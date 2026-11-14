@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Number Guess - Profile</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #07152f, #123c69);
+      color: white;
+      padding: 20px;
+    }
+    header {
+      max-width: 900px;
+      margin: 10px auto 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    header h2 {
+      color: #20d5ff;
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 9px;
+      max-width: 900px;
+      margin: 15px auto 30px;
+    }
+    nav a {
+      padding: 10px 14px;
+      background: #193c63;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    nav a:hover {
+      background: #087fa9;
+    }
+    .logout {
+      padding: 10px 16px;
+      background: #e84b61;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .container {
+      max-width: 900px;
+      margin: 25px auto;
+    }
+    .box {
+      background: #101f3d;
+      border: 1px solid #294a70;
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 22px;
+    }
+    .box h2 {
+      color: #20d5ff;
+      margin-bottom: 14px;
+      font-size: 20px;
+    }
+    .box .hint {
+      color: #9db3cf;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+    /* Profile card */
+    .profile-top {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .avatar {
+      width: 74px;
+      height: 74px;
+      border-radius: 50%;
+      background: #08172e;
+      border: 2px solid #20d5ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 38px;
+    }
+    .who h1 {
+      font-size: 26px;
+      overflow-wrap: anywhere;
+    }
+    .who .title {
+      color: #f6ca45;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    .coins {
+      margin-left: auto;
+      background: #08172e;
+      border: 1px solid #f6ca45;
+      color: #f6ca45;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 20px;
+      white-space: nowrap;
+    }
+    .level-row {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      color: #b9c9df;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .bar {
+      height: 14px;
+      background: #08172e;
+      border-radius: 99px;
+      overflow: hidden;
+      border: 1px solid #294a70;
+    }
+    .bar div {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #08a9d5, #45e6a0);
+      transition: width 0.4s;
+    }
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .stat {
+      background: #08172e;
+      border-radius: 10px;
+      padding: 15px;
+    }
+    .stat p {
+      color: #aebed3;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    .stat strong {
+      color: #20d5ff;
+      font-size: 22px;
+    }
+    .stat small {
+      display: block;
+      color: #9db3cf;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    /* Rename */
+    .rename {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .rename input {
+      flex: 1;
+      min-width: 160px;
+      padding: 13px;
+      border: 1px solid #395779;
+      border-radius: 8px;
+      background: #08172e;
+      color: white;
+      font-size: 16px;
+      outline: none;
+    }
+    .rename input:focus {
+      border-color: #20d5ff;
+    }
+    button.action {
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      background: #087fa9;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button.action:hover:not(:disabled) {
+      background: #08a9d5;
+    }
+    button.action:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    button.action.equip {
+      background: #1f8f66;
+    }
+    button.action.equipped {
+      background: #263d5c;
+    }
+    /* Shop */
+    .shop {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+    .item {
+      background: #08172e;
+      border: 1px solid #294a70;
+      border-radius: 12px;
+      padding: 14px 10px;
+      text-align: center;
+    }
+    .item.on {
+      border-color: #f6ca45;
+    }
+    .item .emoji {
+      font-size: 34px;
+      margin-bottom: 6px;
+    }
+    .item .name {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .item .price {
+      color: #f6ca45;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    .item .req {
+      color: #9db3cf;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+    .item button {
+      width: 100%;
+    }
+    .swatch {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      margin: 0 auto 8px;
+      border: 2px solid #395779;
+    }
+    .swatch.theme {
+      width: 64px;
+      height: 38px;
+      border-radius: 8px;
+    }
+    .item .note {
+      color: #9db3cf;
+      font-size: 11px;
+      line-height: 1.3;
+      margin-bottom: 6px;
+    }
+    .item .count {
+      color: #45e6a0;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+    .fx-glow {
+      text-shadow: 0 0 6px currentColor, 0 0 14px currentColor;
+    }
+    .fx-shine,
+    .fx-rainbow {
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent !important;
+      -webkit-text-fill-color: transparent;
+    }
+    .fx-rainbow {
+      background-image: linear-gradient(90deg, #ff5f6d, #ffc371, #45e6a0, #20d5ff, #c471f5);
+    }
+    .fx-shine {
+      background-image: linear-gradient(90deg, #ffffff, #f6ca45, #ffffff);
+      background-size: 200% 100%;
+      animation: shine 2.5s linear infinite;
+    }
+    @keyframes shine {
+      to { background-position: -200% 0; }
+    }
+    .swatch.frame {
+      background: #08172e;
+    }
+    .message {
+      text-align: center;
+      min-height: 24px;
+      margin-bottom: 18px;
+      font-size: 15px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+    footer {
+      text-align: center;
+      margin: 40px auto 15px;
+      color: #9db3cf;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>🎯 Number Guess</h2>
+    <button class="logout" id="logoutBtn">Logout</button>
+  </header>
+  <nav>
+    <a href="home.html">Home</a>
+    <a href="index.html">Play Game</a>
+    <a href="leader.html">Leaderboard</a>
+    <a href="profile.html">Profile</a>
+    <a href="privacy.html">Privacy Policy</a>
+  </nav>
+  <main class="container">
+    <p class="message" id="message" role="status" aria-live="polite"></p>
+    <section class="box" id="profileBox">
+      <div class="profile-top">
+        <div class="avatar" id="avatar">🙂</div>
+        <div class="who">
+          <h1 id="username">Loading...</h1>
+          <div class="title" id="titleText"></div>
+        </div>
+        <div class="coins" id="coins">🪙 0</div>
+      </div>
+      <div class="level-row">
+        <span id="levelText">Level 1</span>
+        <span id="xpText">0 / 100 XP</span>
+      </div>
+      <div class="bar"><div id="xpBar"></div></div>
+    </section>
+    <section class="box">
+      <h2>📊 Stats</h2>
+      <div class="stats">
+        <div class="stat">
+          <p>🔥 Play Streak</p>
+          <strong id="streak">0</strong>
+          <small id="streakNote">Win again with the same number of guesses</small>
+        </div>
+        <div class="stat">
+          <p>🏅 Best Streak</p>
+          <strong id="bestStreak">0</strong>
+        </div>
+        <div class="stat">
+          <p>🏆 Total Wins</p>
+          <strong id="wins">0</strong>
+        </div>
+        <div class="stat">
+          <p>⭐ Best Score</p>
+          <strong id="bestScore">0</strong>
+        </div>
+      </div>
+    </section>
+    <section class="box">
+      <h2>✏️ Change Username</h2>
+      <p class="hint">
+        Costs <strong>2,000 🪙</strong>. Use 3-16 letters, numbers or
+        underscores.
+      </p>
+      <div class="rename">
+        <input
+          type="text"
+          id="newName"
+          maxlength="16"
+          placeholder="New username"
+          autocomplete="off"
+        >
+        <button class="action" id="renameBtn">Change (2,000 🪙)</button>
+      </div>
+    </section>
+    <div id="shops"></div>
+    <section class="box">
+      <h2>💡 How to earn</h2>
+      <p class="hint" style="margin-bottom:0">
+        Every win gives coins and XP. Higher scores give more. Win several
+        games in a row with the <strong>same number of guesses</strong> to
+        build a streak and earn bonus coins. Level up to unlock rarer
+        cosmetics. Cosmetics are only for style: nothing in the shop can
+        raise your leaderboard score.
+      </p>
+    </section>
+  </main>
+  <footer>
+    © 2026 Number Guess
+  </footer>
+  <script type="module">
+    import {
+      initializeApp
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDhigYBT68Dv4pdboLzVYxnLVMK6VUFFWY",
+      authDomain: "number-guss.firebaseapp.com",
+      projectId: "number-guss",
+      storageBucket: "number-guss.firebasestorage.app",
+      messagingSenderId: "471501648483",
+      appId: "1:471501648483:web:3cbe55c24fd4e0c92b3e56",
+      measurementId: "G-4FYB07JSC5"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // ---------------- Shop items ----------------
+    const RENAME_COST = 2000;
+
+    const BADGES = [
+      { id: "star",   emoji: "🌟", name: "Star",         price: 100,  level: 1 },
+      { id: "fire",   emoji: "🔥", name: "Flame",        price: 250,  level: 2 },
+      { id: "target", emoji: "🎯", name: "Sharpshooter", price: 400,  level: 3 },
+      { id: "gem",    emoji: "💎", name: "Diamond",      price: 800,  level: 5 },
+      { id: "crown",  emoji: "👑", name: "Crown",        price: 1500, level: 8 }
+    ];
+
+    const TITLES = [
+      { id: "rookie", name: "Rookie",       price: 0,    level: 1 },
+      { id: "ninja",  name: "Number Ninja", price: 300,  level: 2 },
+      { id: "master", name: "Guess Master", price: 700,  level: 4 },
+      { id: "oracle", name: "The Oracle",   price: 1200, level: 6 },
+      { id: "legend", name: "Legend",       price: 2500, level: 10 }
+    ];
+
+    const COLORS = [
+      { id: "gold",   name: "Gold",   hex: "#f6ca45", price: 500, level: 1 },
+      { id: "cyan",   name: "Cyan",   hex: "#20d5ff", price: 500, level: 1 },
+      { id: "pink",   name: "Pink",   hex: "#ff6ec7", price: 500, level: 2 },
+      { id: "green",  name: "Green",  hex: "#45e6a0", price: 500, level: 2 },
+      { id: "orange", name: "Orange", hex: "#ff9f43", price: 500, level: 3 }
+    ];
+
+    const EFFECTS = [
+      { id: "glow",    emoji: "✨", name: "Glow",    price: 700,  level: 3 },
+      { id: "shine",   emoji: "💫", name: "Shine",   price: 900,  level: 5 },
+      { id: "rainbow", emoji: "🌈", name: "Rainbow", price: 1200, level: 7 }
+    ];
+
+    const AVATARS = [
+      { id: "cat",    emoji: "🐱", name: "Cat",    price: 150, level: 1 },
+      { id: "dog",    emoji: "🐶", name: "Dog",    price: 150, level: 1 },
+      { id: "fox",    emoji: "🦊", name: "Fox",    price: 200, level: 2 },
+      { id: "panda",  emoji: "🐼", name: "Panda",  price: 200, level: 2 },
+      { id: "robot",  emoji: "🤖", name: "Robot",  price: 300, level: 3 },
+      { id: "alien",  emoji: "👽", name: "Alien",  price: 300, level: 3 },
+      { id: "lion",   emoji: "🦁", name: "Lion",   price: 400, level: 4 },
+      { id: "dragon", emoji: "🐲", name: "Dragon", price: 600, level: 6 }
+    ];
+
+    const FRAMES = [
+      { id: "gold",    name: "Gold Ring",    price: 400, level: 2,
+        border: "3px solid #f6ca45", shadow: "0 0 10px #f6ca4588" },
+      { id: "neon",    name: "Neon Ring",    price: 500, level: 3,
+        border: "3px solid #20d5ff", shadow: "0 0 14px #20d5ff" },
+      { id: "fire",    name: "Fire Ring",    price: 600, level: 4,
+        border: "3px solid #ff6b35", shadow: "0 0 14px #ff6b35" },
+      { id: "rainbow", name: "Rainbow Ring", price: 900, level: 6,
+        border: "3px solid #ff5f6d",
+        shadow: "0 0 0 3px #ffc371, 0 0 0 6px #45e6a0, 0 0 0 9px #20d5ff" }
+    ];
+
+    const BANNERS = [
+      { id: "ocean",  name: "Ocean",  price: 500, level: 2,
+        bg: "linear-gradient(135deg, #0f2b5b, #1b6ca8)" },
+      { id: "aurora", name: "Aurora", price: 600, level: 3,
+        bg: "linear-gradient(135deg, #0b3d3a, #2a5f9e 60%, #7b4bb3)" },
+      { id: "lava",   name: "Lava",   price: 700, level: 4,
+        bg: "linear-gradient(135deg, #3a0d0d, #a3341a)" },
+      { id: "galaxy", name: "Galaxy", price: 800, level: 5,
+        bg: "linear-gradient(135deg, #0a0420, #2c1a5e 50%, #5b2a86)" }
+    ];
+
+    const THEMES = [
+      { id: "default", name: "Classic", price: 0,   level: 1,
+        bg: "linear-gradient(135deg, #07152f, #123c69)" },
+      { id: "neon",    name: "Neon",    price: 600, level: 3,
+        bg: "linear-gradient(135deg, #12002b, #3a0066 55%, #00334d)" },
+      { id: "sunset",  name: "Sunset",  price: 600, level: 3,
+        bg: "linear-gradient(135deg, #2b0a1f, #7a2e4d 50%, #c2603a)" },
+      { id: "forest",  name: "Forest",  price: 600, level: 4,
+        bg: "linear-gradient(135deg, #04170e, #0c3b26 55%, #1d5d3b)" }
+    ];
+
+    const CELEBRATIONS = [
+      { id: "confetti",  emoji: "🎉", name: "Confetti",    price: 300, level: 2 },
+      { id: "stars",     emoji: "⭐", name: "Star Shower", price: 400, level: 3 },
+      { id: "hearts",    emoji: "💖", name: "Hearts",      price: 400, level: 3 },
+      { id: "coins",     emoji: "🪙", name: "Coin Rain",   price: 500, level: 4 },
+      { id: "fireworks", emoji: "🎆", name: "Fireworks",   price: 700, level: 5 }
+    ];
+
+    // How each cosmetic category works
+    //   owned     = list of owned item ids saved on the player
+    //   equip     = field that stores the equipped item
+    //   value     = what gets stored in that field
+    //   sync      = also copy it to the leaderboard entry
+    //   removable = can be un-equipped
+    const CATEGORIES = {
+      badge: {
+        title: "🎖️ Badge Shop",
+        hint: "Your equipped badge shows next to your name on the leaderboard.",
+        label: "badge", list: BADGES, owned: "badges", equip: "badge",
+        value: (i) => i.emoji, sync: true, removable: true
+      },
+      title: {
+        title: "👑 Title Shop",
+        hint: "Your equipped title shows under your name on the leaderboard.",
+        label: "title", list: TITLES, owned: "titles", equip: "title",
+        value: (i) => i.name, sync: true, removable: false
+      },
+      color: {
+        title: "🎨 Username Colors",
+        hint: "Your name shows in this color on the leaderboard.",
+        label: "username color", list: COLORS, owned: "colors", equip: "nameColor",
+        value: (i) => i.hex, sync: true, removable: true
+      },
+      effect: {
+        title: "✨ Name Effects",
+        hint: "Adds a glow or shine to your name on the leaderboard. Shine and Rainbow replace your name color.",
+        label: "name effect", list: EFFECTS, owned: "effects", equip: "nameEffect",
+        value: (i) => i.id, sync: true, removable: true
+      },
+      avatar: {
+        title: "🐱 Avatars",
+        hint: "The picture shown on your profile.",
+        label: "avatar", list: AVATARS, owned: "avatars", equip: "avatar",
+        value: (i) => i.emoji, sync: false, removable: true
+      },
+      frame: {
+        title: "🖼️ Avatar Frames",
+        hint: "A ring around your profile picture.",
+        label: "avatar frame", list: FRAMES, owned: "frames", equip: "frame",
+        value: (i) => i.id, sync: false, removable: true
+      },
+      banner: {
+        title: "🏞️ Profile Banners",
+        hint: "A background for your profile card at the top of this page.",
+        label: "profile banner", list: BANNERS, owned: "banners", equip: "banner",
+        value: (i) => i.id, sync: false, removable: true
+      },
+      theme: {
+        title: "🌌 Page Themes",
+        hint: "Changes the background of the game and profile pages.",
+        label: "theme", list: THEMES, owned: "themes", equip: "theme",
+        value: (i) => i.id, sync: false, removable: false
+      },
+      celebration: {
+        title: "🎊 Win Celebrations",
+        hint: "Plays an animation in the game when you win.",
+        label: "win celebration", list: CELEBRATIONS, owned: "celebrations",
+        equip: "celebration", value: (i) => i.id, sync: false, removable: true
+      }
+    };
+
+    const SHOP_ORDER = [
+      "badge", "title", "color", "effect", "avatar",
+      "frame", "banner", "theme", "celebration"
+    ];
+
+    // Power-ups. Only these two exist so the leaderboard stays fair:
+    // hints cost points, and Second Chance never changes your score.
+    const POWERUPS = [
+      { id: "hint", field: "hintCharges", emoji: "🔮", name: "Extra Oracle Hint",
+        price: 150, level: 1, needsOracle: true,
+        note: "Use more than 1 hint in a game. Every hint costs 200 points." },
+      { id: "shield", field: "shields", emoji: "🛡️", name: "Second Chance",
+        price: 200, level: 2,
+        note: "Saves a streak of 2+ once. Does not change your score." }
+    ];
+
+    const CHEST = {
+      id: "chest", emoji: "🎁", name: "Mystery Chest",
+      price: 250, level: 2,
+      note: "Random coins, a power-up or a cosmetic."
+    };
+
+    // ---------------- Elements ----------------
+    const messageEl = document.getElementById("message");
+    const profileBoxEl = document.getElementById("profileBox");
+    const avatarEl = document.getElementById("avatar");
+    const usernameEl = document.getElementById("username");
+    const titleTextEl = document.getElementById("titleText");
+    const coinsEl = document.getElementById("coins");
+    const levelTextEl = document.getElementById("levelText");
+    const xpTextEl = document.getElementById("xpText");
+    const xpBarEl = document.getElementById("xpBar");
+    const streakEl = document.getElementById("streak");
+    const streakNoteEl = document.getElementById("streakNote");
+    const bestStreakEl = document.getElementById("bestStreak");
+    const winsEl = document.getElementById("wins");
+    const bestScoreEl = document.getElementById("bestScore");
+    const newNameEl = document.getElementById("newName");
+    const renameBtn = document.getElementById("renameBtn");
+    const shopsEl = document.getElementById("shops");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const grids = {};
+
+    let currentUser = null;
+    let player = null;
+    let bestScore = 0;
+
+    function showMessage(text, color = "#b9c9df") {
+      messageEl.textContent = text;
+      messageEl.style.color = color;
+    }
+
+    function defaultUsername(user) {
+      return user.displayName ||
+        user.email?.split("@")[0] ||
+        "Player";
+    }
+
+    function findById(list, id) {
+      return list.find((i) => i.id === id) || null;
+    }
+
+    function applyEffect(element, effectId) {
+      element.classList.remove("fx-glow", "fx-shine", "fx-rainbow");
+      if (["glow", "shine", "rainbow"].includes(effectId)) {
+        element.classList.add("fx-" + effectId);
+      }
+    }
+
+    // Level = 1 + floor(sqrt(xp / 100))  (100 XP = level 2, 400 = 3, 900 = 4 ...)
+    function levelInfo(xp) {
+      const level = Math.floor(Math.sqrt(xp / 100)) + 1;
+      const start = (level - 1) * (level - 1) * 100;
+      const next = level * level * 100;
+      return {
+        level: level,
+        start: start,
+        next: next,
+        percent: Math.min(100, ((xp - start) / (next - start)) * 100)
+      };
+    }
+
+    function listOf(value) {
+      return Array.isArray(value) ? [...value] : [];
+    }
+
+    function normalizePlayer(data) {
+      const titles = listOf(data.titles);
+      const themes = listOf(data.themes);
+      if (!titles.includes("rookie")) {
+        titles.push("rookie");
+      }
+      if (!themes.includes("default")) {
+        themes.push("default");
+      }
+      return {
+        username: data.username || defaultUsername(currentUser),
+        coins: Number(data.coins) || 0,
+        xp: Number(data.xp) || 0,
+        wins: Number(data.wins) || 0,
+        streak: Number(data.streak) || 0,
+        streakGuesses: Number(data.streakGuesses) || 0,
+        bestStreak: Number(data.bestStreak) || 0,
+
+        badges: listOf(data.badges),
+        titles: titles,
+        colors: listOf(data.colors),
+        effects: listOf(data.effects),
+        avatars: listOf(data.avatars),
+        frames: listOf(data.frames),
+        banners: listOf(data.banners),
+        themes: themes,
+        celebrations: listOf(data.celebrations),
+
+        badge: data.badge || "",
+        title: data.title || "Rookie",
+        nameColor: data.nameColor || "",
+        nameEffect: data.nameEffect || "",
+        avatar: data.avatar || "",
+        frame: data.frame || "",
+        banner: data.banner || "",
+        theme: data.theme || "default",
+        celebration: data.celebration || "",
+
+        oracle: data.oracle === true,
+        hintCharges: Number(data.hintCharges) || 0,
+        shields: Number(data.shields) || 0
+      };
+    }
+
+    async function loadPlayer() {
+      const snap = await getDoc(doc(db, "players", currentUser.uid));
+      player = normalizePlayer(snap.exists() ? snap.data() : {});
+      try {
+        const scoreSnap = await getDoc(
+          doc(db, "leaderboard", currentUser.uid)
+        );
+        bestScore = scoreSnap.exists()
+          ? Number(scoreSnap.data().score) || 0
+          : 0;
+      } catch (error) {
+        console.error("Best score load error:", error);
+      }
+    }
+
+    // Read fresh data, check it, then save the changes
+    async function updatePlayer(mutator) {
+      const ref = doc(db, "players", currentUser.uid);
+      const snap = await getDoc(ref);
+      const fresh = normalizePlayer(snap.exists() ? snap.data() : {});
+      const changes = mutator(fresh);
+      await setDoc(ref, changes, { merge: true });
+      player = { ...fresh, ...changes };
+    }
+
+    // Keep the leaderboard entry in sync (only if the player has one)
+    async function syncLeaderboard(fields) {
+      try {
+        const ref = doc(db, "leaderboard", currentUser.uid);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          return;
+        }
+        await setDoc(ref, fields, { merge: true });
+      } catch (error) {
+        console.error("Leaderboard sync error:", error);
+      }
+    }
+
+    // ---------------- Drawing ----------------
+    function render() {
+      const info = levelInfo(player.xp);
+
+      // Profile card
+      avatarEl.textContent = player.avatar || "🙂";
+      const frame = findById(FRAMES, player.frame);
+      avatarEl.style.border = frame ? frame.border : "";
+      avatarEl.style.boxShadow = frame ? frame.shadow : "";
+      const banner = findById(BANNERS, player.banner);
+      profileBoxEl.style.background = banner ? banner.bg : "";
+      usernameEl.textContent =
+        (player.badge ? player.badge + " " : "") + player.username;
+      usernameEl.style.color = /^#[0-9a-fA-F]{6}$/.test(player.nameColor)
+        ? player.nameColor
+        : "";
+      applyEffect(usernameEl, player.nameEffect);
+      titleTextEl.textContent = player.title;
+      coinsEl.textContent = "🪙 " + player.coins.toLocaleString();
+      levelTextEl.textContent = "Level " + info.level;
+      xpTextEl.textContent =
+        player.xp.toLocaleString() + " / " +
+        info.next.toLocaleString() + " XP";
+      xpBarEl.style.width = info.percent + "%";
+      streakEl.textContent = player.streak;
+      streakNoteEl.textContent = player.streak > 0
+        ? player.streak + " wins in a row, " +
+          player.streakGuesses + " guesses each"
+        : "Win again with the same number of guesses";
+      bestStreakEl.textContent = player.bestStreak;
+      winsEl.textContent = player.wins;
+      bestScoreEl.textContent = bestScore.toLocaleString();
+      const theme = findById(THEMES, player.theme) || THEMES[0];
+      document.body.style.background = theme.bg;
+      renderShop(info.level);
+    }
+
+    // Build the empty shop boxes once
+    function buildShop() {
+      const makeBox = (key, title, hint) => {
+        const box = document.createElement("section");
+        box.className = "box";
+        const h2 = document.createElement("h2");
+        h2.textContent = title;
+        const p = document.createElement("p");
+        p.className = "hint";
+        p.textContent = hint;
+        const grid = document.createElement("div");
+        grid.className = "shop";
+        box.append(h2, p, grid);
+        shopsEl.appendChild(box);
+        grids[key] = grid;
+      };
+      SHOP_ORDER.forEach((key) => {
+        makeBox(key, CATEGORIES[key].title, CATEGORIES[key].hint);
+      });
+      makeBox(
+        "powerup",
+        "⚡ Power-ups & Chest",
+        "Only two power-ups exist so the leaderboard stays fair. " +
+        "Extra hints cost 200 points each, and Second Chance never changes your score."
+      );
+      shopsEl.addEventListener("click", handleShopClick);
+    }
+
+    function makeItem(options) {
+      const card = document.createElement("div");
+      card.className = "item" + (options.equipped ? " on" : "");
+      if (options.emoji) {
+        const emoji = document.createElement("div");
+        emoji.className = "emoji";
+        emoji.textContent = options.emoji;
+        card.appendChild(emoji);
+      }
+      if (options.swatch || options.border) {
+        const swatch = document.createElement("div");
+        swatch.className = "swatch" +
+          (options.swatchTheme ? " theme" : "") +
+          (options.border ? " frame" : "");
+        if (options.swatch) {
+          swatch.style.background = options.swatch;
+        }
+        if (options.border) {
+          swatch.style.border = options.border;
+          swatch.style.boxShadow = options.shadow || "";
+        }
+        card.appendChild(swatch);
+      }
+      const name = document.createElement("div");
+      name.className = "name";
+      name.textContent = options.name;
+      if (options.effect) {
+        applyEffect(name, options.effect);
+      }
+      card.appendChild(name);
+      const price = document.createElement("div");
+      price.className = "price";
+      price.textContent = options.price > 0
+        ? "🪙 " + options.price.toLocaleString()
+        : "Free";
+      card.appendChild(price);
+      if (options.note) {
+        const note = document.createElement("div");
+        note.className = "note";
+        note.textContent = options.note;
+        card.appendChild(note);
+      }
+      if (options.count !== undefined) {
+        const count = document.createElement("div");
+        count.className = "count";
+        count.textContent = "Owned: " + options.count;
+        card.appendChild(count);
+      }
+      const req = document.createElement("div");
+      req.className = "req";
+      req.textContent = "Level " + options.level + "+";
+      card.appendChild(req);
+      const button = document.createElement("button");
+      button.className = "action";
+      button.dataset.kind = options.kind;
+      button.dataset.id = options.id;
+      const repeatable =
+        options.kind === "powerup" || options.kind === "chest";
+      if (!repeatable && options.owned) {
+        if (options.equipped) {
+          button.textContent = options.removable
+            ? "Equipped (tap to remove)"
+            : "Equipped";
+          button.classList.add("equipped");
+          button.dataset.action = "unequip";
+          button.disabled = !options.removable;
+        } else {
+          button.textContent = "Equip";
+          button.classList.add("equip");
+          button.dataset.action = "equip";
+        }
+      } else if (options.currentLevel < options.level) {
+        button.textContent = "🔒 Level " + options.level;
+        button.disabled = true;
+      } else if (options.lockReason) {
+        button.textContent = options.lockReason;
+        button.disabled = true;
+      } else if (player.coins < options.price) {
+        button.textContent =
+          "Need " + (options.price - player.coins).toLocaleString() + " 🪙";
+        button.disabled = true;
+      } else {
+        button.textContent = options.kind === "chest" ? "Open" : "Buy";
+        button.dataset.action = "buy";
+      }
+      card.appendChild(button);
+      return card;
+    }
+
+    function renderShop(currentLevel) {
+      Object.keys(grids).forEach((key) => grids[key].replaceChildren());
+      SHOP_ORDER.forEach((kind) => {
+        const cat = CATEGORIES[kind];
+        cat.list.forEach((item) => {
+          grids[kind].appendChild(makeItem({
+            kind: kind,
+            id: item.id,
+            emoji: item.emoji,
+            swatch: kind === "color" ? item.hex : item.bg,
+            swatchTheme: kind === "theme" || kind === "banner",
+            border: item.border,
+            shadow: item.shadow,
+            effect: kind === "effect" ? item.id : "",
+            name: item.name,
+            price: item.price,
+            level: item.level,
+            currentLevel: currentLevel,
+            owned: player[cat.owned].includes(item.id),
+            equipped: player[cat.equip] === cat.value(item),
+            removable: cat.removable
+          }));
+        });
+      });
+      POWERUPS.forEach((power) => {
+        grids.powerup.appendChild(makeItem({
+          kind: "powerup",
+          id: power.id,
+          emoji: power.emoji,
+          name: power.name,
+          price: power.price,
+          level: power.level,
+          note: power.note,
+          count: player[power.field],
+          currentLevel: currentLevel,
+          lockReason: power.needsOracle && !player.oracle
+            ? "🔒 Unlock Oracle first"
+            : ""
+        }));
+      });
+      grids.powerup.appendChild(makeItem({
+        kind: "chest",
+        id: CHEST.id,
+        emoji: CHEST.emoji,
+        name: CHEST.name,
+        price: CHEST.price,
+        level: CHEST.level,
+        note: CHEST.note,
+        currentLevel: currentLevel
+      }));
+    }
+
+    // ---------------- Mystery Chest ----------------
+    function rollChest(fresh) {
+      const changes = {};
+      let text = "";
+      let coinReward = 0;
+      // Every cosmetic the player does not own yet (titles are not in chests)
+      const pool = [];
+      SHOP_ORDER.forEach((kind) => {
+        if (kind === "title") {
+          return;
+        }
+        const cat = CATEGORIES[kind];
+        cat.list.forEach((item) => {
+          if (item.id !== "default" && !fresh[cat.owned].includes(item.id)) {
+            pool.push({ kind: kind, item: item });
+          }
+        });
+      });
+      const roll = Math.random();
+      if (roll < 0.45 || (roll >= 0.70 && pool.length === 0)) {
+        const amounts = [100, 100, 150, 200, 300, 500];
+        coinReward = amounts[Math.floor(Math.random() * amounts.length)];
+        text = "🪙 " + coinReward + " coins";
+      } else if (roll < 0.70) {
+        const power = POWERUPS[Math.floor(Math.random() * POWERUPS.length)];
+        changes[power.field] = fresh[power.field] + 1;
+        text = power.emoji + " 1 " + power.name;
+      } else {
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        const cat = CATEGORIES[pick.kind];
+        changes[cat.owned] = [...fresh[cat.owned], pick.item.id];
+        text = (pick.item.emoji ? pick.item.emoji + " " : "") +
+          pick.item.name + " (" + cat.label + ")";
+      }
+      changes.coins = fresh.coins - CHEST.price + coinReward;
+      return { changes: changes, text: text };
+    }
+
+    // ---------------- Shop actions ----------------
+    async function handleShopClick(event) {
+      const button = event.target.closest("button");
+      if (!button || button.disabled || !button.dataset.action) {
+        return;
+      }
+      const kind = button.dataset.kind;
+      const id = button.dataset.id;
+      const action = button.dataset.action;
+      const cat = CATEGORIES[kind];
+      let item = null;
+      if (cat) {
+        item = findById(cat.list, id);
+      } else if (kind === "powerup") {
+        item = findById(POWERUPS, id);
+      } else if (kind === "chest") {
+        item = CHEST;
+      }
+      if (!item) {
+        return;
+      }
+      button.disabled = true;
+      try {
+        if (action === "buy") {
+          let chestText = "";
+          await updatePlayer((fresh) => {
+            if (levelInfo(fresh.xp).level < item.level) {
+              throw new Error("Your level is too low.");
+            }
+            if (fresh.coins < item.price) {
+              throw new Error("Not enough coins.");
+            }
+            if (kind === "chest") {
+              const result = rollChest(fresh);
+              chestText = result.text;
+              return result.changes;
+            }
+            if (kind === "powerup") {
+              if (item.needsOracle && !fresh.oracle) {
+                throw new Error("Unlock the Oracle Hint first.");
+              }
+              return {
+                coins: fresh.coins - item.price,
+                [item.field]: fresh[item.field] + 1
+              };
+            }
+            if (fresh[cat.owned].includes(id)) {
+              throw new Error("You already own this.");
+            }
+            return {
+              coins: fresh.coins - item.price,
+              [cat.owned]: [...fresh[cat.owned], id]
+            };
+          });
+          if (kind === "chest") {
+            showMessage("🎁 Chest opened! You got: " + chestText, "#f6ca45");
+          } else {
+            showMessage("✅ Bought " + item.name + "!", "#45e6a0");
+          }
+        } else if (action === "equip" && cat) {
+          const value = cat.value(item);
+          await updatePlayer(() => ({ [cat.equip]: value }));
+          if (cat.sync) {
+            await syncLeaderboard({ [cat.equip]: value });
+          }
+          showMessage("✅ " + item.name + " equipped.", "#45e6a0");
+        } else if (action === "unequip" && cat && cat.removable) {
+          await updatePlayer(() => ({ [cat.equip]: "" }));
+          if (cat.sync) {
+            await syncLeaderboard({ [cat.equip]: "" });
+          }
+          showMessage(item.name + " removed.", "#b9c9df");
+        }
+      } catch (error) {
+        console.error(error);
+        showMessage(
+          error.message || "Something went wrong. Check Firestore rules.",
+          "#ff8585"
+        );
+      }
+      render();
+    }
+
+    // ---------------- Change username ----------------
+    renameBtn.addEventListener("click", async () => {
+      const newName = newNameEl.value.trim();
+      if (!/^[A-Za-z0-9_]{3,16}$/.test(newName)) {
+        showMessage(
+          "Username must be 3-16 letters, numbers or underscores.",
+          "#ff8585"
+        );
+        return;
+      }
+      if (newName === player.username) {
+        showMessage("That is already your username.", "#ff8585");
+        return;
+      }
+      const ok = confirm(
+        "Change your username to " + newName + " for " +
+        RENAME_COST.toLocaleString() + " coins?"
+      );
+      if (!ok) {
+        return;
+      }
+      renameBtn.disabled = true;
+      try {
+        await updatePlayer((fresh) => {
+          if (fresh.coins < RENAME_COST) {
+            throw new Error(
+              "You need " + RENAME_COST.toLocaleString() +
+              " coins to change your username."
+            );
+          }
+          return {
+            username: newName,
+            coins: fresh.coins - RENAME_COST
+          };
+        });
+        await syncLeaderboard({ username: newName });
+        newNameEl.value = "";
+        showMessage("✅ Username changed to " + newName + "!", "#45e6a0");
+      } catch (error) {
+        console.error(error);
+        showMessage(
+          error.message || "Could not change username. Check Firestore rules.",
+          "#ff8585"
+        );
+      }
+      renameBtn.disabled = false;
+      render();
+    });
+
+    // ---------------- Logout ----------------
+    logoutBtn.addEventListener("click", async () => {
+      logoutBtn.disabled = true;
+      try {
+        await signOut(auth);
+        window.location.replace("login.html");
+      } catch (error) {
+        console.error(error);
+        showMessage("Logout failed. Please try again.", "#ff8585");
+        logoutBtn.disabled = false;
+      }
+    });
+
+    buildShop();
+
+    // Login check
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.replace("login.html");
+        return;
+      }
+      currentUser = user;
+      try {
+        await loadPlayer();
+        render();
+      } catch (error) {
+        console.error("Profile load error:", error);
+        showMessage(
+          "Could not load your profile. Check your Firestore rules.",
+          "#ff8585"
+        );
+      }
+    });
+  </script>
+</body>
+</html>

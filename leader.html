@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Number Guess - Leaderboard</title>
-
   <style>
     * {
       margin: 0;
@@ -13,14 +11,12 @@
       box-sizing: border-box;
       font-family: Arial, sans-serif;
     }
-
     body {
       min-height: 100vh;
       background: linear-gradient(135deg, #07152f, #123c69);
       color: white;
       padding: 20px;
     }
-
     header {
       max-width: 900px;
       margin: 10px auto 25px;
@@ -30,11 +26,9 @@
       flex-wrap: wrap;
       gap: 12px;
     }
-
     header h2 {
       color: #20d5ff;
     }
-
     nav {
       display: flex;
       flex-wrap: wrap;
@@ -43,7 +37,6 @@
       max-width: 900px;
       margin: 15px auto 30px;
     }
-
     nav a {
       padding: 10px 14px;
       background: #193c63;
@@ -52,11 +45,9 @@
       border-radius: 8px;
       font-size: 14px;
     }
-
     nav a:hover {
       background: #087fa9;
     }
-
     .logout {
       padding: 10px 16px;
       background: #e84b61;
@@ -65,27 +56,22 @@
       border-radius: 8px;
       cursor: pointer;
     }
-
     .container {
       max-width: 900px;
       margin: 25px auto;
     }
-
     .heading {
       text-align: center;
       margin-bottom: 30px;
     }
-
     .heading h1 {
       color: #20d5ff;
       font-size: 34px;
       margin-bottom: 10px;
     }
-
     .heading p {
       color: #b9c9df;
     }
-
     .top-three {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -93,7 +79,6 @@
       align-items: end;
       margin-bottom: 30px;
     }
-
     .player-card {
       background: #101f3d;
       border: 1px solid #294a70;
@@ -102,28 +87,23 @@
       text-align: center;
       overflow-wrap: anywhere;
     }
-
     .player-card.first {
       border: 2px solid #f6ca45;
       padding-top: 30px;
     }
-
     .medal {
       font-size: 38px;
       margin-bottom: 10px;
     }
-
     .player-card h3 {
       font-size: 15px;
       margin-bottom: 10px;
     }
-
     .player-card p {
       color: #20d5ff;
       font-weight: bold;
       font-size: 20px;
     }
-
     .table-box {
       background: #101f3d;
       border: 1px solid #294a70;
@@ -131,55 +111,74 @@
       padding: 20px;
       overflow-x: auto;
     }
-
     .table-box h2 {
       color: #20d5ff;
       margin-bottom: 20px;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
       min-width: 320px;
     }
-
     th, td {
       padding: 15px 12px;
       text-align: left;
       border-bottom: 1px solid #29415f;
     }
-
     th {
       color: #20d5ff;
       font-size: 14px;
     }
-
     td {
       color: #e2edfa;
       overflow-wrap: anywhere;
     }
-
     tbody tr:hover {
       background: #193253;
     }
-
     .rank {
       font-weight: bold;
       color: #20d5ff;
     }
-
     .score {
       color: #45e6a0;
       font-weight: bold;
     }
-
+    .fx-glow {
+      text-shadow: 0 0 6px currentColor, 0 0 14px currentColor;
+    }
+    .fx-shine,
+    .fx-rainbow {
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent !important;
+      -webkit-text-fill-color: transparent;
+    }
+    .fx-rainbow {
+      background-image: linear-gradient(90deg, #ff5f6d, #ffc371, #45e6a0, #20d5ff, #c471f5);
+    }
+    .fx-shine {
+      background-image: linear-gradient(90deg, #ffffff, #f6ca45, #ffffff);
+      background-size: 200% 100%;
+      animation: shine 2.5s linear infinite;
+    }
+    @keyframes shine {
+      to { background-position: -200% 0; }
+    }
+    .player-title {
+      -webkit-text-fill-color: #f6ca45;
+      display: block;
+      color: #f6ca45;
+      font-size: 12px;
+      margin-top: 3px;
+      font-weight: normal;
+    }
     .status {
       text-align: center;
       padding: 22px 10px;
       color: #b9c9df;
       line-height: 1.5;
     }
-
     .refresh {
       display: block;
       margin: 20px auto 0;
@@ -190,100 +189,79 @@
       border-radius: 8px;
       cursor: pointer;
     }
-
     footer {
       text-align: center;
       margin: 40px auto 15px;
       color: #9db3cf;
       font-size: 13px;
     }
-
     @media(max-width: 520px) {
       .top-three {
         gap: 8px;
       }
-
       .player-card {
         padding: 15px 5px;
       }
-
       .player-card.first {
         padding-top: 22px;
       }
-
       .player-card h3 {
         font-size: 12px;
       }
-
       .player-card p {
         font-size: 16px;
       }
-
       .medal {
         font-size: 30px;
       }
-
       .heading h1 {
         font-size: 27px;
       }
-
       .table-box {
         padding: 13px;
       }
     }
   </style>
 </head>
-
 <body>
-
   <header>
     <h2>🎯 Number Guess</h2>
     <button class="logout" id="logoutBtn">Logout</button>
   </header>
-
   <nav>
     <a href="home.html">Home</a>
     <a href="index.html">Play Game</a>
     <a href="leader.html">Leaderboard</a>
+    <a href="profile.html">Profile</a>
     <a href="privacy.html">Privacy Policy</a>
   </nav>
-
   <main class="container">
-
     <section class="heading">
       <h1>🏆 Leaderboard</h1>
       <p>Discover the top Number Guess players!</p>
     </section>
-
     <section class="top-three" id="topThree">
-
       <div class="player-card">
         <div class="medal">🥈</div>
         <h3>Loading...</h3>
         <p>--</p>
       </div>
-
       <div class="player-card first">
         <div class="medal">🥇</div>
         <h3>Loading...</h3>
         <p>--</p>
       </div>
-
       <div class="player-card">
         <div class="medal">🥉</div>
         <h3>Loading...</h3>
         <p>--</p>
       </div>
-
     </section>
-
     <section class="table-box">
-
       <h2>🌟 Top 50 Players</h2>
       <p class="status" style="padding-top:0">
         Best score per player. 1000 points for 1 guess, minus 100 for each extra guess (minimum 100), then x0.5 on Easy and x2 on Hard.
       </p>
-
       <table>
         <thead>
           <tr>
@@ -293,7 +271,6 @@
             <th>Mode</th>
           </tr>
         </thead>
-
         <tbody id="leaderboardBody">
           <tr>
             <td colspan="4" class="status">
@@ -302,21 +279,15 @@
           </tr>
         </tbody>
       </table>
-
       <p class="status" id="status"></p>
-
       <button class="refresh" id="refreshBtn">
         Refresh Leaderboard
       </button>
-
     </section>
-
   </main>
-
   <footer>
     © 2026 Number Guess
   </footer>
-
   <script>
     function showErr(msg) {
       var s = document.getElementById("status");
@@ -330,7 +301,6 @@
       showErr(e.reason && e.reason.message ? e.reason.message : e.reason);
     });
   </script>
-
   <script type="module">
     Promise.all([
       import("https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js"),
@@ -340,18 +310,15 @@
       showErr("Firebase failed to load: " + (e && e.message ? e.message : e));
     });
   </script>
-
   <script type="module">
     import {
       initializeApp
     } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
-
     import {
       getAuth,
       onAuthStateChanged,
       signOut
     } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
-
     import {
       getFirestore,
       collection,
@@ -360,7 +327,6 @@
       limit,
       onSnapshot
     } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
-
     // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyDhigYBT68Dv4pdboLzVYxnLVMK6VUFFWY",
@@ -371,224 +337,170 @@
       appId: "1:471501648483:web:3cbe55c24fd4e0c92b3e56",
       measurementId: "G-4FYB07JSC5"
     };
-
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-
     const leaderboardBody = document.getElementById("leaderboardBody");
     const topThree = document.getElementById("topThree");
     const status = document.getElementById("status");
     const refreshBtn = document.getElementById("refreshBtn");
     const logoutBtn = document.getElementById("logoutBtn");
-
     let unsubscribe = null;
     let isAuthenticated = false;
-
     // Safely display text
     function safeText(value) {
       return String(value ?? "Player").slice(0, 20);
     }
-
+    // Only allow safe hex colors like #f6ca45
+    function safeColor(value) {
+      return /^#[0-9a-fA-F]{6}$/.test(value || "") ? value : "";
+    }
+    // Only allow known name effects
+    function applyEffect(element, effectId) {
+      if (["glow", "shine", "rainbow"].includes(effectId)) {
+        element.classList.add("fx-" + effectId);
+      }
+    }
     // Display top three
     function displayTopThree(players) {
-
       const medals = ["🥈", "🥇", "🥉"];
       const positions = [1, 0, 2];
-
       topThree.replaceChildren();
-
       positions.forEach((playerIndex) => {
-
         const player = players[playerIndex];
-
         const card = document.createElement("div");
         card.className =
           playerIndex === 0 ? "player-card first" : "player-card";
-
         const medal = document.createElement("div");
         medal.className = "medal";
         medal.textContent = medals[playerIndex];
-
         const name = document.createElement("h3");
         name.textContent = player
-          ? safeText(player.username)
+          ? (player.badge ? player.badge + " " : "") + safeText(player.username)
           : "Waiting for player";
-
+        if (player) {
+          name.style.color = safeColor(player.nameColor);
+          applyEffect(name, player.nameEffect);
+        }
         const score = document.createElement("p");
         score.textContent = player
           ? Number(player.score).toLocaleString()
           : "--";
-
         card.append(medal, name, score);
         topThree.appendChild(card);
-
       });
-
     }
-
     // Display leaderboard table
     function displayLeaderboard(players) {
-
       leaderboardBody.replaceChildren();
-
       if (players.length === 0) {
-
         const row = document.createElement("tr");
         const cell = document.createElement("td");
-
         cell.colSpan = 4;
         cell.className = "status";
         cell.textContent = "No scores yet. Be the first to play!";
-
         row.appendChild(cell);
         leaderboardBody.appendChild(row);
-
         displayTopThree([]);
-
         return;
       }
-
       displayTopThree(players);
-
       players.forEach((player, index) => {
-
         const row = document.createElement("tr");
-
         const rankCell = document.createElement("td");
         rankCell.className = "rank";
         rankCell.textContent = "#" + (index + 1);
-
         const nameCell = document.createElement("td");
-        nameCell.textContent = safeText(player.username);
-
+        nameCell.textContent =
+          (player.badge ? player.badge + " " : "") + safeText(player.username);
+        nameCell.style.color = safeColor(player.nameColor);
+        applyEffect(nameCell, player.nameEffect);
+        if (player.title && player.title !== "Rookie") {
+          const titleTag = document.createElement("span");
+          titleTag.className = "player-title";
+          titleTag.textContent = safeText(player.title);
+          nameCell.appendChild(titleTag);
+        }
         const scoreCell = document.createElement("td");
         scoreCell.className = "score";
         scoreCell.textContent = Number(player.score).toLocaleString();
-
         const modeCell = document.createElement("td");
         modeCell.textContent = safeText(player.mode || "Normal");
-
         row.append(rankCell, nameCell, scoreCell, modeCell);
         leaderboardBody.appendChild(row);
-
       });
-
     }
-
     // Start real-time listener
     function loadLeaderboard() {
-
       if (!isAuthenticated) return;
-
       if (unsubscribe) {
         unsubscribe();
       }
-
       status.textContent = "Loading scores...";
-
       // Fetch extra rows, then keep only each player's best score
       const leaderboardQuery = query(
         collection(db, "leaderboard"),
         orderBy("score", "desc"),
         limit(300)
       );
-
       unsubscribe = onSnapshot(
         leaderboardQuery,
-
         (snapshot) => {
-
           const seen = new Set();
           const players = [];
-
           // Sorted high to low, so the first entry per player is their best
           snapshot.docs.forEach(d => {
             const data = d.data();
             const key = data.uid || data.username || d.id;
-
             if (seen.has(key)) return;
-
             seen.add(key);
             players.push(data);
           });
-
           players.splice(50);
-
           displayLeaderboard(players);
-
           status.textContent =
             "Live leaderboard • " + players.length + " entries";
-
         },
-
         (error) => {
-
           console.error("Leaderboard error:", error);
-
           status.textContent =
             "Unable to load scores. Check your Firestore rules and database.";
-
         }
       );
-
     }
-
     // Authentication check
     onAuthStateChanged(auth, (user) => {
-
       if (!user) {
-
         isAuthenticated = false;
-
         if (unsubscribe) {
           unsubscribe();
           unsubscribe = null;
         }
-
         window.location.replace("login.html");
-
         return;
       }
-
       isAuthenticated = true;
       loadLeaderboard();
-
     });
-
     // Refresh
     refreshBtn.addEventListener("click", () => {
       loadLeaderboard();
     });
-
     // Logout
     logoutBtn.addEventListener("click", async () => {
-
       logoutBtn.disabled = true;
-
       try {
-
         if (unsubscribe) {
           unsubscribe();
         }
-
         await signOut(auth);
-
         window.location.replace("login.html");
-
       } catch (error) {
-
         console.error(error);
-
         status.textContent = "Logout failed. Please try again.";
-
         logoutBtn.disabled = false;
-
       }
-
     });
-
   </script>
-
 </body>
 </html>
