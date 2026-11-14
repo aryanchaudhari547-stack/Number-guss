@@ -1,0 +1,437 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Number Guess - Login</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #07152f, #123c69);
+      padding: 20px;
+      color: white;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 400px;
+      padding: 30px;
+      background: #101f3d;
+      border: 1px solid #25466c;
+      border-radius: 18px;
+      box-shadow: 0 12px 35px #0005;
+    }
+
+    h1 {
+      text-align: center;
+      color: #20d5ff;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #b9c9df;
+      margin-bottom: 25px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .tabs button {
+      flex: 1;
+      padding: 11px;
+      border: none;
+      border-radius: 8px;
+      background: #263d5c;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .tabs button.active {
+      background: #079ac5;
+    }
+
+    label {
+      display: block;
+      margin: 13px 0 7px;
+      color: #dceaff;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #395779;
+      border-radius: 8px;
+      background: #08172e;
+      color: white;
+      outline: none;
+      font-size: 15px;
+    }
+
+    input:focus {
+      border-color: #20d5ff;
+    }
+
+    .password-box {
+      display: flex;
+      gap: 8px;
+    }
+
+    .password-box input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .show-btn {
+      padding: 0 12px;
+      border: none;
+      border-radius: 8px;
+      background: #29496e;
+      color: white;
+      cursor: pointer;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 22px;
+      border: none;
+      border-radius: 8px;
+      background: #08a9d5;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .submit-btn:hover {
+      background: #087fa9;
+    }
+
+    .forgot {
+      display: block;
+      text-align: right;
+      margin-top: 12px;
+      color: #20d5ff;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .message {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .privacy {
+      text-align: center;
+      margin-top: 25px;
+      font-size: 13px;
+      color: #aebed3;
+    }
+
+    .privacy a {
+      color: #20d5ff;
+      text-decoration: none;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>🎯 Number Guess</h1>
+    <p class="subtitle">Welcome! Login to play the game.</p>
+
+    <div class="tabs">
+      <button id="loginTab" class="active" type="button">
+        Login
+      </button>
+
+      <button id="signupTab" type="button">
+        Sign Up
+      </button>
+    </div>
+
+    <form id="authForm">
+
+      <div id="nameGroup" class="hidden">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          maxlength="20"
+          autocomplete="nickname"
+          placeholder="Enter username"
+        >
+      </div>
+
+      <label for="email">Email Address</label>
+      <input
+        type="email"
+        id="email"
+        required
+        autocomplete="email"
+        placeholder="Enter your email"
+      >
+
+      <label for="password">Password</label>
+
+      <div class="password-box">
+        <input
+          type="password"
+          id="password"
+          required
+          minlength="6"
+          autocomplete="current-password"
+          placeholder="Enter password"
+        >
+
+        <button
+          type="button"
+          class="show-btn"
+          id="showPassword"
+        >
+          Show
+        </button>
+      </div>
+
+      <a href="#" class="forgot" id="forgotPassword">
+        Forgot password?
+      </a>
+
+      <button type="submit" class="submit-btn" id="submitBtn">
+        Login
+      </button>
+
+    </form>
+
+    <p class="message" id="message" role="status" aria-live="polite"></p>
+
+    <div class="privacy">
+      By continuing, you agree to our
+      <a href="privacy.html">Privacy Policy</a>.
+    </div>
+
+  </div>
+
+  <script type="module">
+
+    import { initializeApp }
+      from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
+
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      sendPasswordResetEmail,
+      updateProfile
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDhigYBT68Dv4pdboLzVYxnLVMK6VUFFWY",
+      authDomain: "number-guss.firebaseapp.com",
+      projectId: "number-guss",
+      storageBucket: "number-guss.firebasestorage.app",
+      messagingSenderId: "471501648483",
+      appId: "1:471501648483:web:3cbe55c24fd4e0c92b3e56",
+      measurementId: "G-4FYB07JSC5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // HTML elements
+    const authForm = document.getElementById("authForm");
+    const loginTab = document.getElementById("loginTab");
+    const signupTab = document.getElementById("signupTab");
+    const nameGroup = document.getElementById("nameGroup");
+    const username = document.getElementById("username");
+    const email = document.getElementById("email");
+    const password = document.getElementById("password");
+    const submitBtn = document.getElementById("submitBtn");
+    const message = document.getElementById("message");
+    const showPassword = document.getElementById("showPassword");
+    const forgotPassword = document.getElementById("forgotPassword");
+
+    let currentMode = "login";
+
+    function showMessage(text, success = false) {
+      message.textContent = text;
+      message.style.color = success ? "#45e6a0" : "#ff8585";
+    }
+
+    function setLoading(loading) {
+      submitBtn.disabled = loading;
+      submitBtn.style.opacity = loading ? "0.6" : "1";
+      submitBtn.textContent = loading
+        ? "Please wait..."
+        : currentMode === "login" ? "Login" : "Create Account";
+    }
+
+    // Login / Signup tab
+    function setMode(mode) {
+      currentMode = mode;
+
+      loginTab.classList.toggle("active", mode === "login");
+      signupTab.classList.toggle("active", mode === "signup");
+
+      nameGroup.classList.toggle("hidden", mode === "login");
+      forgotPassword.classList.toggle("hidden", mode === "signup");
+
+      username.required = mode === "signup";
+      username.disabled = mode === "login";
+
+      password.autocomplete =
+        mode === "login" ? "current-password" : "new-password";
+
+      submitBtn.textContent =
+        mode === "login" ? "Login" : "Create Account";
+
+      showMessage("");
+    }
+
+    loginTab.addEventListener("click", () => setMode("login"));
+    signupTab.addEventListener("click", () => setMode("signup"));
+
+    // Show / Hide password
+    showPassword.addEventListener("click", () => {
+      const hidden = password.type === "password";
+
+      password.type = hidden ? "text" : "password";
+      showPassword.textContent = hidden ? "Hide" : "Show";
+    });
+
+    // Authentication state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.location.replace("home.html");
+      }
+    });
+
+    // Login and signup
+    authForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const emailValue = email.value.trim();
+      const passwordValue = password.value;
+      const usernameValue = username.value.trim();
+
+      if (currentMode === "signup" &&
+          (usernameValue.length < 2 || usernameValue.length > 20)) {
+        showMessage("Username must be 2 to 20 characters.");
+        return;
+      }
+
+      setLoading(true);
+      showMessage("");
+
+      try {
+
+        if (currentMode === "signup") {
+
+          const userCredential =
+            await createUserWithEmailAndPassword(
+              auth,
+              emailValue,
+              passwordValue
+            );
+
+          await updateProfile(userCredential.user, {
+            displayName: usernameValue
+          });
+
+          showMessage("Account created! Opening home...", true);
+
+          window.location.replace("home.html");
+
+        } else {
+
+          await signInWithEmailAndPassword(
+            auth,
+            emailValue,
+            passwordValue
+          );
+
+          showMessage("Login successful! Opening home...", true);
+
+          window.location.replace("home.html");
+        }
+
+      } catch (error) {
+
+        const errorMessages = {
+          "auth/email-already-in-use": "This email already has an account.",
+          "auth/invalid-email": "Please enter a valid email address.",
+          "auth/weak-password": "Password must contain at least 6 characters.",
+          "auth/invalid-credential": "Incorrect email or password.",
+          "auth/network-request-failed": "Network error. Check your internet.",
+          "auth/too-many-requests": "Too many attempts. Please try again later."
+        };
+
+        showMessage(
+          errorMessages[error.code] ||
+          "Something went wrong. Please try again."
+        );
+
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    // Forgot password
+    forgotPassword.addEventListener("click", async (event) => {
+      event.preventDefault();
+
+      const emailValue = email.value.trim();
+
+      if (!emailValue) {
+        showMessage("Enter your email address first.");
+        email.focus();
+        return;
+      }
+
+      try {
+        await sendPasswordResetEmail(auth, emailValue);
+        showMessage("Password reset instructions have been sent.", true);
+
+      } catch (error) {
+        showMessage(
+          error.code === "auth/invalid-email"
+            ? "Please enter a valid email."
+            : "Could not send reset email. Please try again."
+        );
+      }
+    });
+
+    setMode("login");
+
+  </script>
+
+</body>
+</html>

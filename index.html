@@ -1,0 +1,574 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Number Guess - Game</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #07152f, #123c69);
+      color: white;
+      padding: 20px;
+    }
+
+    header {
+      max-width: 850px;
+      margin: 10px auto 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    header h2 {
+      color: #20d5ff;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin: 15px auto;
+      max-width: 850px;
+    }
+
+    nav a {
+      background: #193c63;
+      color: white;
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    nav a:hover {
+      background: #087fa9;
+    }
+
+    .logout {
+      background: #e84b61;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+
+    .game {
+      max-width: 480px;
+      margin: 35px auto;
+      padding: 30px 22px;
+      text-align: center;
+      background: #101f3d;
+      border: 1px solid #294a70;
+      border-radius: 18px;
+      box-shadow: 0 12px 35px #0005;
+    }
+
+    h1 {
+      color: #20d5ff;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      color: #b9c9df;
+      line-height: 1.5;
+      margin-bottom: 25px;
+    }
+
+    .number {
+      font-size: 55px;
+      font-weight: bold;
+      color: #20d5ff;
+      margin: 20px 0;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      gap: 10px;
+      margin: 25px 0;
+    }
+
+    .stat {
+      background: #08172e;
+      padding: 15px;
+      border-radius: 10px;
+      flex: 1;
+    }
+
+    .stat p {
+      color: #aebed3;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .stat strong {
+      color: #20d5ff;
+      font-size: 22px;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px;
+      border: 1px solid #395779;
+      border-radius: 8px;
+      background: #08172e;
+      color: white;
+      font-size: 18px;
+      text-align: center;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #20d5ff;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .primary {
+      width: 100%;
+      padding: 14px;
+      margin-top: 14px;
+      border: none;
+      border-radius: 8px;
+      background: #08a9d5;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .primary:hover {
+      background: #087fa9;
+    }
+
+    .secondary {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: 1px solid #395779;
+      border-radius: 8px;
+      background: #263d5c;
+      color: white;
+      font-size: 15px;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .message {
+      min-height: 55px;
+      margin-top: 20px;
+      font-size: 17px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .instructions {
+      max-width: 480px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #101f3d;
+      border-radius: 12px;
+      color: #b9c9df;
+      line-height: 1.7;
+    }
+
+    .instructions h3 {
+      color: #20d5ff;
+      margin-bottom: 10px;
+    }
+
+    footer {
+      text-align: center;
+      color: #9db3cf;
+      margin: 35px auto 15px;
+      font-size: 13px;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h2>🎯 Number Guess</h2>
+    <button class="logout" id="logoutBtn">Logout</button>
+  </header>
+
+  <nav>
+    <a href="home.html">Home</a>
+    <a href="index.html">Play Game</a>
+    <a href="Leaderboard%20-%20LD.html">Leaderboard</a>
+    <a href="privacy.html">Privacy Policy</a>
+  </nav>
+
+  <main class="game">
+
+    <h1>Number Guess</h1>
+
+    <p class="subtitle">
+      Guess the secret number between 1 and 100!
+    </p>
+
+    <div class="number">🎲</div>
+
+    <div class="stats">
+
+      <div class="stat">
+        <p>Attempts</p>
+        <strong id="attempts">0</strong>
+      </div>
+
+      <div class="stat">
+        <p>Best Score</p>
+        <strong id="score">0</strong>
+      </div>
+
+    </div>
+
+    <form id="guessForm">
+
+      <input
+        type="number"
+        id="guessInput"
+        min="1"
+        max="100"
+        required
+        placeholder="Enter number 1 - 100"
+        autocomplete="off"
+      >
+
+      <button class="primary" id="guessBtn" type="submit">
+        Submit Guess
+      </button>
+
+    </form>
+
+    <p class="message" id="message" role="status" aria-live="polite">
+      Make your first guess!
+    </p>
+
+    <button class="secondary hidden" id="restartBtn">
+      Play Again
+    </button>
+
+    <button class="secondary" id="homeBtn">
+      Back to Home
+    </button>
+
+  </main>
+
+  <section class="instructions">
+
+    <h3>📖 How to Play</h3>
+
+    <p>
+      1. A secret number is selected between 1 and 100.
+    </p>
+
+    <p>
+      2. Enter your guess.
+    </p>
+
+    <p>
+      3. The game tells you whether to guess higher or lower.
+    </p>
+
+    <p>
+      4. Find the secret number to win.
+    </p>
+
+    <p>
+      5. Fewer attempts give you a higher score.
+    </p>
+
+  </section>
+
+  <footer>
+    © 2026 Number Guess
+  </footer>
+
+  <script type="module">
+
+    import {
+      initializeApp
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
+
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
+
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDhigYBT68Dv4pdboLzVYxnLVMK6VUFFWY",
+      authDomain: "number-guss.firebaseapp.com",
+      projectId: "number-guss",
+      storageBucket: "number-guss.firebasestorage.app",
+      messagingSenderId: "471501648483",
+      appId: "1:471501648483:web:3cbe55c24fd4e0c92b3e56",
+      measurementId: "G-4FYB07JSC5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Elements
+    const guessForm = document.getElementById("guessForm");
+    const guessInput = document.getElementById("guessInput");
+    const guessBtn = document.getElementById("guessBtn");
+    const attemptsElement = document.getElementById("attempts");
+    const scoreElement = document.getElementById("score");
+    const messageElement = document.getElementById("message");
+    const restartBtn = document.getElementById("restartBtn");
+    const homeBtn = document.getElementById("homeBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    // Game variables
+    let secretNumber;
+    let attempts;
+    let gameOver;
+    let currentUser;
+    let bestScore = 0;
+
+    // Generate secret number
+    function startGame() {
+
+      secretNumber = Math.floor(Math.random() * 100) + 1;
+
+      attempts = 0;
+      gameOver = false;
+
+      attemptsElement.textContent = "0";
+      scoreElement.textContent = bestScore;
+
+      messageElement.textContent = "Make your first guess!";
+      messageElement.style.color = "#b9c9df";
+
+      guessInput.value = "";
+      guessInput.disabled = false;
+
+      guessBtn.disabled = false;
+      guessBtn.textContent = "Submit Guess";
+
+      restartBtn.classList.add("hidden");
+
+      guessInput.focus();
+    }
+
+    // Update message
+    function showMessage(text, color = "#b9c9df") {
+
+      messageElement.textContent = text;
+      messageElement.style.color = color;
+
+    }
+
+    // Calculate score
+    function calculateScore() {
+
+      const points = 1000 - ((attempts - 1) * 50);
+
+      return Math.max(100, points);
+
+    }
+
+    // Submit score to Firestore
+    async function saveScore(score) {
+
+      if (!currentUser) {
+        showMessage("Please login before saving your score.");
+        return;
+      }
+
+      try {
+
+        const username =
+          currentUser.displayName ||
+          currentUser.email?.split("@")[0] ||
+          "Player";
+
+        await addDoc(collection(db, "leaderboard"), {
+
+          uid: currentUser.uid,
+
+          username: username,
+
+          score: score,
+
+          createdAt: serverTimestamp()
+
+        });
+
+        showMessage(
+          "🎉 You won! Score saved to leaderboard!",
+          "#45e6a0"
+        );
+
+      } catch (error) {
+
+        console.error("Score save error:", error);
+
+        showMessage(
+          "You won, but your score could not be saved. Check Firestore setup.",
+          "#ff8585"
+        );
+
+      }
+
+    }
+
+    // Guess handling
+    guessForm.addEventListener("submit", async (event) => {
+
+      event.preventDefault();
+
+      if (gameOver) {
+        return;
+      }
+
+      const guess = Number(guessInput.value);
+
+      if (!Number.isInteger(guess) || guess < 1 || guess > 100) {
+
+        showMessage(
+          "Enter a whole number between 1 and 100.",
+          "#ff8585"
+        );
+
+        return;
+      }
+
+      attempts++;
+
+      attemptsElement.textContent = attempts;
+
+      if (guess < secretNumber) {
+
+        showMessage("📈 Too low! Guess higher.", "#20d5ff");
+
+      } else if (guess > secretNumber) {
+
+        showMessage("📉 Too high! Guess lower.", "#20d5ff");
+
+      } else {
+
+        gameOver = true;
+
+        const finalScore = calculateScore();
+
+        bestScore = Math.max(bestScore, finalScore);
+
+        scoreElement.textContent = bestScore;
+
+        guessInput.disabled = true;
+        guessBtn.disabled = true;
+
+        guessBtn.textContent = "You Won!";
+
+        restartBtn.classList.remove("hidden");
+
+        showMessage(
+          `🎉 Correct! You guessed it in ${attempts} attempts. Score: ${finalScore}`,
+          "#45e6a0"
+        );
+
+        await saveScore(finalScore);
+
+        return;
+
+      }
+
+      guessInput.value = "";
+      guessInput.focus();
+
+    });
+
+    // Restart game
+    restartBtn.addEventListener("click", () => {
+
+      startGame();
+
+    });
+
+    // Home button
+    homeBtn.addEventListener("click", () => {
+
+      window.location.href = "home.html";
+
+    });
+
+    // Logout
+    logoutBtn.addEventListener("click", async () => {
+
+      logoutBtn.disabled = true;
+
+      try {
+
+        await signOut(auth);
+
+        window.location.replace("login.html");
+
+      } catch (error) {
+
+        console.error(error);
+
+        showMessage("Logout failed. Please try again.", "#ff8585");
+
+        logoutBtn.disabled = false;
+
+      }
+
+    });
+
+    // Firebase login check
+    onAuthStateChanged(auth, (user) => {
+
+      if (!user) {
+
+        window.location.replace("login.html");
+
+        return;
+
+      }
+
+      currentUser = user;
+
+      startGame();
+
+    });
+
+  </script>
+
+</body>
+</html>
