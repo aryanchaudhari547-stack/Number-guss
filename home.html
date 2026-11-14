@@ -167,6 +167,13 @@
     </div>
 
     <div class="card">
+      <div class="emoji">👤</div>
+      <h2>My Profile</h2>
+      <p>Check your level, coins and streak. Buy badges and titles.</p>
+      <button id="profileBtn">Open Profile</button>
+    </div>
+
+    <div class="card">
       <div class="emoji">🔒</div>
       <h2>Privacy Policy</h2>
       <p>Learn how your account information is handled.</p>
@@ -234,6 +241,10 @@
 
     document.getElementById("leaderboardBtn").addEventListener("click", () => {
       window.location.href = "leader.html";
+    });
+
+    document.getElementById("profileBtn").addEventListener("click", () => {
+      window.location.href = "profile.html";
     });
 
     document.getElementById("privacyBtn").addEventListener("click", () => {
