@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -206,6 +205,52 @@
     .hidden {
       display: none;
     }
+
+    .modes {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .mode {
+      flex: 1;
+      padding: 10px 4px;
+      border: 1px solid #395779;
+      border-radius: 10px;
+      background: #08172e;
+      color: #b9c9df;
+      font-size: 14px;
+      font-weight: bold;
+      line-height: 1.4;
+    }
+
+    .mode small {
+      display: block;
+      font-weight: normal;
+      font-size: 11px;
+      opacity: 0.85;
+    }
+
+    .mode.active {
+      border-color: #20d5ff;
+      background: #123c69;
+      color: white;
+    }
+
+    .power-info {
+      margin-top: 14px;
+      font-size: 13px;
+      color: #9db3cf;
+    }
+
+    .power-info.unlocked {
+      color: #f6ca45;
+    }
+
+    .hint-btn {
+      border-color: #f6ca45;
+      color: #f6ca45;
+    }
   </style>
 </head>
 
@@ -227,7 +272,19 @@
 
     <h1>Number Guess</h1>
 
-    <p class="subtitle">
+    <div class="modes" id="modes">
+      <button type="button" class="mode" data-mode="easy">
+        Easy<small>1-50 · x0.5 pts</small>
+      </button>
+      <button type="button" class="mode" data-mode="normal">
+        Normal<small>1-100 · x1 pts</small>
+      </button>
+      <button type="button" class="mode" data-mode="hard">
+        Hard<small>1-500 · 10 tries · x2 pts</small>
+      </button>
+    </div>
+
+    <p class="subtitle" id="subtitle">
       Guess the secret number between 1 and 100!
     </p>
 
@@ -238,6 +295,11 @@
       <div class="stat">
         <p>Attempts</p>
         <strong id="attempts">0</strong>
+      </div>
+
+      <div class="stat">
+        <p>This Game</p>
+        <strong id="lastScore">-</strong>
       </div>
 
       <div class="stat">
@@ -269,6 +331,12 @@
       Make your first guess!
     </p>
 
+    <button class="secondary hint-btn hidden" id="hintBtn" type="button">
+      🔮 Use Oracle Hint (-200 pts)
+    </button>
+
+    <p class="power-info" id="powerInfo"></p>
+
     <button class="secondary hidden" id="restartBtn">
       Play Again
     </button>
@@ -283,24 +351,33 @@
 
     <h3>📖 How to Play</h3>
 
+    <p>1. Pick a difficulty. A secret number is chosen for you.</p>
+
+    <p>2. Enter your guess. The game tells you higher or lower.</p>
+
+    <p>3. Find the secret number to win.</p>
+
     <p>
-      1. A secret number is selected between 1 and 100.
+      4. Scoring: 1000 points for 1 guess, minus 100 for every extra
+      guess (minimum 100). Then it is multiplied by your difficulty:
+      Easy x0.5, Normal x1, Hard x2.
     </p>
 
     <p>
-      2. Enter your guess.
+      5. Hard mode gives you only 10 guesses. Run out and you lose.
+    </p>
+
+    <h3 style="margin-top:16px">⚡ Powers</h3>
+
+    <p>
+      Win a game in <strong>1 guess</strong> to permanently unlock
+      <strong>🔮 Oracle Hint</strong>. Once per game, it shows a small
+      range that contains the secret number. It costs 200 points and
+      does not count as a guess.
     </p>
 
     <p>
-      3. The game tells you whether to guess higher or lower.
-    </p>
-
-    <p>
-      4. Find the secret number to win.
-    </p>
-
-    <p>
-      5. Fewer attempts give you a higher score.
+      The leaderboard shows each player once, with their best score.
     </p>
 
   </section>
@@ -323,8 +400,9 @@
 
     import {
       getFirestore,
-      collection,
-      addDoc,
+      doc,
+      getDoc,
+      setDoc,
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
 
@@ -343,16 +421,30 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // Difficulty modes
+    const MODES = {
+      easy:   { label: "Easy",   max: 50,  limit: null, multiplier: 0.5 },
+      normal: { label: "Normal", max: 100, limit: null, multiplier: 1 },
+      hard:   { label: "Hard",   max: 500, limit: 10,   multiplier: 2 }
+    };
+
+    const HINT_COST = 200;
+
     // Elements
     const guessForm = document.getElementById("guessForm");
     const guessInput = document.getElementById("guessInput");
     const guessBtn = document.getElementById("guessBtn");
     const attemptsElement = document.getElementById("attempts");
     const scoreElement = document.getElementById("score");
+    const lastScoreElement = document.getElementById("lastScore");
     const messageElement = document.getElementById("message");
+    const subtitleElement = document.getElementById("subtitle");
+    const powerInfo = document.getElementById("powerInfo");
+    const hintBtn = document.getElementById("hintBtn");
     const restartBtn = document.getElementById("restartBtn");
     const homeBtn = document.getElementById("homeBtn");
     const logoutBtn = document.getElementById("logoutBtn");
+    const modeButtons = document.querySelectorAll(".mode");
 
     // Game variables
     let secretNumber;
@@ -360,31 +452,9 @@
     let gameOver;
     let currentUser;
     let bestScore = 0;
-
-    // Generate secret number
-    function startGame() {
-
-      secretNumber = Math.floor(Math.random() * 100) + 1;
-
-      attempts = 0;
-      gameOver = false;
-
-      attemptsElement.textContent = "0";
-      scoreElement.textContent = bestScore;
-
-      messageElement.textContent = "Make your first guess!";
-      messageElement.style.color = "#b9c9df";
-
-      guessInput.value = "";
-      guessInput.disabled = false;
-
-      guessBtn.disabled = false;
-      guessBtn.textContent = "Submit Guess";
-
-      restartBtn.classList.add("hidden");
-
-      guessInput.focus();
-    }
+    let mode = "normal";
+    let hintUsed = false;
+    let hasOracle = false;
 
     // Update message
     function showMessage(text, color = "#b9c9df") {
@@ -394,20 +464,175 @@
 
     }
 
-    // Calculate score
-    function calculateScore() {
+    function updateAttempts() {
 
-      const points = 1000 - ((attempts - 1) * 50);
+      const limit = MODES[mode].limit;
 
-      return Math.max(100, points);
+      attemptsElement.textContent =
+        limit ? attempts + "/" + limit : String(attempts);
 
     }
 
-    // Submit score to Firestore
-    async function saveScore(score) {
+    function updateModeButtons() {
+
+      modeButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.mode === mode);
+      });
+
+    }
+
+    function updatePowerUI() {
+
+      if (hasOracle) {
+        powerInfo.textContent = "🔮 Oracle Hint unlocked";
+        powerInfo.classList.add("unlocked");
+      } else {
+        powerInfo.textContent =
+          "🔒 Win a game in 1 guess to unlock a power";
+        powerInfo.classList.remove("unlocked");
+      }
+
+      const canUseHint = hasOracle && !gameOver && !hintUsed;
+
+      hintBtn.classList.toggle("hidden", !hasOracle);
+      hintBtn.disabled = !canUseHint;
+      hintBtn.textContent = hintUsed
+        ? "🔮 Oracle Hint used"
+        : "🔮 Use Oracle Hint (-" + HINT_COST + " pts)";
+
+    }
+
+    // Start a new game
+    function startGame() {
+
+      const config = MODES[mode];
+
+      secretNumber = Math.floor(Math.random() * config.max) + 1;
+
+      attempts = 0;
+      gameOver = false;
+      hintUsed = false;
+
+      updateAttempts();
+      updateModeButtons();
+
+      lastScoreElement.textContent = "-";
+      scoreElement.textContent = bestScore;
+
+      subtitleElement.textContent =
+        "Guess the secret number between 1 and " + config.max + "!";
+
+      showMessage("Make your first guess!");
+
+      guessInput.value = "";
+      guessInput.min = 1;
+      guessInput.max = config.max;
+      guessInput.placeholder = "Enter number 1 - " + config.max;
+      guessInput.disabled = false;
+
+      guessBtn.disabled = false;
+      guessBtn.textContent = "Submit Guess";
+
+      restartBtn.classList.add("hidden");
+
+      updatePowerUI();
+
+      guessInput.focus();
+    }
+
+    // Score: 1000 for 1 guess, -100 per extra guess (min 100),
+    // -200 if the hint was used, then multiplied by the difficulty
+    function calculateScore() {
+
+      let points = Math.max(100, 1000 - ((attempts - 1) * 100));
+
+      if (hintUsed) {
+        points = Math.max(100, points - HINT_COST);
+      }
+
+      return Math.round(points * MODES[mode].multiplier);
+
+    }
+
+    // Load saved best score and powers
+    async function loadPlayerData() {
+
+      try {
+
+        const scoreSnap = await getDoc(
+          doc(db, "leaderboard", currentUser.uid)
+        );
+
+        bestScore = scoreSnap.exists()
+          ? Number(scoreSnap.data().score) || 0
+          : 0;
+
+      } catch (error) {
+
+        console.error("Best score load error:", error);
+
+        bestScore = 0;
+
+      }
+
+      try {
+
+        const playerSnap = await getDoc(
+          doc(db, "players", currentUser.uid)
+        );
+
+        hasOracle =
+          playerSnap.exists() && playerSnap.data().oracle === true;
+
+      } catch (error) {
+
+        console.error("Powers load error:", error);
+
+        hasOracle = false;
+
+      }
+
+    }
+
+    // Unlock the Oracle Hint power
+    async function unlockOracle() {
+
+      try {
+
+        await setDoc(
+          doc(db, "players", currentUser.uid),
+          { oracle: true, unlockedAt: serverTimestamp() },
+          { merge: true }
+        );
+
+        hasOracle = true;
+
+        return true;
+
+      } catch (error) {
+
+        console.error("Power unlock error:", error);
+
+        return false;
+
+      }
+
+    }
+
+    // Save score: one leaderboard entry per player (best score only)
+    async function saveScore(score, unlockedPower) {
+
+      let summary =
+        "🎉 Correct on " + MODES[mode].label + "! " +
+        attempts + (attempts === 1 ? " guess" : " guesses") +
+        ". Score: " + score + ".";
+
+      if (unlockedPower) {
+        summary += " 🔓 POWER UNLOCKED: Oracle Hint!";
+      }
 
       if (!currentUser) {
-        showMessage("Please login before saving your score.");
+        showMessage(summary + " Please login to save your score.");
         return;
       }
 
@@ -418,29 +643,51 @@
           currentUser.email?.split("@")[0] ||
           "Player";
 
-        await addDoc(collection(db, "leaderboard"), {
+        const ref = doc(db, "leaderboard", currentUser.uid);
 
-          uid: currentUser.uid,
+        const snap = await getDoc(ref);
 
-          username: username,
+        const savedBest = snap.exists()
+          ? Number(snap.data().score) || 0
+          : 0;
 
-          score: score,
+        if (score > savedBest) {
 
-          createdAt: serverTimestamp()
+          await setDoc(ref, {
+            uid: currentUser.uid,
+            username: username,
+            score: score,
+            attempts: attempts,
+            mode: MODES[mode].label,
+            createdAt: serverTimestamp()
+          });
 
-        });
+          bestScore = score;
+          scoreElement.textContent = bestScore;
 
-        showMessage(
-          "🎉 You won! Score saved to leaderboard!",
-          "#45e6a0"
-        );
+          showMessage(
+            summary + " 🏆 New best score! Leaderboard updated.",
+            "#45e6a0"
+          );
+
+        } else {
+
+          bestScore = savedBest;
+          scoreElement.textContent = bestScore;
+
+          showMessage(
+            summary + " Your best score is still " + savedBest + ".",
+            "#45e6a0"
+          );
+
+        }
 
       } catch (error) {
 
         console.error("Score save error:", error);
 
         showMessage(
-          "You won, but your score could not be saved. Check Firestore setup.",
+          summary + " But your score could not be saved. Check Firestore rules.",
           "#ff8585"
         );
 
@@ -457,12 +704,13 @@
         return;
       }
 
+      const config = MODES[mode];
       const guess = Number(guessInput.value);
 
-      if (!Number.isInteger(guess) || guess < 1 || guess > 100) {
+      if (!Number.isInteger(guess) || guess < 1 || guess > config.max) {
 
         showMessage(
-          "Enter a whole number between 1 and 100.",
+          "Enter a whole number between 1 and " + config.max + ".",
           "#ff8585"
         );
 
@@ -471,25 +719,15 @@
 
       attempts++;
 
-      attemptsElement.textContent = attempts;
+      updateAttempts();
 
-      if (guess < secretNumber) {
-
-        showMessage("📈 Too low! Guess higher.", "#20d5ff");
-
-      } else if (guess > secretNumber) {
-
-        showMessage("📉 Too high! Guess lower.", "#20d5ff");
-
-      } else {
+      if (guess === secretNumber) {
 
         gameOver = true;
 
         const finalScore = calculateScore();
 
-        bestScore = Math.max(bestScore, finalScore);
-
-        scoreElement.textContent = bestScore;
+        lastScoreElement.textContent = finalScore;
 
         guessInput.disabled = true;
         guessBtn.disabled = true;
@@ -498,12 +736,52 @@
 
         restartBtn.classList.remove("hidden");
 
-        showMessage(
-          `🎉 Correct! You guessed it in ${attempts} attempts. Score: ${finalScore}`,
-          "#45e6a0"
-        );
+        updatePowerUI();
 
-        await saveScore(finalScore);
+        showMessage("Saving your score...");
+
+        // Winning in 1 guess unlocks the Oracle Hint
+        let unlockedPower = false;
+
+        if (attempts === 1 && !hasOracle && currentUser) {
+          unlockedPower = await unlockOracle();
+          updatePowerUI();
+        }
+
+        await saveScore(finalScore, unlockedPower);
+
+        return;
+
+      }
+
+      if (guess < secretNumber) {
+
+        showMessage("📈 Too low! Guess higher.", "#20d5ff");
+
+      } else {
+
+        showMessage("📉 Too high! Guess lower.", "#20d5ff");
+
+      }
+
+      // Hard mode: limited guesses
+      if (config.limit && attempts >= config.limit) {
+
+        gameOver = true;
+
+        guessInput.disabled = true;
+        guessBtn.disabled = true;
+
+        guessBtn.textContent = "Game Over";
+
+        restartBtn.classList.remove("hidden");
+
+        updatePowerUI();
+
+        showMessage(
+          "💀 Out of guesses! The number was " + secretNumber + ".",
+          "#ff8585"
+        );
 
         return;
 
@@ -511,6 +789,66 @@
 
       guessInput.value = "";
       guessInput.focus();
+
+    });
+
+    // Oracle Hint power
+    hintBtn.addEventListener("click", () => {
+
+      if (!hasOracle || gameOver || hintUsed) {
+        return;
+      }
+
+      const max = MODES[mode].max;
+      const size = Math.ceil(max / 5);
+
+      let low = secretNumber - Math.floor(Math.random() * size);
+      low = Math.max(1, Math.min(low, max - size + 1));
+
+      const high = Math.min(max, low + size - 1);
+
+      hintUsed = true;
+
+      updatePowerUI();
+
+      showMessage(
+        "🔮 The secret number is between " + low + " and " + high +
+        ". (-" + HINT_COST + " pts)",
+        "#f6ca45"
+      );
+
+      guessInput.focus();
+
+    });
+
+    // Difficulty buttons
+    modeButtons.forEach((button) => {
+
+      button.addEventListener("click", () => {
+
+        const newMode = button.dataset.mode;
+
+        if (newMode === mode) {
+          return;
+        }
+
+        if (attempts > 0 && !gameOver) {
+
+          const ok = confirm(
+            "Change difficulty? Your current game will restart."
+          );
+
+          if (!ok) {
+            return;
+          }
+
+        }
+
+        mode = newMode;
+
+        startGame();
+
+      });
 
     });
 
@@ -552,7 +890,7 @@
     });
 
     // Firebase login check
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
 
       if (!user) {
 
@@ -563,6 +901,8 @@
       }
 
       currentUser = user;
+
+      await loadPlayerData();
 
       startGame();
 

@@ -280,6 +280,9 @@
     <section class="table-box">
 
       <h2>🌟 Top 50 Players</h2>
+      <p class="status" style="padding-top:0">
+        Best score per player. 1000 points for 1 guess, minus 100 for each extra guess (minimum 100), then x0.5 on Easy and x2 on Hard.
+      </p>
 
       <table>
         <thead>
@@ -287,12 +290,13 @@
             <th>Rank</th>
             <th>Username</th>
             <th>Score</th>
+            <th>Mode</th>
           </tr>
         </thead>
 
         <tbody id="leaderboardBody">
           <tr>
-            <td colspan="3" class="status">
+            <td colspan="4" class="status">
               Loading leaderboard...
             </td>
           </tr>
@@ -433,7 +437,7 @@
         const row = document.createElement("tr");
         const cell = document.createElement("td");
 
-        cell.colSpan = 3;
+        cell.colSpan = 4;
         cell.className = "status";
         cell.textContent = "No scores yet. Be the first to play!";
 
@@ -462,7 +466,10 @@
         scoreCell.className = "score";
         scoreCell.textContent = Number(player.score).toLocaleString();
 
-        row.append(rankCell, nameCell, scoreCell);
+        const modeCell = document.createElement("td");
+        modeCell.textContent = safeText(player.mode || "Normal");
+
+        row.append(rankCell, nameCell, scoreCell, modeCell);
         leaderboardBody.appendChild(row);
 
       });
@@ -480,10 +487,11 @@
 
       status.textContent = "Loading scores...";
 
+      // Fetch extra rows, then keep only each player's best score
       const leaderboardQuery = query(
         collection(db, "leaderboard"),
         orderBy("score", "desc"),
-        limit(50)
+        limit(300)
       );
 
       unsubscribe = onSnapshot(
@@ -491,9 +499,21 @@
 
         (snapshot) => {
 
-          const players = snapshot.docs.map(doc => ({
-            ...doc.data()
-          }));
+          const seen = new Set();
+          const players = [];
+
+          // Sorted high to low, so the first entry per player is their best
+          snapshot.docs.forEach(d => {
+            const data = d.data();
+            const key = data.uid || data.username || d.id;
+
+            if (seen.has(key)) return;
+
+            seen.add(key);
+            players.push(data);
+          });
+
+          players.splice(50);
 
           displayLeaderboard(players);
 
