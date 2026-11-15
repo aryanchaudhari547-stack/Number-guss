@@ -1,9 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Number Guess - Home</title>
+
   <style>
     * {
       margin: 0;
@@ -11,12 +13,14 @@
       box-sizing: border-box;
       font-family: Arial, sans-serif;
     }
+
     body {
       min-height: 100vh;
       background: linear-gradient(135deg, #07152f, #123c69);
       color: white;
       padding: 20px;
     }
+
     header {
       display: flex;
       justify-content: space-between;
@@ -26,9 +30,11 @@
       max-width: 1000px;
       margin: 10px auto 40px;
     }
+
     header h2 {
       color: #20d5ff;
     }
+
     .logout {
       border: none;
       background: #e84b61;
@@ -38,23 +44,28 @@
       cursor: pointer;
       font-weight: bold;
     }
+
     .welcome {
       text-align: center;
       margin: 35px auto;
     }
+
     .welcome h1 {
       font-size: 35px;
       color: #20d5ff;
       margin-bottom: 12px;
     }
+
     .welcome p {
       color: #c6d8ef;
       font-size: 16px;
     }
+
     .username {
       color: #ffffff;
       font-weight: bold;
     }
+
     .cards {
       max-width: 1000px;
       margin: 35px auto;
@@ -62,6 +73,7 @@
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 22px;
     }
+
     .card {
       background: #101f3d;
       border: 1px solid #294a70;
@@ -70,23 +82,28 @@
       text-align: center;
       transition: transform 0.2s;
     }
+
     .card:hover {
       transform: translateY(-5px);
     }
+
     .card .emoji {
       font-size: 48px;
       margin-bottom: 15px;
     }
+
     .card h2 {
       margin-bottom: 12px;
       color: #20d5ff;
     }
+
     .card p {
       color: #b9c9df;
       line-height: 1.5;
       min-height: 48px;
       margin-bottom: 20px;
     }
+
     .card button {
       width: 100%;
       padding: 13px;
@@ -98,15 +115,18 @@
       font-weight: bold;
       cursor: pointer;
     }
+
     .card button:hover {
       background: #087fa9;
     }
+
     footer {
       text-align: center;
       margin: 50px auto 15px;
       color: #9db3cf;
       font-size: 13px;
     }
+
     footer a {
       color: #20d5ff;
       text-decoration: none;
@@ -114,11 +134,14 @@
     }
   </style>
 </head>
+
 <body>
+
   <header>
     <h2>🎯 Number Guess</h2>
     <button class="logout" id="logoutBtn">Logout</button>
   </header>
+
   <section class="welcome">
     <h1>Welcome!</h1>
     <p>
@@ -126,53 +149,73 @@
       Ready to play?
     </p>
   </section>
+
   <section class="cards">
+
     <div class="card">
       <div class="emoji">🎮</div>
       <h2>Play Game</h2>
       <p>Guess the secret number and test your skills.</p>
       <button id="gameBtn">Start Playing</button>
     </div>
+
     <div class="card">
       <div class="emoji">❌⭕</div>
       <h2>Tic Tac Toe</h2>
       <p>Play against the computer or challenge a friend.</p>
       <button id="tikBtn">Play Tic Tac Toe</button>
     </div>
+
     <div class="card">
       <div class="emoji">🏆</div>
       <h2>Leaderboard</h2>
       <p>See the top players and their scores.</p>
       <button id="leaderboardBtn">View Leaderboard</button>
     </div>
+
+    <div class="card">
+      <div class="emoji">🛍️</div>
+      <h2>Shop</h2>
+      <p>Spend your coins on badges, titles, avatars, themes and more.</p>
+      <button id="shopBtn">Open Shop</button>
+    </div>
+
     <div class="card">
       <div class="emoji">👤</div>
       <h2>My Profile</h2>
-      <p>Check your level, coins and streak. Buy badges and titles.</p>
+      <p>See your level, coins, streak and stats.</p>
       <button id="profileBtn">Open Profile</button>
     </div>
+
     <div class="card">
       <div class="emoji">🔒</div>
       <h2>Privacy Policy</h2>
       <p>Learn how your account information is handled.</p>
       <button id="privacyBtn">Read Policy</button>
     </div>
+
   </section>
+
   <footer>
     <p>© 2026 Number Guess</p>
     <br>
     <a href="privacy.html">Privacy Policy</a>
     <a href="tik.html">Tic Tac Toe</a>
     <a href="leader.html">Leaderboard</a>
+    <a href="shop.html">Shop</a>
   </footer>
+
   <script type="module">
+
     import { initializeApp }
       from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
+
     import {
       getAuth,
       onAuthStateChanged,
       signOut
     } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyDhigYBT68Dv4pdboLzVYxnLVMK6VUFFWY",
       authDomain: "number-guss.firebaseapp.com",
@@ -182,52 +225,75 @@
       appId: "1:471501648483:web:3cbe55c24fd4e0c92b3e56",
       measurementId: "G-4FYB07JSC5"
     };
+
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+
     const usernameElement = document.getElementById("username");
     const logoutBtn = document.getElementById("logoutBtn");
+
     let currentUser = null;
+
     // Check login status
     onAuthStateChanged(auth, (user) => {
+
       if (!user) {
         window.location.replace("login.html");
         return;
       }
+
       currentUser = user;
+
       usernameElement.textContent =
         user.displayName ||
         user.email?.split("@")[0] ||
         "Player";
     });
+
     // Navigate to pages
     document.getElementById("gameBtn").addEventListener("click", () => {
       window.location.href = "index.html";
     });
+
     document.getElementById("tikBtn").addEventListener("click", () => {
       window.location.href = "tik.html";
     });
+
     document.getElementById("leaderboardBtn").addEventListener("click", () => {
       window.location.href = "leader.html";
     });
+
+    document.getElementById("shopBtn").addEventListener("click", () => {
+      window.location.href = "shop.html";
+    });
+
     document.getElementById("profileBtn").addEventListener("click", () => {
       window.location.href = "profile.html";
     });
+
     document.getElementById("privacyBtn").addEventListener("click", () => {
       window.location.href = "privacy.html";
     });
+
     // Logout
     logoutBtn.addEventListener("click", async () => {
+
       logoutBtn.disabled = true;
       logoutBtn.textContent = "Logging out...";
+
       try {
         await signOut(auth);
         window.location.replace("login.html");
+
       } catch (error) {
         alert("Logout failed. Please try again.");
         logoutBtn.disabled = false;
         logoutBtn.textContent = "Logout";
       }
+
     });
+
   </script>
+
 </body>
 </html>
