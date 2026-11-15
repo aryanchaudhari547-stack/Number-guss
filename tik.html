@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Number Guess - Tic Tac Toe</title>
+
   <style>
     * {
       margin: 0;
@@ -11,12 +13,14 @@
       box-sizing: border-box;
       font-family: Arial, sans-serif;
     }
+
     body {
       min-height: 100vh;
       background: linear-gradient(135deg, #07152f, #123c69);
       color: white;
       padding: 20px;
     }
+
     header {
       max-width: 850px;
       margin: 10px auto 25px;
@@ -26,9 +30,11 @@
       gap: 12px;
       flex-wrap: wrap;
     }
+
     header h2 {
       color: #20d5ff;
     }
+
     nav {
       display: flex;
       flex-wrap: wrap;
@@ -37,6 +43,7 @@
       margin: 15px auto;
       max-width: 850px;
     }
+
     nav a {
       background: #193c63;
       color: white;
@@ -45,9 +52,11 @@
       border-radius: 8px;
       font-size: 14px;
     }
+
     nav a:hover {
       background: #087fa9;
     }
+
     .logout {
       background: #e84b61;
       color: white;
@@ -56,6 +65,7 @@
       padding: 10px 15px;
       cursor: pointer;
     }
+
     .game {
       max-width: 480px;
       margin: 30px auto;
@@ -66,21 +76,25 @@
       border-radius: 18px;
       box-shadow: 0 12px 35px #0005;
     }
+
     h1 {
       color: #20d5ff;
       margin-bottom: 18px;
     }
+
     .row {
       display: flex;
       gap: 8px;
       margin-bottom: 12px;
     }
+
     .row-label {
       color: #9db3cf;
       font-size: 13px;
       margin: 6px 0 6px;
       text-align: left;
     }
+
     .opt {
       flex: 1;
       padding: 11px 4px;
@@ -92,35 +106,42 @@
       font-weight: bold;
       cursor: pointer;
     }
+
     .opt.active {
       border-color: #20d5ff;
       background: #123c69;
       color: white;
     }
+
     .hidden {
       display: none;
     }
+
     .scores {
       display: flex;
       gap: 10px;
       margin: 20px 0;
     }
+
     .score-box {
       flex: 1;
       background: #08172e;
       border-radius: 10px;
       padding: 12px 6px;
     }
+
     .score-box p {
       color: #aebed3;
       font-size: 12px;
       margin-bottom: 6px;
       overflow-wrap: anywhere;
     }
+
     .score-box strong {
       color: #20d5ff;
       font-size: 24px;
     }
+
     .status {
       min-height: 30px;
       margin-bottom: 14px;
@@ -128,6 +149,21 @@
       font-weight: bold;
       color: #b9c9df;
     }
+
+    .note {
+      min-height: 20px;
+      margin: -6px 0 14px;
+      font-size: 14px;
+      color: #f6ca45;
+    }
+
+    .info {
+      color: #9db3cf;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+
     .board {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -135,6 +171,7 @@
       width: min(100%, 340px);
       margin: 0 auto 20px;
     }
+
     .cell {
       aspect-ratio: 1 / 1;
       border: 2px solid #395779;
@@ -149,26 +186,33 @@
       justify-content: center;
       transition: background 0.15s, transform 0.1s;
     }
+
     .cell:hover:not(:disabled) {
       background: #123c69;
     }
+
     .cell:active:not(:disabled) {
       transform: scale(0.96);
     }
+
     .cell:disabled {
       cursor: not-allowed;
     }
+
     .cell.x {
       color: #20d5ff;
     }
+
     .cell.o {
       color: #f6ca45;
     }
+
     .cell.win {
       background: #1f8f66;
       border-color: #45e6a0;
       color: white;
     }
+
     .secondary {
       width: 100%;
       padding: 12px;
@@ -180,6 +224,7 @@
       font-size: 15px;
       cursor: pointer;
     }
+
     .primary {
       width: 100%;
       padding: 14px;
@@ -191,9 +236,11 @@
       font-weight: bold;
       cursor: pointer;
     }
+
     .primary:hover {
       background: #087fa9;
     }
+
     footer {
       text-align: center;
       color: #9db3cf;
@@ -202,11 +249,14 @@
     }
   </style>
 </head>
+
 <body>
+
   <header>
     <h2>🎯 Number Guess</h2>
     <button class="logout" id="logoutBtn">Logout</button>
   </header>
+
   <nav>
     <a href="home.html">Home</a>
     <a href="index.html">Play Game</a>
@@ -215,26 +265,34 @@
     <a href="profile.html">Profile</a>
     <a href="privacy.html">Privacy Policy</a>
   </nav>
+
   <main class="game">
+
     <h1>❌ Tic Tac Toe ⭕</h1>
+
     <div class="row-label">Game mode</div>
     <div class="row" id="modeRow">
       <button class="opt" data-mode="ai">1 vs Computer</button>
       <button class="opt" data-mode="pvp">1 vs 1</button>
     </div>
+
     <div id="aiOptions">
+
       <div class="row-label">Computer level</div>
       <div class="row" id="levelRow">
         <button class="opt" data-level="easy">Easy</button>
         <button class="opt" data-level="medium">Medium</button>
         <button class="opt" data-level="hard">Hard</button>
       </div>
+
       <div class="row-label">You play as (X goes first)</div>
       <div class="row" id="sideRow">
         <button class="opt" data-side="X">❌ X</button>
         <button class="opt" data-side="O">⭕ O</button>
       </div>
+
     </div>
+
     <div class="scores">
       <div class="score-box">
         <p id="labelX">You (X)</p>
@@ -249,12 +307,25 @@
         <strong id="scoreO">0</strong>
       </div>
     </div>
+
     <p class="status" id="status" role="status" aria-live="polite"></p>
+
+    <p class="note" id="rewardNote"></p>
+
     <div class="board" id="board"></div>
+
+    <p class="info">
+      Your wins against the computer are saved to your profile.
+      Win on <strong>Hard</strong> to earn 3 🪙 per win. Easy, Medium
+      and 1 vs 1 give no coins.
+    </p>
+
     <button class="primary" id="newRoundBtn">New Round</button>
     <button class="secondary" id="resetBtn">Reset Scores</button>
     <button class="secondary" id="homeBtn">Back to Home</button>
+
   </main>
+
   <footer>
     © 2026 Number Guess
   </footer>
@@ -271,6 +342,13 @@
       signOut
     } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
 
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
+
     // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyDhigYBT68Dv4pdboLzVYxnLVMK6VUFFWY",
@@ -284,10 +362,18 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Coins for a Hard win against the computer
+    const HARD_WIN_COINS = 3;
+
+    // Hard is strong but not perfect: it makes a random move this often
+    const HARD_MISTAKE_CHANCE = 0.2;
 
     // Elements
     const boardEl = document.getElementById("board");
     const statusEl = document.getElementById("status");
+    const rewardNoteEl = document.getElementById("rewardNote");
     const aiOptions = document.getElementById("aiOptions");
     const labelX = document.getElementById("labelX");
     const labelO = document.getElementById("labelO");
@@ -320,28 +406,39 @@
     let human = "X";        // your symbol in 1 vs Computer
     let scores = { X: 0, O: 0, draw: 0 };
     let roundId = 0;        // stops old computer moves after a reset
+    let currentUser = null;
 
     // ---------- Game logic ----------
 
     // Returns { winner, line } or null
     function findWinner(b) {
+
       for (const line of LINES) {
+
         const [a, c, d] = line;
+
         if (b[a] && b[a] === b[c] && b[a] === b[d]) {
           return { winner: b[a], line: line };
         }
+
       }
+
       return null;
+
     }
 
     function emptyCells(b) {
+
       const cells = [];
+
       b.forEach((value, index) => {
         if (!value) {
           cells.push(index);
         }
       });
+
       return cells;
+
     }
 
     function other(symbol) {
@@ -350,37 +447,58 @@
 
     // Finds a cell where `symbol` would win right now
     function findWinningMove(b, symbol) {
+
       for (const cell of emptyCells(b)) {
+
         b[cell] = symbol;
+
         const result = findWinner(b);
+
         b[cell] = "";
+
         if (result && result.winner === symbol) {
           return cell;
         }
+
       }
+
       return -1;
+
     }
 
     // Minimax: the computer never loses on Hard
     function minimax(b, turn, cpu, depth) {
+
       const result = findWinner(b);
+
       if (result) {
         return result.winner === cpu ? 10 - depth : depth - 10;
       }
+
       const moves = emptyCells(b);
+
       if (moves.length === 0) {
         return 0;
       }
+
       let best = turn === cpu ? -Infinity : Infinity;
+
       for (const move of moves) {
+
         b[move] = turn;
+
         const score = minimax(b, other(turn), cpu, depth + 1);
+
         b[move] = "";
+
         best = turn === cpu
           ? Math.max(best, score)
           : Math.min(best, score);
+
       }
+
       return best;
+
     }
 
     function randomOf(list) {
@@ -389,137 +507,282 @@
 
     // Choose the computer's move
     function pickMove() {
+
       const cpu = other(human);
       const moves = emptyCells(board);
+
       if (level === "easy") {
         return randomOf(moves);
       }
+
       if (level === "medium") {
+
         // Win if possible, then block, then center, then random
         const win = findWinningMove(board, cpu);
+
         if (win >= 0) {
           return win;
         }
+
         const block = findWinningMove(board, human);
+
         if (block >= 0) {
           return block;
         }
+
         if (!board[4]) {
           return 4;
         }
+
+        return randomOf(moves);
+
+      }
+
+      // Hard: sometimes makes a random mistake so it can be beaten
+      if (Math.random() < HARD_MISTAKE_CHANCE) {
         return randomOf(moves);
       }
-      // Hard: try every move and keep the best ones
+
+      // Otherwise try every move and keep the best ones
       let bestScore = -Infinity;
       let bestMoves = [];
+
       for (const move of moves) {
+
         board[move] = cpu;
+
         const score = minimax(board, human, cpu, 1);
+
         board[move] = "";
+
         if (score > bestScore) {
           bestScore = score;
           bestMoves = [move];
         } else if (score === bestScore) {
           bestMoves.push(move);
         }
+
       }
+
       return randomOf(bestMoves);
+
     }
 
     // ---------- Names and text ----------
     function nameOf(symbol) {
+
       if (mode === "ai") {
         return symbol === human ? "You" : "Computer";
       }
+
       return symbol === "X" ? "Player 1" : "Player 2";
+
     }
 
     function updateLabels() {
+
       labelX.textContent = nameOf("X") + " (X)";
       labelO.textContent = nameOf("O") + " (O)";
+
     }
 
     function updateScores() {
+
       scoreXEl.textContent = scores.X;
       scoreOEl.textContent = scores.O;
       scoreDrawEl.textContent = scores.draw;
+
     }
 
     function setActive(buttons, attribute, value) {
+
       buttons.forEach((button) => {
         button.classList.toggle(
           "active",
           button.dataset[attribute] === value
         );
       });
+
     }
 
     function updateOptionButtons() {
+
       setActive(modeButtons, "mode", mode);
       setActive(levelButtons, "level", level);
       setActive(sideButtons, "side", human);
+
       aiOptions.classList.toggle("hidden", mode !== "ai");
+
     }
 
     function showTurn() {
+
       if (mode === "ai" && current !== human) {
         statusEl.textContent = "💻 Computer is thinking...";
         return;
       }
+
       statusEl.textContent = mode === "ai"
         ? "Your turn (" + current + ")"
         : nameOf(current) + "'s turn (" + current + ")";
+
     }
 
     // ---------- Drawing the board ----------
     function buildBoard() {
+
       boardEl.replaceChildren();
+
       for (let i = 0; i < 9; i++) {
+
         const cell = document.createElement("button");
+
         cell.className = "cell";
         cell.type = "button";
         cell.dataset.index = i;
         cell.setAttribute("aria-label", "Cell " + (i + 1));
+
         boardEl.appendChild(cell);
+
       }
+
     }
 
     function drawBoard(winLine) {
+
       const cells = boardEl.children;
+
       for (let i = 0; i < 9; i++) {
+
         const cell = cells[i];
         const value = board[i];
+
         cell.textContent = value === "X" ? "❌" : value === "O" ? "⭕" : "";
+
         cell.classList.toggle("x", value === "X");
         cell.classList.toggle("o", value === "O");
         cell.classList.toggle(
           "win",
           Boolean(winLine && winLine.includes(i))
         );
+
         cell.disabled = gameOver || Boolean(value);
+
       }
+
+    }
+
+    // ---------- Saving results to your profile ----------
+    // outcome: "win", "loss" or "draw" (only used in 1 vs Computer)
+    async function saveResult(playedMode, playedLevel, outcome) {
+
+      if (!currentUser) {
+        return;
+      }
+
+      try {
+
+        const ref = doc(db, "players", currentUser.uid);
+
+        const snap = await getDoc(ref);
+
+        const data = snap.exists() ? snap.data() : {};
+
+        const num = (key) => Number(data[key]) || 0;
+
+        const changes = {};
+
+        let note = "";
+
+        if (playedMode === "pvp") {
+
+          changes.tttPvpGames = num("tttPvpGames") + 1;
+
+        } else if (outcome === "win") {
+
+          const key = playedLevel === "easy"
+            ? "tttWinsEasy"
+            : playedLevel === "medium"
+              ? "tttWinsMedium"
+              : "tttWinsHard";
+
+          changes[key] = num(key) + 1;
+
+          if (playedLevel === "hard") {
+
+            changes.coins = num("coins") + HARD_WIN_COINS;
+
+            note = "🪙 +" + HARD_WIN_COINS + " coins for beating Hard!";
+
+          } else {
+
+            note = "Win saved. (No coins on Easy or Medium)";
+
+          }
+
+        } else if (outcome === "loss") {
+
+          changes.tttLosses = num("tttLosses") + 1;
+
+        } else {
+
+          changes.tttDraws = num("tttDraws") + 1;
+
+        }
+
+        await setDoc(ref, changes, { merge: true });
+
+        rewardNoteEl.textContent = note;
+
+      } catch (error) {
+
+        console.error("Tic tac toe save error:", error);
+
+        rewardNoteEl.textContent =
+          "Could not save to your profile. Check Firestore rules.";
+
+      }
+
     }
 
     // ---------- Playing ----------
     function startRound() {
+
       roundId++;
+
+      rewardNoteEl.textContent = "";
+
       board = Array(9).fill("");
       current = "X";
       gameOver = false;
       busy = false;
+
       drawBoard(null);
       showTurn();
+
       // If you play as O, the computer goes first
       if (mode === "ai" && human === "O") {
         computerTurn();
       }
+
     }
 
     function finishRound(result) {
+
+      const outcome = !result
+        ? "draw"
+        : result.winner === human ? "win" : "loss";
+
+      saveResult(mode, level, outcome);
+
       gameOver = true;
+
       if (result) {
+
         scores[result.winner]++;
+
         drawBoard(result.line);
+
         if (mode === "ai") {
           statusEl.textContent = result.winner === human
             ? "🎉 You win!"
@@ -528,70 +791,103 @@
           statusEl.textContent =
             "🎉 " + nameOf(result.winner) + " (" + result.winner + ") wins!";
         }
+
       } else {
+
         scores.draw++;
+
         drawBoard(null);
+
         statusEl.textContent = "🤝 It's a draw!";
+
       }
+
       updateScores();
+
     }
 
     function place(index) {
+
       board[index] = current;
+
       const result = findWinner(board);
+
       if (result) {
         finishRound(result);
         return;
       }
+
       if (emptyCells(board).length === 0) {
         finishRound(null);
         return;
       }
+
       current = other(current);
+
       drawBoard(null);
       showTurn();
+
       if (mode === "ai" && current !== human) {
         computerTurn();
       }
+
     }
 
     function computerTurn() {
+
       busy = true;
+
       const myRound = roundId;
+
       setTimeout(() => {
+
         // Ignore if the round was reset while the computer was thinking
         if (myRound !== roundId || gameOver) {
           return;
         }
+
         busy = false;
+
         place(pickMove());
+
       }, 450);
+
     }
 
     // Click on a cell
     boardEl.addEventListener("click", (event) => {
+
       const cell = event.target.closest(".cell");
+
       if (!cell || gameOver || busy) {
         return;
       }
+
       if (mode === "ai" && current !== human) {
         return;
       }
+
       const index = Number(cell.dataset.index);
+
       if (board[index]) {
         return;
       }
+
       place(index);
+
     });
 
     // ---------- Settings ----------
     // Changing a setting resets the scores and starts a new round
     function applySettings() {
+
       scores = { X: 0, O: 0, draw: 0 };
+
       updateOptionButtons();
       updateLabels();
       updateScores();
       startRound();
+
     }
 
     modeButtons.forEach((button) => {
@@ -629,15 +925,25 @@
 
     // Logout
     logoutBtn.addEventListener("click", async () => {
+
       logoutBtn.disabled = true;
+
       try {
+
         await signOut(auth);
+
         window.location.replace("login.html");
+
       } catch (error) {
+
         console.error(error);
+
         statusEl.textContent = "Logout failed. Please try again.";
+
         logoutBtn.disabled = false;
+
       }
+
     });
 
     // Start
@@ -646,9 +952,14 @@
 
     // Login check
     onAuthStateChanged(auth, (user) => {
+
       if (!user) {
         window.location.replace("login.html");
+        return;
       }
+
+      currentUser = user;
+
     });
 
   </script>
