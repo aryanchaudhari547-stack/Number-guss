@@ -120,6 +120,15 @@
       background: #087fa9;
     }
 
+    .card.locked {
+      opacity: 0.75;
+    }
+
+    .card button:disabled {
+      background: #395779;
+      cursor: not-allowed;
+    }
+
     footer {
       text-align: center;
       margin: 50px auto 15px;
@@ -167,6 +176,27 @@
     </div>
 
     <div class="card">
+      <div class="emoji">🔴🟡</div>
+      <h2>Connect 4</h2>
+      <p>Drop discs and line up four in a row. Computer or 1 vs 1.</p>
+      <button id="fourBtn">Play Connect 4</button>
+    </div>
+
+    <div class="card">
+      <div class="emoji">🔷🔶</div>
+      <h2>Dots &amp; Boxes</h2>
+      <p>Close the most boxes. 4×4, 6×6 or 10×10 grids.</p>
+      <button id="dotsBtn">Play Dots &amp; Boxes</button>
+    </div>
+
+    <div class="card" id="mazeCard">
+      <div class="emoji">🧩</div>
+      <h2>Mini Maze</h2>
+      <p id="mazeText">50 mazes to escape. Unlocks at Level 7.</p>
+      <button id="mazeBtn" disabled>🔒 Checking level...</button>
+    </div>
+
+    <div class="card">
       <div class="emoji">🏆</div>
       <h2>Leaderboard</h2>
       <p>See the top players and their scores.</p>
@@ -201,6 +231,8 @@
     <br>
     <a href="privacy.html">Privacy Policy</a>
     <a href="tik.html">Tic Tac Toe</a>
+    <a href="four.html">Connect 4</a>
+    <a href="dots.html">Dots &amp; Boxes</a>
     <a href="leader.html">Leaderboard</a>
     <a href="shop.html">Shop</a>
   </footer>
@@ -216,6 +248,12 @@
       signOut
     } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
 
+    import {
+      getFirestore,
+      doc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyDhigYBT68Dv4pdboLzVYxnLVMK6VUFFWY",
       authDomain: "number-guss.firebaseapp.com",
@@ -228,6 +266,61 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Player level needed to open the Mini Maze
+    const MAZE_UNLOCK_LEVEL = 7;
+
+    const mazeCard = document.getElementById("mazeCard");
+    const mazeText = document.getElementById("mazeText");
+    const mazeBtn = document.getElementById("mazeBtn");
+    let mazeUnlocked = false;
+
+    // Level = 1 + floor(sqrt(xp / 100))
+    function levelFromXp(xp) {
+      return Math.floor(Math.sqrt(xp / 100)) + 1;
+    }
+
+    // Lock or unlock the Mini Maze card
+    async function checkMazeLock(user) {
+
+      try {
+
+        const snap = await getDoc(doc(db, "players", user.uid));
+
+        const xp = snap.exists() ? Number(snap.data().xp) || 0 : 0;
+        const level = levelFromXp(xp);
+
+        if (level >= MAZE_UNLOCK_LEVEL) {
+
+          mazeUnlocked = true;
+          mazeCard.classList.remove("locked");
+          mazeText.textContent = "50 mazes to escape. Reach the exit in the fewest moves.";
+          mazeBtn.disabled = false;
+          mazeBtn.textContent = "Play Mini Maze";
+
+        } else {
+
+          mazeUnlocked = false;
+          mazeCard.classList.add("locked");
+          mazeText.textContent =
+            "Unlocks at Level " + MAZE_UNLOCK_LEVEL + ". You are Level " + level + ".";
+          mazeBtn.disabled = true;
+          mazeBtn.textContent = "🔒 Reach Level " + MAZE_UNLOCK_LEVEL;
+
+        }
+
+      } catch (error) {
+
+        console.error("Level check error:", error);
+
+        mazeUnlocked = false;
+        mazeText.textContent = "Could not check your level. Try again later.";
+        mazeBtn.textContent = "🔒 Locked";
+
+      }
+
+    }
 
     const usernameElement = document.getElementById("username");
     const logoutBtn = document.getElementById("logoutBtn");
@@ -244,6 +337,8 @@
 
       currentUser = user;
 
+      checkMazeLock(user);
+
       usernameElement.textContent =
         user.displayName ||
         user.email?.split("@")[0] ||
@@ -257,6 +352,20 @@
 
     document.getElementById("tikBtn").addEventListener("click", () => {
       window.location.href = "tik.html";
+    });
+
+    document.getElementById("fourBtn").addEventListener("click", () => {
+      window.location.href = "four.html";
+    });
+
+    document.getElementById("dotsBtn").addEventListener("click", () => {
+      window.location.href = "dots.html";
+    });
+
+    mazeBtn.addEventListener("click", () => {
+      if (mazeUnlocked) {
+        window.location.href = "maze.html";
+      }
     });
 
     document.getElementById("leaderboardBtn").addEventListener("click", () => {

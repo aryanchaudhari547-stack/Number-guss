@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Number Guess - Mini Maze</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #07152f, #123c69);
+      color: white;
+      padding: 20px;
+    }
+
+    header {
+      max-width: 850px;
+      margin: 10px auto 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    header h2 {
+      color: #20d5ff;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin: 15px auto;
+      max-width: 850px;
+    }
+
+    nav a {
+      background: #193c63;
+      color: white;
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    nav a:hover {
+      background: #087fa9;
+    }
+
+    .logout {
+      background: #e84b61;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+
+    .game {
+      max-width: 480px;
+      margin: 30px auto;
+      padding: 26px 20px;
+      text-align: center;
+      background: #101f3d;
+      border: 1px solid #294a70;
+      border-radius: 18px;
+      box-shadow: 0 12px 35px #0005;
+    }
+
+    h1 {
+      color: #20d5ff;
+      margin-bottom: 18px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .row-label {
+      color: #9db3cf;
+      font-size: 13px;
+      margin: 6px 0 6px;
+      text-align: left;
+    }
+
+    .opt {
+      flex: 1;
+      padding: 11px 4px;
+      border: 1px solid #395779;
+      border-radius: 10px;
+      background: #08172e;
+      color: #b9c9df;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .opt.active {
+      border-color: #20d5ff;
+      background: #123c69;
+      color: white;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .scores {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .score-box {
+      flex: 1;
+      background: #08172e;
+      border-radius: 10px;
+      padding: 12px 6px;
+    }
+
+    .score-box p {
+      color: #aebed3;
+      font-size: 12px;
+      margin-bottom: 6px;
+      overflow-wrap: anywhere;
+    }
+
+    .score-box strong {
+      color: #20d5ff;
+      font-size: 24px;
+    }
+
+    .status {
+      min-height: 30px;
+      margin-bottom: 14px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #b9c9df;
+    }
+
+    .info {
+      color: #9db3cf;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+
+    .secondary {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: 1px solid #395779;
+      border-radius: 8px;
+      background: #263d5c;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .primary {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      background: #08a9d5;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .primary:hover {
+      background: #087fa9;
+    }
+
+    footer {
+      text-align: center;
+      color: #9db3cf;
+      margin: 35px auto 15px;
+      font-size: 13px;
+    }
+
+    .game {
+      max-width: 460px;
+    }
+
+    .lock-icon {
+      font-size: 56px;
+      margin-bottom: 10px;
+    }
+
+    .lock-text {
+      color: #b9c9df;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .bar {
+      height: 14px;
+      background: #08172e;
+      border-radius: 99px;
+      overflow: hidden;
+      border: 1px solid #294a70;
+      margin: 12px 0 6px;
+    }
+
+    .bar div {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #08a9d5, #45e6a0);
+    }
+
+    .bar-text {
+      color: #9db3cf;
+      font-size: 13px;
+      margin-bottom: 18px;
+    }
+
+    .summary {
+      color: #b9c9df;
+      font-size: 14px;
+      margin-bottom: 14px;
+    }
+
+    .levels {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .lvl {
+      aspect-ratio: 1 / 1;
+      border: 1px solid #395779;
+      border-radius: 10px;
+      background: #08172e;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.2;
+      padding: 0;
+    }
+
+    .lvl small {
+      font-size: 9px;
+      font-weight: normal;
+      color: #f6ca45;
+      min-height: 11px;
+    }
+
+    .lvl.done {
+      border-color: #45e6a0;
+    }
+
+    .lvl.next {
+      border-color: #20d5ff;
+      background: #123c69;
+    }
+
+    .lvl:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .stats {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .stat {
+      flex: 1;
+      background: #08172e;
+      border-radius: 10px;
+      padding: 10px 4px;
+    }
+
+    .stat p {
+      color: #aebed3;
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .stat strong {
+      color: #20d5ff;
+      font-size: 18px;
+    }
+
+    .maze-wrap {
+      margin: 0 auto 14px;
+      touch-action: none;
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+      border: 2px solid #294a70;
+      border-radius: 10px;
+      background: #08172e;
+    }
+
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 64px);
+      grid-template-rows: repeat(3, 56px);
+      gap: 6px;
+      justify-content: center;
+      margin: 6px auto 14px;
+    }
+
+    .dpad button {
+      border: 1px solid #395779;
+      border-radius: 12px;
+      background: #263d5c;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .dpad button:active {
+      background: #087fa9;
+    }
+
+    .up    { grid-column: 2; grid-row: 1; }
+    .left  { grid-column: 1; grid-row: 2; }
+    .right { grid-column: 3; grid-row: 2; }
+    .down  { grid-column: 2; grid-row: 3; }
+
+    .win-box {
+      background: #08172e;
+      border: 2px solid #45e6a0;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .win-box h3 {
+      color: #45e6a0;
+      margin-bottom: 8px;
+    }
+
+    .win-box p {
+      color: #b9c9df;
+      line-height: 1.6;
+      margin-bottom: 4px;
+    }
+
+    .stars {
+      font-size: 28px;
+      margin: 6px 0;
+    }
+
+    .save-note {
+      min-height: 18px;
+      color: #9db3cf;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h2>🎯 Number Guess</h2>
+    <button class="logout" id="logoutBtn">Logout</button>
+  </header>
+
+  <nav>
+    <a href="home.html">Home</a>
+    <a href="index.html">Play Game</a>
+    <a href="tik.html">Tic Tac Toe</a>
+    <a href="four.html">Connect 4</a>
+    <a href="dots.html">Dots &amp; Boxes</a>
+    <a href="maze.html">Mini Maze</a>
+    <a href="leader.html">Leaderboard</a>
+    <a href="shop.html">Shop</a>
+    <a href="profile.html">Profile</a>
+  </nav>
+
+  <main class="game">
+
+    <!-- Shown while you are below the unlock level -->
+    <section id="lockBox" class="hidden">
+
+      <div class="lock-icon">🔒</div>
+      <h1>Mini Maze</h1>
+
+      <p class="lock-text" id="lockText"></p>
+
+      <div class="bar"><div id="lockBar"></div></div>
+      <p class="bar-text" id="lockBarText"></p>
+
+      <button class="primary" id="lockPlayBtn">Play Number Guess to earn XP</button>
+      <button class="secondary" id="lockHomeBtn">Back to Home</button>
+
+    </section>
+
+    <!-- Level select -->
+    <section id="selectBox" class="hidden">
+
+      <h1>🧩 Mini Maze</h1>
+
+      <p class="summary" id="summary"></p>
+
+      <div class="levels" id="levels"></div>
+
+      <button class="secondary" id="selectHomeBtn">Back to Home</button>
+
+    </section>
+
+    <!-- Playing a level -->
+    <section id="playBox" class="hidden">
+
+      <h1 id="playTitle">Level 1</h1>
+
+      <div class="stats">
+        <div class="stat"><p>Moves</p><strong id="moves">0</strong></div>
+        <div class="stat"><p>Best path</p><strong id="par">0</strong></div>
+        <div class="stat"><p>Your best</p><strong id="best">-</strong></div>
+      </div>
+
+      <div class="maze-wrap" id="mazeWrap">
+        <canvas id="canvas"></canvas>
+      </div>
+
+      <div class="dpad" id="dpad">
+        <button class="up" data-dir="up" aria-label="Up">▲</button>
+        <button class="left" data-dir="left" aria-label="Left">◀</button>
+        <button class="right" data-dir="right" aria-label="Right">▶</button>
+        <button class="down" data-dir="down" aria-label="Down">▼</button>
+      </div>
+
+      <div class="win-box hidden" id="winBox">
+        <h3 id="winTitle">Level complete!</h3>
+        <div class="stars" id="winStars"></div>
+        <p id="winText"></p>
+        <p class="save-note" id="saveNote"></p>
+        <button class="primary" id="nextBtn" style="margin-top:12px">Next Level ➜</button>
+      </div>
+
+      <button class="secondary" id="restartBtn">Restart Level</button>
+      <button class="secondary" id="levelsBtn">All Levels</button>
+
+    </section>
+
+  </main>
+
+  <footer>
+    © 2026 Number Guess
+  </footer>
+
+  <script type="module">
+
+    import {
+      initializeApp
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
+
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
+
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDhigYBT68Dv4pdboLzVYxnLVMK6VUFFWY",
+      authDomain: "number-guss.firebaseapp.com",
+      projectId: "number-guss",
+      storageBucket: "number-guss.firebasestorage.app",
+      messagingSenderId: "471501648483",
+      appId: "1:471501648483:web:3cbe55c24fd4e0c92b3e56",
+      measurementId: "G-4FYB07JSC5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // =====================================================================
+    //  MINI MAZE SETTINGS
+    // =====================================================================
+
+    // Player level needed to open the maze
+    const UNLOCK_LEVEL = 7;
+
+    // ---- HOW TO ADD MORE LEVELS ----------------------------------------
+    // Option 1: raise TOTAL_LEVELS. Every extra level is a new random maze
+    //           (the same maze every time, because it uses a fixed seed).
+    // Option 2: draw your own maze in CUSTOM_LEVELS. They are played after
+    //           the generated levels. Use:
+    //             #  wall      S  start      E  exit      any other  path
+    //           Example (copy it, remove the // and put it inside the [ ]):
+    //             [
+    //               "#########",
+    //               "#S..#...#",
+    //               "#.#.#.#.#",
+    //               "#.#...#E#",
+    //               "#########"
+    //             ],
+    // ---------------------------------------------------------------------
+    const TOTAL_LEVELS = 50;
+
+    const CUSTOM_LEVELS = [
+    ];
+
+    // =====================================================================
+
+    // Elements
+    const lockBox = document.getElementById("lockBox");
+    const selectBox = document.getElementById("selectBox");
+    const playBox = document.getElementById("playBox");
+    const lockText = document.getElementById("lockText");
+    const lockBar = document.getElementById("lockBar");
+    const lockBarText = document.getElementById("lockBarText");
+    const lockPlayBtn = document.getElementById("lockPlayBtn");
+    const lockHomeBtn = document.getElementById("lockHomeBtn");
+    const selectHomeBtn = document.getElementById("selectHomeBtn");
+    const summaryEl = document.getElementById("summary");
+    const levelsEl = document.getElementById("levels");
+    const playTitle = document.getElementById("playTitle");
+    const movesEl = document.getElementById("moves");
+    const parEl = document.getElementById("par");
+    const bestEl = document.getElementById("best");
+    const mazeWrap = document.getElementById("mazeWrap");
+    const canvas = document.getElementById("canvas");
+    const dpad = document.getElementById("dpad");
+    const winBox = document.getElementById("winBox");
+    const winTitle = document.getElementById("winTitle");
+    const winStars = document.getElementById("winStars");
+    const winText = document.getElementById("winText");
+    const saveNote = document.getElementById("saveNote");
+    const nextBtn = document.getElementById("nextBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const levelsBtn = document.getElementById("levelsBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const ctx = canvas.getContext("2d");
+
+    // ---------- Maze creation ----------
+    // A maze is a grid of tiles: 1 = wall, 0 = path.
+
+    // Small random number generator, so the same level is always the same maze
+    function makeRandom(seed) {
+
+      let a = seed >>> 0;
+
+      return function () {
+        a = (a + 0x6D2B79F5) >>> 0;
+        let t = a;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+
+    }
+
+    // Build a random maze with `cellsW` x `cellsH` rooms
+    function generateMaze(cellsW, cellsH, seed) {
+
+      const random = makeRandom(seed);
+
+      const rows = cellsH * 2 + 1;
+      const cols = cellsW * 2 + 1;
+
+      const grid = [];
+
+      for (let r = 0; r < rows; r++) {
+        grid.push(Array(cols).fill(1));
+      }
+
+      const visited = [];
+
+      for (let r = 0; r < cellsH; r++) {
+        visited.push(Array(cellsW).fill(false));
+      }
+
+      // Walk through the rooms and knock down walls (depth-first)
+      const stack = [[0, 0]];
+
+      visited[0][0] = true;
+      grid[1][1] = 0;
+
+      while (stack.length > 0) {
+
+        const [cr, cc] = stack[stack.length - 1];
+
+        const options = [];
+
+        [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([dr, dc]) => {
+
+          const nr = cr + dr;
+          const nc = cc + dc;
+
+          if (nr >= 0 && nr < cellsH && nc >= 0 && nc < cellsW &&
+              !visited[nr][nc]) {
+            options.push([nr, nc, dr, dc]);
+          }
+
+        });
+
+        if (options.length === 0) {
+          stack.pop();
+          continue;
+        }
+
+        const [nr, nc, dr, dc] = options[Math.floor(random() * options.length)];
+
+        visited[nr][nc] = true;
+
+        // Open the wall between the two rooms, then the new room
+        grid[cr * 2 + 1 + dr][cc * 2 + 1 + dc] = 0;
+        grid[nr * 2 + 1][nc * 2 + 1] = 0;
+
+        stack.push([nr, nc]);
+
+      }
+
+      return {
+        grid: grid,
+        rows: rows,
+        cols: cols,
+        start: [1, 1],
+        exit: [rows - 2, cols - 2]
+      };
+
+    }
+
+    // Turn a hand-drawn maze (array of strings) into a maze
+    function parseCustomMaze(lines) {
+
+      const rows = lines.length;
+      const cols = Math.max(...lines.map((line) => line.length));
+
+      const grid = [];
+
+      let start = null;
+      let exit = null;
+
+      for (let r = 0; r < rows; r++) {
+
+        const row = [];
+
+        for (let c = 0; c < cols; c++) {
+
+          const ch = lines[r][c] || "#";
+
+          if (ch === "S") start = [r, c];
+          if (ch === "E") exit = [r, c];
+
+          row.push(ch === "#" ? 1 : 0);
+
+        }
+
+        grid.push(row);
+
+      }
+
+      if (!start || !exit) {
+        throw new Error("A custom maze needs one S (start) and one E (exit).");
+      }
+
+      return { grid: grid, rows: rows, cols: cols, start: start, exit: exit };
+
+    }
+
+    // Shortest number of steps from start to exit
+    function shortestPath(maze) {
+
+      const dist = [];
+
+      for (let r = 0; r < maze.rows; r++) {
+        dist.push(Array(maze.cols).fill(-1));
+      }
+
+      const queue = [maze.start];
+
+      dist[maze.start[0]][maze.start[1]] = 0;
+
+      while (queue.length > 0) {
+
+        const [r, c] = queue.shift();
+
+        if (r === maze.exit[0] && c === maze.exit[1]) {
+          return dist[r][c];
+        }
+
+        [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([dr, dc]) => {
+
+          const nr = r + dr;
+          const nc = c + dc;
+
+          if (nr >= 0 && nr < maze.rows && nc >= 0 && nc < maze.cols &&
+              maze.grid[nr][nc] === 0 && dist[nr][nc] === -1) {
+            dist[nr][nc] = dist[r][c] + 1;
+            queue.push([nr, nc]);
+          }
+
+        });
+
+      }
+
+      return -1;
+
+    }
+
+    function totalLevels() {
+      return TOTAL_LEVELS + CUSTOM_LEVELS.length;
+    }
+
+    // Build level number `n` (1, 2, 3 ...)
+    function buildLevel(n) {
+
+      let maze;
+
+      if (n <= TOTAL_LEVELS) {
+
+        // Rooms grow every 7 levels: 3, 4, 5 ... up to 12
+        const rooms = Math.min(12, 3 + Math.floor((n - 1) / 7));
+
+        maze = generateMaze(rooms, rooms, n * 7919 + 12345);
+
+      } else {
+
+        maze = parseCustomMaze(CUSTOM_LEVELS[n - TOTAL_LEVELS - 1]);
+
+      }
+
+      maze.par = shortestPath(maze);
+
+      return maze;
+
+    }
+
+    // ---------- Player data ----------
+    let currentUser = null;
+    let xp = 0;
+    let completed = 0;     // highest level finished
+    let bestMoves = {};    // { "1": 14, "2": 22 ... }
+
+    // Level = 1 + floor(sqrt(xp / 100))
+    function levelFromXp(value) {
+      return Math.floor(Math.sqrt(value / 100)) + 1;
+    }
+
+    function starsFor(moves, par) {
+
+      if (moves <= par) return 3;
+      if (moves <= Math.ceil(par * 1.5)) return 2;
+
+      return 1;
+
+    }
+
+    function starText(count) {
+      return "⭐".repeat(count) + "☆".repeat(3 - count);
+    }
+
+    async function loadProgress() {
+
+      const snap = await getDoc(doc(db, "players", currentUser.uid));
+
+      const data = snap.exists() ? snap.data() : {};
+
+      xp = Number(data.xp) || 0;
+      completed = Number(data.mazeCompleted) || 0;
+      bestMoves = data.mazeBest && typeof data.mazeBest === "object"
+        ? data.mazeBest
+        : {};
+
+    }
+
+    async function saveProgress(level, moves) {
+
+      const key = String(level);
+
+      const oldBest = Number(bestMoves[key]) || 0;
+
+      const newBest = oldBest > 0 ? Math.min(oldBest, moves) : moves;
+
+      bestMoves[key] = newBest;
+      completed = Math.max(completed, level);
+
+      await setDoc(
+        doc(db, "players", currentUser.uid),
+        {
+          mazeCompleted: completed,
+          mazeBest: { [key]: newBest }
+        },
+        { merge: true }
+      );
+
+      return newBest < oldBest || oldBest === 0;
+
+    }
+
+    // ---------- Screens ----------
+    function showScreen(name) {
+
+      lockBox.classList.toggle("hidden", name !== "lock");
+      selectBox.classList.toggle("hidden", name !== "select");
+      playBox.classList.toggle("hidden", name !== "play");
+
+    }
+
+    function showLock() {
+
+      const level = levelFromXp(xp);
+      const needXp = (UNLOCK_LEVEL - 1) * (UNLOCK_LEVEL - 1) * 100;
+      const percent = Math.min(100, (xp / needXp) * 100);
+
+      lockText.textContent =
+        "Mini Maze opens at Level " + UNLOCK_LEVEL + ". " +
+        "You are Level " + level + ".";
+
+      lockBar.style.width = percent + "%";
+
+      lockBarText.textContent =
+        xp.toLocaleString() + " / " + needXp.toLocaleString() +
+        " XP (" + (needXp - xp).toLocaleString() + " more to go)";
+
+      showScreen("lock");
+
+    }
+
+    function showLevelSelect() {
+
+      const total = totalLevels();
+
+      summaryEl.textContent =
+        "Completed " + completed + " of " + total + " levels";
+
+      levelsEl.replaceChildren();
+
+      for (let n = 1; n <= total; n++) {
+
+        const button = document.createElement("button");
+
+        button.className = "lvl";
+        button.dataset.level = n;
+
+        const best = Number(bestMoves[String(n)]) || 0;
+
+        const label = document.createElement("span");
+        label.textContent = n;
+
+        const small = document.createElement("small");
+
+        if (n <= completed) {
+
+          button.classList.add("done");
+
+          // Stars are worked out from the saved best moves
+          const par = shortestPath(buildLevel(n));
+
+          small.textContent = best ? "⭐".repeat(starsFor(best, par)) : "✓";
+
+        } else if (n === completed + 1) {
+
+          button.classList.add("next");
+          small.textContent = "PLAY";
+
+        } else {
+
+          button.disabled = true;
+          small.textContent = "🔒";
+
+        }
+
+        button.append(label, small);
+        levelsEl.appendChild(button);
+
+      }
+
+      showScreen("select");
+
+    }
+
+    // ---------- Playing ----------
+    let level = 1;
+    let maze = null;
+    let player = [1, 1];
+    let moves = 0;
+    let finished = false;
+    let trail = new Set();
+    let tile = 20;
+
+    function startLevel(n) {
+
+      level = n;
+      maze = buildLevel(n);
+      player = maze.start.slice();
+      moves = 0;
+      finished = false;
+      trail = new Set([player[0] + "," + player[1]]);
+
+      playTitle.textContent = "Level " + n + " of " + totalLevels();
+      movesEl.textContent = "0";
+      parEl.textContent = maze.par;
+
+      const best = Number(bestMoves[String(n)]) || 0;
+
+      bestEl.textContent = best ? best : "-";
+
+      winBox.classList.add("hidden");
+      dpad.classList.remove("hidden");
+
+      showScreen("play");
+
+      drawMaze();
+
+    }
+
+    function drawMaze() {
+
+      if (!maze) {
+        return;
+      }
+
+      const available = Math.min(mazeWrap.clientWidth || 340, 400);
+
+      tile = Math.max(10, Math.floor(available / maze.cols));
+
+      const width = tile * maze.cols;
+      const height = tile * maze.rows;
+
+      const ratio = window.devicePixelRatio || 1;
+
+      canvas.width = width * ratio;
+      canvas.height = height * ratio;
+      canvas.style.width = width + "px";
+      canvas.style.height = height + "px";
+
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+      for (let r = 0; r < maze.rows; r++) {
+
+        for (let c = 0; c < maze.cols; c++) {
+
+          if (maze.grid[r][c] === 1) {
+            ctx.fillStyle = "#1a4fa3";
+          } else if (trail.has(r + "," + c)) {
+            ctx.fillStyle = "#1c5a86";
+          } else {
+            ctx.fillStyle = "#0d2347";
+          }
+
+          ctx.fillRect(c * tile, r * tile, tile, tile);
+
+        }
+
+      }
+
+      // Exit
+      ctx.font = Math.floor(tile * 0.85) + "px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(
+        "⭐",
+        maze.exit[1] * tile + tile / 2,
+        maze.exit[0] * tile + tile / 2 + 1
+      );
+
+      // Player
+      ctx.beginPath();
+      ctx.arc(
+        player[1] * tile + tile / 2,
+        player[0] * tile + tile / 2,
+        tile * 0.36,
+        0,
+        Math.PI * 2
+      );
+      ctx.fillStyle = "#f6ca45";
+      ctx.shadowColor = "#f6ca45";
+      ctx.shadowBlur = 8;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+    }
+
+    const DIRECTIONS = {
+      up: [-1, 0],
+      down: [1, 0],
+      left: [0, -1],
+      right: [0, 1]
+    };
+
+    function step(direction) {
+
+      if (!maze || finished) {
+        return;
+      }
+
+      const [dr, dc] = DIRECTIONS[direction];
+
+      const nr = player[0] + dr;
+      const nc = player[1] + dc;
+
+      if (nr < 0 || nr >= maze.rows || nc < 0 || nc >= maze.cols) {
+        return;
+      }
+
+      if (maze.grid[nr][nc] === 1) {
+        return;
+      }
+
+      player = [nr, nc];
+      moves++;
+
+      trail.add(nr + "," + nc);
+
+      movesEl.textContent = moves;
+
+      drawMaze();
+
+      if (nr === maze.exit[0] && nc === maze.exit[1]) {
+        win();
+      }
+
+    }
+
+    async function win() {
+
+      finished = true;
+
+      const stars = starsFor(moves, maze.par);
+      const isLast = level >= totalLevels();
+
+      winTitle.textContent = "🎉 Level " + level + " complete!";
+      winStars.textContent = starText(stars);
+      winText.textContent =
+        "You used " + moves + " moves. The shortest path is " + maze.par + ".";
+      saveNote.textContent = "Saving your progress...";
+
+      nextBtn.classList.toggle("hidden", isLast);
+
+      if (isLast) {
+        winText.textContent += " That was the last level for now!";
+      }
+
+      winBox.classList.remove("hidden");
+      dpad.classList.add("hidden");
+
+      try {
+
+        const improved = await saveProgress(level, moves);
+
+        saveNote.textContent = improved
+          ? "Progress saved. New best!"
+          : "Progress saved.";
+
+        bestEl.textContent = bestMoves[String(level)];
+
+      } catch (error) {
+
+        console.error("Maze save error:", error);
+
+        saveNote.textContent =
+          "Could not save your progress. Check Firestore rules.";
+
+      }
+
+    }
+
+    // ---------- Controls ----------
+    // D-pad: tap to move, hold to keep moving
+    let holdTimer = null;
+
+    function stopHold() {
+
+      if (holdTimer) {
+        clearInterval(holdTimer);
+        holdTimer = null;
+      }
+
+    }
+
+    dpad.addEventListener("pointerdown", (event) => {
+
+      const button = event.target.closest("button");
+
+      if (!button) {
+        return;
+      }
+
+      event.preventDefault();
+
+      const direction = button.dataset.dir;
+
+      step(direction);
+
+      stopHold();
+
+      holdTimer = setInterval(() => step(direction), 130);
+
+    });
+
+    ["pointerup", "pointerleave", "pointercancel"].forEach((name) => {
+      dpad.addEventListener(name, stopHold);
+    });
+
+    window.addEventListener("blur", stopHold);
+
+    // Keyboard
+    window.addEventListener("keydown", (event) => {
+
+      if (playBox.classList.contains("hidden")) {
+        return;
+      }
+
+      const keys = {
+        ArrowUp: "up", w: "up", W: "up",
+        ArrowDown: "down", s: "down", S: "down",
+        ArrowLeft: "left", a: "left", A: "left",
+        ArrowRight: "right", d: "right", D: "right"
+      };
+
+      if (keys[event.key]) {
+        event.preventDefault();
+        step(keys[event.key]);
+      }
+
+    });
+
+    // Swipe on the maze
+    let touchStart = null;
+
+    mazeWrap.addEventListener("touchstart", (event) => {
+
+      const touch = event.changedTouches[0];
+
+      touchStart = { x: touch.clientX, y: touch.clientY };
+
+    }, { passive: true });
+
+    mazeWrap.addEventListener("touchend", (event) => {
+
+      if (!touchStart) {
+        return;
+      }
+
+      const touch = event.changedTouches[0];
+
+      const dx = touch.clientX - touchStart.x;
+      const dy = touch.clientY - touchStart.y;
+
+      touchStart = null;
+
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) {
+        return;
+      }
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        step(dx > 0 ? "right" : "left");
+      } else {
+        step(dy > 0 ? "down" : "up");
+      }
+
+    }, { passive: true });
+
+    window.addEventListener("resize", drawMaze);
+
+    // Buttons
+    levelsEl.addEventListener("click", (event) => {
+
+      const button = event.target.closest(".lvl");
+
+      if (!button || button.disabled) {
+        return;
+      }
+
+      startLevel(Number(button.dataset.level));
+
+    });
+
+    nextBtn.addEventListener("click", () => {
+      startLevel(Math.min(level + 1, totalLevels()));
+    });
+
+    restartBtn.addEventListener("click", () => {
+      startLevel(level);
+    });
+
+    levelsBtn.addEventListener("click", () => {
+      stopHold();
+      showLevelSelect();
+    });
+
+    lockPlayBtn.addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
+
+    [lockHomeBtn, selectHomeBtn].forEach((button) => {
+      button.addEventListener("click", () => {
+        window.location.href = "home.html";
+      });
+    });
+
+    // Logout
+    logoutBtn.addEventListener("click", async () => {
+
+      logoutBtn.disabled = true;
+
+      try {
+
+        await signOut(auth);
+
+        window.location.replace("login.html");
+
+      } catch (error) {
+
+        console.error(error);
+
+        logoutBtn.disabled = false;
+
+      }
+
+    });
+
+    // Login check, then lock or level select
+    onAuthStateChanged(auth, async (user) => {
+
+      if (!user) {
+        window.location.replace("login.html");
+        return;
+      }
+
+      currentUser = user;
+
+      try {
+
+        await loadProgress();
+
+      } catch (error) {
+
+        console.error("Progress load error:", error);
+
+        lockText.textContent =
+          "Could not load your progress. Check your Firestore rules.";
+
+        showScreen("lock");
+
+        return;
+
+      }
+
+      if (levelFromXp(xp) < UNLOCK_LEVEL) {
+        showLock();
+      } else {
+        showLevelSelect();
+      }
+
+    });
+
+  </script>
+
+</body>
+</html>

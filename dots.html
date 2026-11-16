@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Number Guess - Dots and Boxes</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #07152f, #123c69);
+      color: white;
+      padding: 20px;
+    }
+
+    header {
+      max-width: 850px;
+      margin: 10px auto 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    header h2 {
+      color: #20d5ff;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin: 15px auto;
+      max-width: 850px;
+    }
+
+    nav a {
+      background: #193c63;
+      color: white;
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    nav a:hover {
+      background: #087fa9;
+    }
+
+    .logout {
+      background: #e84b61;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+
+    .game {
+      max-width: 480px;
+      margin: 30px auto;
+      padding: 26px 20px;
+      text-align: center;
+      background: #101f3d;
+      border: 1px solid #294a70;
+      border-radius: 18px;
+      box-shadow: 0 12px 35px #0005;
+    }
+
+    h1 {
+      color: #20d5ff;
+      margin-bottom: 18px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .row-label {
+      color: #9db3cf;
+      font-size: 13px;
+      margin: 6px 0 6px;
+      text-align: left;
+    }
+
+    .opt {
+      flex: 1;
+      padding: 11px 4px;
+      border: 1px solid #395779;
+      border-radius: 10px;
+      background: #08172e;
+      color: #b9c9df;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .opt.active {
+      border-color: #20d5ff;
+      background: #123c69;
+      color: white;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .scores {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .score-box {
+      flex: 1;
+      background: #08172e;
+      border-radius: 10px;
+      padding: 12px 6px;
+    }
+
+    .score-box p {
+      color: #aebed3;
+      font-size: 12px;
+      margin-bottom: 6px;
+      overflow-wrap: anywhere;
+    }
+
+    .score-box strong {
+      color: #20d5ff;
+      font-size: 24px;
+    }
+
+    .status {
+      min-height: 30px;
+      margin-bottom: 14px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #b9c9df;
+    }
+
+    .info {
+      color: #9db3cf;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+
+    .secondary {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: 1px solid #395779;
+      border-radius: 8px;
+      background: #263d5c;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .primary {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      background: #08a9d5;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .primary:hover {
+      background: #087fa9;
+    }
+
+    footer {
+      text-align: center;
+      color: #9db3cf;
+      margin: 35px auto 15px;
+      font-size: 13px;
+    }
+
+    .board-wrap {
+      margin: 0 auto 18px;
+      max-width: 100%;
+      touch-action: manipulation;
+    }
+
+    .board-wrap svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: #08172e;
+      border: 2px solid #294a70;
+      border-radius: 14px;
+    }
+
+    .ln {
+      stroke: #2d4c75;
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+
+    .ln.p1 {
+      stroke: #20d5ff;
+      stroke-width: 5;
+    }
+
+    .ln.p2 {
+      stroke: #f6ca45;
+      stroke-width: 5;
+    }
+
+    .ln.last {
+      stroke-width: 7;
+      filter: drop-shadow(0 0 3px #ffffff);
+    }
+
+    .hit {
+      stroke: transparent;
+      stroke-width: 20;
+      stroke-linecap: round;
+      cursor: pointer;
+      pointer-events: stroke;
+    }
+
+    .hit:hover {
+      stroke: rgba(255, 255, 255, 0.18);
+    }
+
+    .hit.done {
+      pointer-events: none;
+    }
+
+    .bx {
+      fill: transparent;
+    }
+
+    .bx.p1 {
+      fill: rgba(32, 213, 255, 0.30);
+    }
+
+    .bx.p2 {
+      fill: rgba(246, 202, 69, 0.30);
+    }
+
+    .bt {
+      fill: #ffffff;
+      font-weight: bold;
+      text-anchor: middle;
+      dominant-baseline: central;
+      pointer-events: none;
+    }
+
+    .dot {
+      fill: #b9c9df;
+    }
+
+    .live {
+      display: flex;
+      gap: 10px;
+      margin: 0 0 14px;
+    }
+
+    .live .score-box strong {
+      font-size: 22px;
+    }
+
+    .live .p1 strong {
+      color: #20d5ff;
+    }
+
+    .live .p2 strong {
+      color: #f6ca45;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h2>🎯 Number Guess</h2>
+    <button class="logout" id="logoutBtn">Logout</button>
+  </header>
+
+  <nav>
+    <a href="home.html">Home</a>
+    <a href="index.html">Play Game</a>
+    <a href="tik.html">Tic Tac Toe</a>
+    <a href="four.html">Connect 4</a>
+    <a href="dots.html">Dots &amp; Boxes</a>
+    <a href="maze.html">Mini Maze</a>
+    <a href="leader.html">Leaderboard</a>
+    <a href="shop.html">Shop</a>
+    <a href="profile.html">Profile</a>
+  </nav>
+
+  <main class="game">
+
+    <h1>🔷 Dots &amp; Boxes 🔶</h1>
+
+    <div class="row-label">Game mode</div>
+    <div class="row" id="modeRow">
+      <button class="opt" data-mode="ai">1 vs Computer</button>
+      <button class="opt" data-mode="pvp">1 vs 1</button>
+    </div>
+
+    <div id="aiOptions">
+
+      <div class="row-label">Computer level</div>
+      <div class="row" id="levelRow">
+        <button class="opt" data-level="easy">Easy</button>
+        <button class="opt" data-level="medium">Medium</button>
+        <button class="opt" data-level="hard">Hard</button>
+      </div>
+
+    </div>
+
+    <div class="row-label">Grid size (number of boxes)</div>
+    <div class="row" id="sizeRow">
+      <button class="opt" data-size="4">4 × 4</button>
+      <button class="opt" data-size="6">6 × 6</button>
+      <button class="opt" data-size="10">10 × 10</button>
+    </div>
+
+    <div class="scores">
+      <div class="score-box">
+        <p id="labelP1">You wins</p>
+        <strong id="scoreP1">0</strong>
+      </div>
+      <div class="score-box">
+        <p>Draws</p>
+        <strong id="scoreDraw">0</strong>
+      </div>
+      <div class="score-box">
+        <p id="labelP2">Computer wins</p>
+        <strong id="scoreP2">0</strong>
+      </div>
+    </div>
+
+    <div class="live">
+      <div class="score-box p1">
+        <p id="boxLabel1">You (boxes)</p>
+        <strong id="boxes1">0</strong>
+      </div>
+      <div class="score-box p2">
+        <p id="boxLabel2">Computer (boxes)</p>
+        <strong id="boxes2">0</strong>
+      </div>
+    </div>
+
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+
+    <div class="board-wrap" id="boardWrap">
+      <svg id="board" xmlns="http://www.w3.org/2000/svg" role="img"
+           aria-label="Dots and boxes board"></svg>
+    </div>
+
+    <p class="info">
+      Take turns drawing a line between two dots. Close a box to score
+      it and play again. The player with the most boxes wins.
+    </p>
+
+    <button class="primary" id="newRoundBtn">New Round</button>
+    <button class="secondary" id="resetBtn">Reset Scores</button>
+    <button class="secondary" id="homeBtn">Back to Home</button>
+
+  </main>
+
+  <footer>
+    © 2026 Number Guess
+  </footer>
+
+  <script type="module">
+
+    import {
+      initializeApp
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
+
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDhigYBT68Dv4pdboLzVYxnLVMK6VUFFWY",
+      authDomain: "number-guss.firebaseapp.com",
+      projectId: "number-guss",
+      storageBucket: "number-guss.firebasestorage.app",
+      messagingSenderId: "471501648483",
+      appId: "1:471501648483:web:3cbe55c24fd4e0c92b3e56",
+      measurementId: "G-4FYB07JSC5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+
+    // Elements
+    const boardEl = document.getElementById("board");
+    const boardWrap = document.getElementById("boardWrap");
+    const statusEl = document.getElementById("status");
+    const aiOptions = document.getElementById("aiOptions");
+    const labelP1 = document.getElementById("labelP1");
+    const labelP2 = document.getElementById("labelP2");
+    const scoreP1El = document.getElementById("scoreP1");
+    const scoreP2El = document.getElementById("scoreP2");
+    const scoreDrawEl = document.getElementById("scoreDraw");
+    const boxLabel1 = document.getElementById("boxLabel1");
+    const boxLabel2 = document.getElementById("boxLabel2");
+    const boxes1El = document.getElementById("boxes1");
+    const boxes2El = document.getElementById("boxes2");
+    const newRoundBtn = document.getElementById("newRoundBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const homeBtn = document.getElementById("homeBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const modeButtons = document.querySelectorAll("#modeRow .opt");
+    const levelButtons = document.querySelectorAll("#levelRow .opt");
+    const sizeButtons = document.querySelectorAll("#sizeRow .opt");
+
+    // ---------- Game logic ----------
+    // N = number of boxes on each side (4, 6 or 10)
+    // h[r][c] = horizontal line (r = 0..N, c = 0..N-1)
+    // v[r][c] = vertical line   (r = 0..N-1, c = 0..N)
+    // owner[r][c] = who closed the box (0 = nobody)
+
+    let N = 4;
+    let h = [];
+    let v = [];
+    let owner = [];
+    let hOwner = [];
+    let vOwner = [];
+    let boxes = { 1: 0, 2: 0 };
+    let linesLeft = 0;
+    let turn = 1;              // Player 1 always starts
+    let gameOver = false;
+    let busy = false;
+    let mode = "ai";           // "ai" or "pvp"
+    let level = "medium";      // "easy", "medium" or "hard"
+    let scores = { 1: 0, 2: 0, draw: 0 };
+    let roundId = 0;           // stops old computer moves after a reset
+    let lastMove = null;
+
+    function grid(rows, cols, value) {
+
+      const result = [];
+
+      for (let r = 0; r < rows; r++) {
+        result.push(Array(cols).fill(value));
+      }
+
+      return result;
+
+    }
+
+    function newGame() {
+
+      h = grid(N + 1, N, false);
+      v = grid(N, N + 1, false);
+      owner = grid(N, N, 0);
+      hOwner = grid(N + 1, N, 0);
+      vOwner = grid(N, N + 1, 0);
+      boxes = { 1: 0, 2: 0 };
+      linesLeft = 2 * N * (N + 1);
+      turn = 1;
+      gameOver = false;
+      lastMove = null;
+
+    }
+
+    // How many sides of a box are drawn (works on any h and v arrays)
+    function sides(hh, vv, r, c) {
+
+      return (hh[r][c] ? 1 : 0) + (hh[r + 1][c] ? 1 : 0) +
+        (vv[r][c] ? 1 : 0) + (vv[r][c + 1] ? 1 : 0);
+
+    }
+
+    // The boxes touching a line
+    function touching(type, r, c) {
+
+      const list = [];
+
+      if (type === "h") {
+        if (r > 0) list.push([r - 1, c]);
+        if (r < N) list.push([r, c]);
+      } else {
+        if (c > 0) list.push([r, c - 1]);
+        if (c < N) list.push([r, c]);
+      }
+
+      return list;
+
+    }
+
+    // Draw a line for `player`. Returns how many boxes it closed.
+    function placeLine(type, r, c, player) {
+
+      if (type === "h") {
+        h[r][c] = true;
+        hOwner[r][c] = player;
+      } else {
+        v[r][c] = true;
+        vOwner[r][c] = player;
+      }
+
+      linesLeft--;
+
+      let closed = 0;
+
+      touching(type, r, c).forEach(([br, bc]) => {
+
+        if (sides(h, v, br, bc) === 4 && owner[br][bc] === 0) {
+          owner[br][bc] = player;
+          closed++;
+        }
+
+      });
+
+      boxes[player] += closed;
+
+      return closed;
+
+    }
+
+    function availableMoves() {
+
+      const moves = [];
+
+      for (let r = 0; r <= N; r++) {
+        for (let c = 0; c < N; c++) {
+          if (!h[r][c]) moves.push({ type: "h", r: r, c: c });
+        }
+      }
+
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c <= N; c++) {
+          if (!v[r][c]) moves.push({ type: "v", r: r, c: c });
+        }
+      }
+
+      return moves;
+
+    }
+
+    function other(player) {
+      return player === 1 ? 2 : 1;
+    }
+
+    function randomOf(list) {
+      return list[Math.floor(Math.random() * list.length)];
+    }
+
+    // A move that closes a box (some touching box already has 3 sides)
+    function isCapture(move) {
+
+      return touching(move.type, move.r, move.c).some(
+        ([br, bc]) => sides(h, v, br, bc) === 3
+      );
+
+    }
+
+    // A move that does not give the other player a box
+    // (no touching box already has 2 or more sides)
+    function isSafe(move) {
+
+      return touching(move.type, move.r, move.c).every(
+        ([br, bc]) => sides(h, v, br, bc) < 2
+      );
+
+    }
+
+    // If this move is made, how many boxes can the other player take?
+    function giveaway(move) {
+
+      const hh = h.map((row) => row.slice());
+      const vv = v.map((row) => row.slice());
+
+      if (move.type === "h") {
+        hh[move.r][move.c] = true;
+      } else {
+        vv[move.r][move.c] = true;
+      }
+
+      let total = 0;
+      let again = true;
+
+      while (again) {
+
+        again = false;
+
+        for (let r = 0; r < N && !again; r++) {
+
+          for (let c = 0; c < N && !again; c++) {
+
+            if (sides(hh, vv, r, c) !== 3) {
+              continue;
+            }
+
+            // Take the missing side of this box
+            if (!hh[r][c]) hh[r][c] = true;
+            else if (!hh[r + 1][c]) hh[r + 1][c] = true;
+            else if (!vv[r][c]) vv[r][c] = true;
+            else vv[r][c + 1] = true;
+
+            again = true;
+
+          }
+
+        }
+
+      }
+
+      // Boxes taken = boxes that are now closed but were not closed before
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          if (sides(hh, vv, r, c) === 4 && owner[r][c] === 0) {
+            total++;
+          }
+        }
+      }
+
+      return total;
+
+    }
+
+    // Choose the computer's line
+    function pickMove() {
+
+      const moves = availableMoves();
+
+      const captures = moves.filter(isCapture);
+
+      if (level === "easy") {
+
+        // Sometimes grabs a box, otherwise plays at random
+        if (captures.length > 0 && Math.random() < 0.5) {
+          return randomOf(captures);
+        }
+
+        return randomOf(moves);
+
+      }
+
+      // Medium and Hard always take a box when they can
+      if (captures.length > 0) {
+        return randomOf(captures);
+      }
+
+      const safe = moves.filter(isSafe);
+
+      if (safe.length > 0) {
+        return randomOf(safe);
+      }
+
+      if (level === "medium") {
+        return randomOf(moves);
+      }
+
+      // Hard: no safe line left, so give away as few boxes as possible
+      let bestCount = Infinity;
+      let best = [];
+
+      moves.forEach((move) => {
+
+        const count = giveaway(move);
+
+        if (count < bestCount) {
+          bestCount = count;
+          best = [move];
+        } else if (count === bestCount) {
+          best.push(move);
+        }
+
+      });
+
+      return randomOf(best);
+
+    }
+
+    // ---------- Names and text ----------
+    function nameOf(player) {
+
+      if (mode === "ai") {
+        return player === 1 ? "You" : "Computer";
+      }
+
+      return player === 1 ? "Player 1" : "Player 2";
+
+    }
+
+    function markOf(player) {
+
+      if (mode === "ai") {
+        return player === 1 ? "Y" : "C";
+      }
+
+      return String(player);
+
+    }
+
+    function updateLabels() {
+
+      labelP1.textContent = nameOf(1) + " wins";
+      labelP2.textContent = nameOf(2) + " wins";
+      boxLabel1.textContent = nameOf(1) + " (boxes)";
+      boxLabel2.textContent = nameOf(2) + " (boxes)";
+
+    }
+
+    function updateScores() {
+
+      scoreP1El.textContent = scores[1];
+      scoreP2El.textContent = scores[2];
+      scoreDrawEl.textContent = scores.draw;
+
+    }
+
+    function setActive(buttons, attribute, value) {
+
+      buttons.forEach((button) => {
+        button.classList.toggle(
+          "active",
+          button.dataset[attribute] === String(value)
+        );
+      });
+
+    }
+
+    function updateOptionButtons() {
+
+      setActive(modeButtons, "mode", mode);
+      setActive(levelButtons, "level", level);
+      setActive(sizeButtons, "size", N);
+
+      aiOptions.classList.toggle("hidden", mode !== "ai");
+
+    }
+
+    function showTurn(extra) {
+
+      if (mode === "ai" && turn === 2) {
+        statusEl.textContent = extra
+          ? "💻 Computer closed a box and goes again..."
+          : "💻 Computer is thinking...";
+        return;
+      }
+
+      const who = mode === "ai" ? "Your turn" : nameOf(turn) + "'s turn";
+
+      statusEl.textContent = extra
+        ? "📦 Box! " + who + " again"
+        : who;
+
+    }
+
+    // ---------- Drawing the board ----------
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const SPACING = 40;
+    const PADDING = 16;
+
+    let hLines = [];
+    let vLines = [];
+    let hHits = [];
+    let vHits = [];
+    let boxRects = [];
+    let boxTexts = [];
+
+    function svgEl(name, attributes) {
+
+      const element = document.createElementNS(SVG_NS, name);
+
+      Object.keys(attributes).forEach((key) => {
+        element.setAttribute(key, attributes[key]);
+      });
+
+      return element;
+
+    }
+
+    function buildBoard() {
+
+      boardEl.replaceChildren();
+
+      const size = N * SPACING + PADDING * 2;
+
+      boardEl.setAttribute("viewBox", "0 0 " + size + " " + size);
+
+      boardWrap.style.width = Math.min(430, N * 54 + 40) + "px";
+
+      hLines = grid(N + 1, N, null);
+      vLines = grid(N, N + 1, null);
+      hHits = grid(N + 1, N, null);
+      vHits = grid(N, N + 1, null);
+      boxRects = grid(N, N, null);
+      boxTexts = grid(N, N, null);
+
+      const fontSize = N >= 10 ? 15 : 20;
+
+      // Boxes (colored when closed)
+      for (let r = 0; r < N; r++) {
+
+        for (let c = 0; c < N; c++) {
+
+          const x = PADDING + c * SPACING;
+          const y = PADDING + r * SPACING;
+
+          const rect = svgEl("rect", {
+            x: x + 3, y: y + 3,
+            width: SPACING - 6, height: SPACING - 6,
+            rx: 4, class: "bx"
+          });
+
+          const text = svgEl("text", {
+            x: x + SPACING / 2, y: y + SPACING / 2 + 1,
+            "font-size": fontSize, class: "bt"
+          });
+
+          boardEl.appendChild(rect);
+          boardEl.appendChild(text);
+
+          boxRects[r][c] = rect;
+          boxTexts[r][c] = text;
+
+        }
+
+      }
+
+      // Visible lines
+      for (let r = 0; r <= N; r++) {
+
+        for (let c = 0; c < N; c++) {
+
+          const x = PADDING + c * SPACING;
+          const y = PADDING + r * SPACING;
+
+          const line = svgEl("line", {
+            x1: x, y1: y, x2: x + SPACING, y2: y, class: "ln"
+          });
+
+          boardEl.appendChild(line);
+
+          hLines[r][c] = line;
+
+        }
+
+      }
+
+      for (let r = 0; r < N; r++) {
+
+        for (let c = 0; c <= N; c++) {
+
+          const x = PADDING + c * SPACING;
+          const y = PADDING + r * SPACING;
+
+          const line = svgEl("line", {
+            x1: x, y1: y, x2: x, y2: y + SPACING, class: "ln"
+          });
+
+          boardEl.appendChild(line);
+
+          vLines[r][c] = line;
+
+        }
+
+      }
+
+      // Dots
+      const dotRadius = N >= 10 ? 3.5 : 4.5;
+
+      for (let r = 0; r <= N; r++) {
+
+        for (let c = 0; c <= N; c++) {
+
+          boardEl.appendChild(svgEl("circle", {
+            cx: PADDING + c * SPACING,
+            cy: PADDING + r * SPACING,
+            r: dotRadius,
+            class: "dot"
+          }));
+
+        }
+
+      }
+
+      // Invisible, thicker lines on top so they are easy to tap
+      for (let r = 0; r <= N; r++) {
+
+        for (let c = 0; c < N; c++) {
+
+          const x = PADDING + c * SPACING;
+          const y = PADDING + r * SPACING;
+
+          const hit = svgEl("line", {
+            x1: x + 6, y1: y, x2: x + SPACING - 6, y2: y,
+            class: "hit", "data-type": "h", "data-r": r, "data-c": c
+          });
+
+          boardEl.appendChild(hit);
+
+          hHits[r][c] = hit;
+
+        }
+
+      }
+
+      for (let r = 0; r < N; r++) {
+
+        for (let c = 0; c <= N; c++) {
+
+          const x = PADDING + c * SPACING;
+          const y = PADDING + r * SPACING;
+
+          const hit = svgEl("line", {
+            x1: x, y1: y + 6, x2: x, y2: y + SPACING - 6,
+            class: "hit", "data-type": "v", "data-r": r, "data-c": c
+          });
+
+          boardEl.appendChild(hit);
+
+          vHits[r][c] = hit;
+
+        }
+
+      }
+
+    }
+
+    function drawBoard() {
+
+      const isLast = (type, r, c) =>
+        lastMove && lastMove.type === type &&
+        lastMove.r === r && lastMove.c === c;
+
+      for (let r = 0; r <= N; r++) {
+
+        for (let c = 0; c < N; c++) {
+
+          const who = hOwner[r][c];
+
+          hLines[r][c].setAttribute(
+            "class",
+            "ln" + (who ? " p" + who : "") +
+            (isLast("h", r, c) ? " last" : "")
+          );
+
+          hHits[r][c].setAttribute(
+            "class", "hit" + (h[r][c] || gameOver ? " done" : "")
+          );
+
+        }
+
+      }
+
+      for (let r = 0; r < N; r++) {
+
+        for (let c = 0; c <= N; c++) {
+
+          const who = vOwner[r][c];
+
+          vLines[r][c].setAttribute(
+            "class",
+            "ln" + (who ? " p" + who : "") +
+            (isLast("v", r, c) ? " last" : "")
+          );
+
+          vHits[r][c].setAttribute(
+            "class", "hit" + (v[r][c] || gameOver ? " done" : "")
+          );
+
+        }
+
+      }
+
+      for (let r = 0; r < N; r++) {
+
+        for (let c = 0; c < N; c++) {
+
+          const who = owner[r][c];
+
+          boxRects[r][c].setAttribute("class", "bx" + (who ? " p" + who : ""));
+          boxTexts[r][c].textContent = who ? markOf(who) : "";
+
+        }
+
+      }
+
+      boxes1El.textContent = boxes[1];
+      boxes2El.textContent = boxes[2];
+
+    }
+
+    // ---------- Playing ----------
+    function startRound() {
+
+      roundId++;
+
+      busy = false;
+
+      newGame();
+      buildBoard();
+      drawBoard();
+      showTurn(false);
+
+    }
+
+    function finishGame() {
+
+      gameOver = true;
+
+      if (boxes[1] > boxes[2]) {
+
+        scores[1]++;
+
+        statusEl.textContent = mode === "ai"
+          ? "🎉 You win " + boxes[1] + " to " + boxes[2] + "!"
+          : "🎉 Player 1 wins " + boxes[1] + " to " + boxes[2] + "!";
+
+      } else if (boxes[2] > boxes[1]) {
+
+        scores[2]++;
+
+        statusEl.textContent = mode === "ai"
+          ? "💻 Computer wins " + boxes[2] + " to " + boxes[1] + "!"
+          : "🎉 Player 2 wins " + boxes[2] + " to " + boxes[1] + "!";
+
+      } else {
+
+        scores.draw++;
+
+        statusEl.textContent =
+          "🤝 It's a draw, " + boxes[1] + " each!";
+
+      }
+
+      drawBoard();
+      updateScores();
+
+    }
+
+    function makeMove(type, r, c) {
+
+      const closed = placeLine(type, r, c, turn);
+
+      lastMove = { type: type, r: r, c: c };
+
+      if (linesLeft === 0) {
+        drawBoard();
+        finishGame();
+        return;
+      }
+
+      // Closing a box means you play again
+      if (closed === 0) {
+        turn = other(turn);
+      }
+
+      drawBoard();
+      showTurn(closed > 0);
+
+      if (mode === "ai" && turn === 2) {
+        computerTurn();
+      }
+
+    }
+
+    function computerTurn() {
+
+      busy = true;
+
+      const myRound = roundId;
+
+      setTimeout(() => {
+
+        if (myRound !== roundId || gameOver) {
+          return;
+        }
+
+        const move = pickMove();
+
+        busy = false;
+
+        makeMove(move.type, move.r, move.c);
+
+      }, 380);
+
+    }
+
+    // Tap on a line
+    boardEl.addEventListener("click", (event) => {
+
+      const hit = event.target.closest(".hit");
+
+      if (!hit || gameOver || busy) {
+        return;
+      }
+
+      if (mode === "ai" && turn !== 1) {
+        return;
+      }
+
+      const type = hit.dataset.type;
+      const r = Number(hit.dataset.r);
+      const c = Number(hit.dataset.c);
+
+      if ((type === "h" ? h[r][c] : v[r][c])) {
+        return;
+      }
+
+      makeMove(type, r, c);
+
+    });
+
+    // ---------- Settings ----------
+    // Changing a setting resets the scores and starts a new round
+    function applySettings() {
+
+      scores = { 1: 0, 2: 0, draw: 0 };
+
+      updateOptionButtons();
+      updateLabels();
+      updateScores();
+      startRound();
+
+    }
+
+    modeButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        mode = button.dataset.mode;
+        applySettings();
+      });
+    });
+
+    levelButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        level = button.dataset.level;
+        applySettings();
+      });
+    });
+
+    sizeButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        N = Number(button.dataset.size);
+        applySettings();
+      });
+    });
+
+    newRoundBtn.addEventListener("click", () => {
+      startRound();
+    });
+
+    resetBtn.addEventListener("click", () => {
+      applySettings();
+    });
+
+    homeBtn.addEventListener("click", () => {
+      window.location.href = "home.html";
+    });
+
+    // Logout
+    logoutBtn.addEventListener("click", async () => {
+
+      logoutBtn.disabled = true;
+
+      try {
+
+        await signOut(auth);
+
+        window.location.replace("login.html");
+
+      } catch (error) {
+
+        console.error(error);
+
+        statusEl.textContent = "Logout failed. Please try again.";
+
+        logoutBtn.disabled = false;
+
+      }
+
+    });
+
+    // Start
+    applySettings();
+
+    // Login check
+    onAuthStateChanged(auth, (user) => {
+
+      if (!user) {
+        window.location.replace("login.html");
+      }
+
+    });
+
+  </script>
+
+</body>
+</html>
