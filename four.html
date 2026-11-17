@@ -199,8 +199,8 @@
       width: min(100%, 420px);
       margin: 0 auto 20px;
       padding: 10px;
-      background: #1a4fa3;
-      border: 3px solid #123c80;
+      background: var(--board-bg, #1a4fa3);
+      border: 3px solid var(--board-border, #123c80);
       border-radius: 16px;
     }
 
@@ -227,11 +227,11 @@
     }
 
     .slot .disc.r {
-      background: radial-gradient(circle at 35% 30%, #ff9aa5, #ff5f6d 55%, #c93a49);
+      background: var(--disc-r, radial-gradient(circle at 35% 30%, #ff9aa5, #ff5f6d 55%, #c93a49));
     }
 
     .slot .disc.y {
-      background: radial-gradient(circle at 35% 30%, #ffe9a3, #f6ca45 55%, #c9971c);
+      background: var(--disc-y, radial-gradient(circle at 35% 30%, #ffe9a3, #f6ca45 55%, #c9971c));
     }
 
     .slot .disc.drop {
@@ -252,6 +252,24 @@
     @keyframes pulse {
       from { filter: brightness(1); }
       to   { filter: brightness(1.45); }
+    }
+
+
+    .note {
+      min-height: 20px;
+      margin: -6px 0 14px;
+      font-size: 14px;
+      color: #f6ca45;
+    }
+
+    .slot.hint {
+      box-shadow: inset 0 0 0 4px #ffffff, 0 0 12px #ffffff;
+      animation: hint-glow 0.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes hint-glow {
+      from { filter: brightness(1); }
+      to   { filter: brightness(1.6); }
     }
 
     .hint-col {
@@ -329,6 +347,24 @@
 
     <div class="board" id="board"></div>
 
+    <p class="note" id="rewardNote"></p>
+
+    <div class="row hidden" id="powerRow">
+      <button class="opt" id="undoBtn" type="button">↩️ Undo</button>
+      <button class="opt" id="hintBtn" type="button">💡 Hint</button>
+    </div>
+
+    <p class="info hidden" id="powerInfo">
+      Undo and Hint work 2 times per game. On Hard, using one means
+      no coins or XP for that game.
+    </p>
+
+    <p class="info">
+      Your wins against the computer are saved to your profile. Beat
+      <strong>Hard</strong> to earn 6 🪙 and 6 XP per win (no power-ups).
+      Easy, Medium and 1 vs 1 give none.
+    </p>
+
     <button class="primary" id="newRoundBtn">New Round</button>
     <button class="secondary" id="resetBtn">Reset Scores</button>
     <button class="secondary" id="homeBtn">Back to Home</button>
@@ -351,6 +387,13 @@
       signOut
     } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
 
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
+
     // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyDhigYBT68Dv4pdboLzVYxnLVMK6VUFFWY",
@@ -364,6 +407,7 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
 
 
     // Elements
@@ -379,6 +423,11 @@
     const resetBtn = document.getElementById("resetBtn");
     const homeBtn = document.getElementById("homeBtn");
     const logoutBtn = document.getElementById("logoutBtn");
+    const rewardNoteEl = document.getElementById("rewardNote");
+    const powerRow = document.getElementById("powerRow");
+    const powerInfo = document.getElementById("powerInfo");
+    const undoBtn = document.getElementById("undoBtn");
+    const hintBtn = document.getElementById("hintBtn");
 
     const modeButtons = document.querySelectorAll("#modeRow .opt");
     const levelButtons = document.querySelectorAll("#levelRow .opt");
@@ -392,7 +441,179 @@
     const COLUMN_ORDER = [3, 2, 4, 1, 5, 0, 6];
 
     // How deep the Hard computer looks ahead
-    const HARD_DEPTH = 5;
+    const HARD_DEPTH = 6;
+
+    // ---------- Your saved profile (items and rewards) ----------
+    // Reward for beating the computer on Hard (only if you used no power-ups)
+    const HARD_REWARD = { coins: 6, xp: 6 };
+
+    // Undo and Hint can each be used this many times per game
+    const POWER_LIMIT = 2;
+
+    let currentUser = null;
+    let saved = {};          // your saved profile data
+
+    const num = (value) => Number(value) || 0;
+
+    async function loadSaved() {
+
+      try {
+
+        const snap = await getDoc(doc(db, "players", currentUser.uid));
+
+        saved = snap.exists() ? snap.data() : {};
+
+      } catch (error) {
+
+        console.error("Profile load error:", error);
+
+        saved = {};
+
+      }
+
+    }
+
+    // Use up one power-up item (checked against your saved data)
+    async function spendItem(field) {
+
+      try {
+
+        const ref = doc(db, "players", currentUser.uid);
+
+        const snap = await getDoc(ref);
+
+        const data = snap.exists() ? snap.data() : {};
+
+        if (num(data[field]) <= 0) {
+          saved = data;
+          return false;
+        }
+
+        const value = num(data[field]) - 1;
+
+        await setDoc(ref, { [field]: value }, { merge: true });
+
+        saved = { ...data, [field]: value };
+
+        return true;
+
+      } catch (error) {
+
+        console.error("Item use error:", error);
+
+        return false;
+
+      }
+
+    }
+
+    // Save a finished game: your stats, plus coins and XP for beating Hard.
+    // Returns a short message to show.
+    async function saveGameResult(playedMode, playedLevel, outcome, rewardOk) {
+
+      if (!currentUser) {
+        return "";
+      }
+
+      try {
+
+        const ref = doc(db, "players", currentUser.uid);
+
+        const snap = await getDoc(ref);
+
+        const data = snap.exists() ? snap.data() : {};
+
+        const changes = {};
+
+        let note = "";
+
+        if (playedMode === "pvp") {
+
+          changes["fourPvpGames"] = num(data["fourPvpGames"]) + 1;
+
+        } else if (outcome === "win") {
+
+          const key = "fourWins" + (
+            playedLevel === "easy" ? "Easy"
+              : playedLevel === "medium" ? "Medium" : "Hard"
+          );
+
+          changes[key] = num(data[key]) + 1;
+
+          if (playedLevel === "hard") {
+
+            if (rewardOk) {
+
+              changes.coins = num(data.coins) + HARD_REWARD.coins;
+              changes.xp = num(data.xp) + HARD_REWARD.xp;
+
+              note = "🪙 +" + HARD_REWARD.coins + " coins and +" +
+                HARD_REWARD.xp + " XP for beating Hard!";
+
+            } else {
+
+              note = "Win saved. You used a power-up, so no coins or XP this game.";
+
+            }
+
+          } else {
+
+            note = "Win saved. (No coins or XP on Easy or Medium)";
+
+          }
+
+        } else if (outcome === "loss") {
+
+          changes["fourLosses"] = num(data["fourLosses"]) + 1;
+
+        } else {
+
+          changes["fourDraws"] = num(data["fourDraws"]) + 1;
+
+        }
+
+        await setDoc(ref, changes, { merge: true });
+
+        saved = { ...data, ...changes };
+
+        return note;
+
+      } catch (error) {
+
+        console.error("Game save error:", error);
+
+        return "Could not save to your profile. Check Firestore rules.";
+
+      }
+
+    }
+
+    // Looks bought in the shop (look only, they never change the game)
+    const FOUR_DISCS = {
+      "pinkgreen": {"r": "radial-gradient(circle at 35% 30%, #ffafe0, #ff6ec7 55%, #bf5295)", "y": "radial-gradient(circle at 35% 30%, #99f1cb, #45e6a0 55%, #34ac78)", "c1": "#ff6ec7", "c2": "#45e6a0"},
+      "purpleorange": {"r": "radial-gradient(circle at 35% 30%, #ceaeff, #a66bff 55%, #7c50bf)", "y": "radial-gradient(circle at 35% 30%, #ffca98, #ff9f43 55%, #bf7732)", "c1": "#a66bff", "c2": "#ff9f43"},
+      "blackwhite": {"r": "radial-gradient(circle at 35% 30%, #8c8f96, #2e3340 55%, #222630)", "y": "radial-gradient(circle at 35% 30%, #f8f9fa, #f3f4f6 55%, #b6b7b8)", "c1": "#2e3340", "c2": "#f3f4f6"},
+      "fireice": {"r": "radial-gradient(circle at 35% 30%, #ffae90, #ff6b35 55%, #bf5028)", "y": "radial-gradient(circle at 35% 30%, #b6e9ff, #7ad7ff 55%, #5ca1bf)", "c1": "#ff6b35", "c2": "#7ad7ff"},
+      "goldsilver": {"r": "radial-gradient(circle at 35% 30%, #f2d886, #e8b923 55%, #ae8b1a)", "y": "radial-gradient(circle at 35% 30%, #e5eaec, #cfd8dc 55%, #9ba2a5)", "c1": "#e8b923", "c2": "#cfd8dc"}
+    };
+
+    const FOUR_BOARDS = {
+      "green": {"bg": "#1f8a4c", "border": "#166a3a"},
+      "purple": {"bg": "#6b3fbf", "border": "#4f2c92"},
+      "red": {"bg": "#b3261e", "border": "#8a1c16"},
+      "black": {"bg": "#2b2f3a", "border": "#1a1d25"},
+      "rainbow": {"bg": "linear-gradient(135deg, #ff5f6d, #ffc371, #45e6a0, #20d5ff, #c471f5)", "border": "#ffffff"}
+    };
+
+    let discLook = null;    // equipped disc colors (or null for red and yellow)
+
+    // Power-up state for the current round
+    let history = [];       // board snapshots from before each of your moves
+    let undoUsed = 0;
+    let hintUsed = 0;
+    let usedPower = false;
+    let hintIndex = -1;
+
 
     // Game state ("R" = Red, "Y" = Yellow)
     let board = Array(ROWS * COLS).fill("");
@@ -625,43 +846,44 @@
       return list[Math.floor(Math.random() * list.length)];
     }
 
-    // Choose the computer's column
-    function pickColumn() {
+    // Choose a column for `me` (the computer, or a hint for you)
+    function chooseColumn(b, me, lvl) {
 
-      const cpu = other(human);
-      const columns = validColumns(board);
+      const cpu = me;
+      const opp = other(me);
+      const columns = validColumns(b);
 
-      if (level === "easy") {
+      if (lvl === "easy") {
         return randomOf(columns);
       }
 
       // Win now if possible
       for (const col of columns) {
-        if (winsByPlaying(board, col, cpu)) {
+        if (winsByPlaying(b, col, cpu)) {
           return col;
         }
       }
 
       // Block your winning move
       for (const col of columns) {
-        if (winsByPlaying(board, col, human)) {
+        if (winsByPlaying(b, col, opp)) {
           return col;
         }
       }
 
-      if (level === "medium") {
+      if (lvl === "medium") {
 
         // Avoid moves that let you win right after, then prefer the middle
         const safe = columns.filter((col) => {
 
-          const row = dropRow(board, col);
+          const row = dropRow(b, col);
 
-          board[row * COLS + col] = cpu;
+          b[row * COLS + col] = cpu;
 
-          const gives = dropRow(board, col) >= 0 &&
-            winsByPlaying(board, col, human);
+          const gives = dropRow(b, col) >= 0 &&
+            winsByPlaying(b, col, opp);
 
-          board[row * COLS + col] = "";
+          b[row * COLS + col] = "";
 
           return !gives;
 
@@ -689,15 +911,15 @@
 
       for (const col of columns) {
 
-        const row = dropRow(board, col);
+        const row = dropRow(b, col);
 
-        board[row * COLS + col] = cpu;
+        b[row * COLS + col] = cpu;
 
         const score = minimax(
-          board, HARD_DEPTH - 1, -Infinity, Infinity, false, cpu
+          b, HARD_DEPTH - 1, -Infinity, Infinity, false, cpu
         );
 
-        board[row * COLS + col] = "";
+        b[row * COLS + col] = "";
 
         if (score > bestScore) {
           bestScore = score;
@@ -712,6 +934,10 @@
 
     }
 
+    function pickColumn() {
+      return chooseColumn(board, other(human), level);
+    }
+
     // ---------- Names and text ----------
     function nameOf(color) {
 
@@ -724,13 +950,19 @@
     }
 
     function icon(color) {
+
+      if (discLook) {
+        return "●";
+      }
+
       return color === "R" ? "🔴" : "🟡";
+
     }
 
     function updateLabels() {
 
-      labelR.textContent = nameOf("R") + " (🔴)";
-      labelY.textContent = nameOf("Y") + " (🟡)";
+      labelR.textContent = nameOf("R") + " (" + icon("R") + ")";
+      labelY.textContent = nameOf("Y") + " (" + icon("Y") + ")";
 
     }
 
@@ -830,16 +1062,157 @@
 
         }
 
+        slot.classList.toggle("hint", i === hintIndex);
+
         slot.disabled = gameOver;
 
       }
 
+      updatePowerUI();
+
     }
+
+    // ---------- Saving results to your profile ----------
+    // outcome: "win", "loss" or "draw" (only used in 1 vs Computer)
+    async function saveResult(playedMode, playedLevel, outcome) {
+
+      const note = await saveGameResult(
+        playedMode, playedLevel, outcome, !usedPower
+      );
+
+      rewardNoteEl.textContent = note;
+
+    }
+
+    // ---------- Shop looks ----------
+    function applyStyles() {
+
+      discLook = FOUR_DISCS[saved.fourDisc] || null;
+
+      const board = FOUR_BOARDS[saved.fourBoard];
+
+      boardEl.style.setProperty("--board-bg", board ? board.bg : "");
+      boardEl.style.setProperty("--board-border", board ? board.border : "");
+      boardEl.style.setProperty("--disc-r", discLook ? discLook.r : "");
+      boardEl.style.setProperty("--disc-y", discLook ? discLook.y : "");
+
+      labelR.style.color = discLook ? discLook.c1 : "";
+      labelY.style.color = discLook ? discLook.c2 : "";
+
+      updateLabels();
+      drawBoard();
+      showTurn();
+
+    }
+
+    // ---------- Power-ups ----------
+    function updatePowerUI() {
+
+      const undos = num(saved.undos);
+      const hints = num(saved.gameHints);
+
+      const show = mode === "ai" &&
+        (undos > 0 || hints > 0 || undoUsed > 0 || hintUsed > 0);
+
+      powerRow.classList.toggle("hidden", !show);
+      powerInfo.classList.toggle("hidden", !show);
+
+      const myTurn = mode === "ai" && !gameOver && !busy && current === human;
+
+      undoBtn.textContent = "↩️ Undo (" + undos + ")";
+      hintBtn.textContent = "💡 Hint (" + hints + ")";
+
+      undoBtn.disabled =
+        !myTurn || undos <= 0 || undoUsed >= POWER_LIMIT || history.length === 0;
+
+      hintBtn.disabled =
+        !myTurn || hints <= 0 || hintUsed >= POWER_LIMIT;
+
+    }
+
+    function powerNote() {
+
+      rewardNoteEl.textContent = level === "hard"
+        ? "Power-up used: no coins or XP for this game."
+        : "";
+
+    }
+
+    undoBtn.addEventListener("click", async () => {
+
+      if (undoBtn.disabled) {
+        return;
+      }
+
+      undoBtn.disabled = true;
+
+      const ok = await spendItem("undos");
+
+      if (!ok) {
+        rewardNoteEl.textContent = "You have no Undo left.";
+        updatePowerUI();
+        return;
+      }
+
+      const snapshot = history.pop();
+
+      board = snapshot.board;
+      current = snapshot.current;
+      gameOver = false;
+      lastIndex = -1;
+      winCells = [];
+      hintIndex = -1;
+
+      undoUsed++;
+      usedPower = true;
+
+      drawBoard();
+      showTurn();
+      powerNote();
+
+    });
+
+    hintBtn.addEventListener("click", async () => {
+
+      if (hintBtn.disabled) {
+        return;
+      }
+
+      hintBtn.disabled = true;
+
+      const ok = await spendItem("gameHints");
+
+      if (!ok) {
+        rewardNoteEl.textContent = "You have no Hints left.";
+        updatePowerUI();
+        return;
+      }
+
+      hintUsed++;
+      usedPower = true;
+
+      // A decent column (wins, blocks, avoids traps), not always the best
+      const col = chooseColumn(board, human, "medium");
+
+      hintIndex = dropRow(board, col) * COLS + col;
+
+      drawBoard();
+      powerNote();
+
+    });
 
     // ---------- Playing ----------
     function startRound() {
 
       roundId++;
+
+      rewardNoteEl.textContent = "";
+
+      history = [];
+      undoUsed = 0;
+      hintUsed = 0;
+      usedPower = false;
+      hintIndex = -1;
 
       board = Array(ROWS * COLS).fill("");
       current = "R";
@@ -861,6 +1234,12 @@
     function finishRound(result) {
 
       gameOver = true;
+
+      const outcome = !result
+        ? "draw"
+        : result.winner === human ? "win" : "loss";
+
+      saveResult(mode, level, outcome);
 
       if (result) {
 
@@ -929,6 +1308,8 @@
 
       busy = true;
 
+      updatePowerUI();
+
       const myRound = roundId;
 
       // Let the screen draw first, then think
@@ -959,6 +1340,14 @@
 
       if (mode === "ai" && current !== human) {
         return;
+      }
+
+      if (mode === "ai") {
+
+        history.push({ board: board.slice(), current: current });
+
+        hintIndex = -1;
+
       }
 
       play(Number(slot.dataset.col));
@@ -1039,11 +1428,18 @@
     applySettings();
 
     // Login check
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
 
       if (!user) {
         window.location.replace("login.html");
+        return;
       }
+
+      currentUser = user;
+
+      await loadSaved();
+
+      applyStyles();
 
     });
 

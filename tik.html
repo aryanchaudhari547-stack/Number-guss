@@ -174,9 +174,9 @@
 
     .cell {
       aspect-ratio: 1 / 1;
-      border: 2px solid #395779;
+      border: 2px solid var(--cell-border, #395779);
       border-radius: 12px;
-      background: #08172e;
+      background: var(--cell-bg, #08172e);
       color: white;
       font-size: 54px;
       font-weight: bold;
@@ -188,7 +188,17 @@
     }
 
     .cell:hover:not(:disabled) {
-      background: #123c69;
+      background: var(--cell-hover, #123c69);
+    }
+
+    .cell.hint {
+      box-shadow: inset 0 0 0 4px #f6ca45, 0 0 12px #f6ca45;
+      animation: hint-pulse 0.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes hint-pulse {
+      from { filter: brightness(1); }
+      to   { filter: brightness(1.5); }
     }
 
     .cell:active:not(:disabled) {
@@ -262,6 +272,7 @@
     <a href="index.html">Play Game</a>
     <a href="tik.html">Tic Tac Toe</a>
     <a href="leader.html">Leaderboard</a>
+    <a href="shop.html">Shop</a>
     <a href="profile.html">Profile</a>
     <a href="privacy.html">Privacy Policy</a>
   </nav>
@@ -314,10 +325,19 @@
 
     <div class="board" id="board"></div>
 
+    <div class="row hidden" id="powerRow">
+      <button class="opt" id="undoBtn" type="button">↩️ Undo</button>
+      <button class="opt" id="hintBtn" type="button">💡 Hint</button>
+    </div>
+
+    <p class="info hidden" id="powerInfo">
+      Undo and Hint work 2 times per game. On Hard, using one means
+      no coins or XP for that game.
+    </p>
+
     <p class="info">
       Your wins against the computer are saved to your profile.
-      Win on <strong>Hard</strong> to earn 3 🪙 per win. Easy, Medium
-      and 1 vs 1 give no coins.
+      Win on <strong>Hard</strong> to earn 3 🪙 and 3 XP per win (no power-ups). Easy, Medium and 1 vs 1 give none.
     </p>
 
     <button class="primary" id="newRoundBtn">New Round</button>
@@ -364,11 +384,182 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Coins for a Hard win against the computer
-    const HARD_WIN_COINS = 3;
-
     // Hard is strong but not perfect: it makes a random move this often
-    const HARD_MISTAKE_CHANCE = 0.2;
+    const HARD_MISTAKE_CHANCE = 0.12;
+
+
+    // ---------- Your saved profile (items and rewards) ----------
+    // Reward for beating the computer on Hard (only if you used no power-ups)
+    const HARD_REWARD = { coins: 3, xp: 3 };
+
+    // Undo and Hint can each be used this many times per game
+    const POWER_LIMIT = 2;
+
+    let currentUser = null;
+    let saved = {};          // your saved profile data
+
+    const num = (value) => Number(value) || 0;
+
+    async function loadSaved() {
+
+      try {
+
+        const snap = await getDoc(doc(db, "players", currentUser.uid));
+
+        saved = snap.exists() ? snap.data() : {};
+
+      } catch (error) {
+
+        console.error("Profile load error:", error);
+
+        saved = {};
+
+      }
+
+    }
+
+    // Use up one power-up item (checked against your saved data)
+    async function spendItem(field) {
+
+      try {
+
+        const ref = doc(db, "players", currentUser.uid);
+
+        const snap = await getDoc(ref);
+
+        const data = snap.exists() ? snap.data() : {};
+
+        if (num(data[field]) <= 0) {
+          saved = data;
+          return false;
+        }
+
+        const value = num(data[field]) - 1;
+
+        await setDoc(ref, { [field]: value }, { merge: true });
+
+        saved = { ...data, [field]: value };
+
+        return true;
+
+      } catch (error) {
+
+        console.error("Item use error:", error);
+
+        return false;
+
+      }
+
+    }
+
+    // Save a finished game: your stats, plus coins and XP for beating Hard.
+    // Returns a short message to show.
+    async function saveGameResult(playedMode, playedLevel, outcome, rewardOk) {
+
+      if (!currentUser) {
+        return "";
+      }
+
+      try {
+
+        const ref = doc(db, "players", currentUser.uid);
+
+        const snap = await getDoc(ref);
+
+        const data = snap.exists() ? snap.data() : {};
+
+        const changes = {};
+
+        let note = "";
+
+        if (playedMode === "pvp") {
+
+          changes["tttPvpGames"] = num(data["tttPvpGames"]) + 1;
+
+        } else if (outcome === "win") {
+
+          const key = "tttWins" + (
+            playedLevel === "easy" ? "Easy"
+              : playedLevel === "medium" ? "Medium" : "Hard"
+          );
+
+          changes[key] = num(data[key]) + 1;
+
+          if (playedLevel === "hard") {
+
+            if (rewardOk) {
+
+              changes.coins = num(data.coins) + HARD_REWARD.coins;
+              changes.xp = num(data.xp) + HARD_REWARD.xp;
+
+              note = "🪙 +" + HARD_REWARD.coins + " coins and +" +
+                HARD_REWARD.xp + " XP for beating Hard!";
+
+            } else {
+
+              note = "Win saved. You used a power-up, so no coins or XP this game.";
+
+            }
+
+          } else {
+
+            note = "Win saved. (No coins or XP on Easy or Medium)";
+
+          }
+
+        } else if (outcome === "loss") {
+
+          changes["tttLosses"] = num(data["tttLosses"]) + 1;
+
+        } else {
+
+          changes["tttDraws"] = num(data["tttDraws"]) + 1;
+
+        }
+
+        await setDoc(ref, changes, { merge: true });
+
+        saved = { ...data, ...changes };
+
+        return note;
+
+      } catch (error) {
+
+        console.error("Game save error:", error);
+
+        return "Could not save to your profile. Check Firestore rules.";
+
+      }
+
+    }
+
+    // Looks bought in the shop (look only, they never change the game)
+    const TIC_SYMBOLS = {
+      "stars": {"x": "⭐", "o": "🌙"},
+      "fireice": {"x": "🔥", "o": "❄️"},
+      "catdog": {"x": "🐱", "o": "🐶"},
+      "fruit": {"x": "🍎", "o": "🍊"},
+      "space": {"x": "🚀", "o": "🛸"},
+      "royal": {"x": "👑", "o": "💎"}
+    };
+
+    const TIC_BOARDS = {
+      "neon": {"cell": "#0b1a3a", "border": "#20d5ff", "hover": "#16306a"},
+      "wood": {"cell": "#7a4f2a", "border": "#4a2d12", "hover": "#8f6035"},
+      "ice": {"cell": "#2a5d7c", "border": "#9fdcff", "hover": "#3a7ba1"},
+      "candy": {"cell": "#7a2b6e", "border": "#ff8fd0", "hover": "#963a88"},
+      "gold": {"cell": "#5a4410", "border": "#f6ca45", "hover": "#735817"}
+    };
+
+    let symbols = { x: "❌", o: "⭕" };
+    let lastWin = null;
+
+    // Power-up state for the current round
+    let history = [];       // board snapshots from before each of your moves
+    let undoUsed = 0;
+    let hintUsed = 0;
+    let usedPower = false;
+    let hintIndex = -1;
 
     // Elements
     const boardEl = document.getElementById("board");
@@ -384,6 +575,10 @@
     const resetBtn = document.getElementById("resetBtn");
     const homeBtn = document.getElementById("homeBtn");
     const logoutBtn = document.getElementById("logoutBtn");
+    const powerRow = document.getElementById("powerRow");
+    const powerInfo = document.getElementById("powerInfo");
+    const undoBtn = document.getElementById("undoBtn");
+    const hintBtn = document.getElementById("hintBtn");
 
     const modeButtons = document.querySelectorAll("#modeRow .opt");
     const levelButtons = document.querySelectorAll("#levelRow .opt");
@@ -406,7 +601,6 @@
     let human = "X";        // your symbol in 1 vs Computer
     let scores = { X: 0, O: 0, draw: 0 };
     let roundId = 0;        // stops old computer moves after a reset
-    let currentUser = null;
 
     // ---------- Game logic ----------
 
@@ -439,6 +633,10 @@
 
       return cells;
 
+    }
+
+    function mark(symbol) {
+      return symbol === "X" ? symbols.x : symbols.o;
     }
 
     function other(symbol) {
@@ -505,32 +703,33 @@
       return list[Math.floor(Math.random() * list.length)];
     }
 
-    // Choose the computer's move
-    function pickMove() {
+    // Choose a move for `me` (the computer, or a hint for you)
+    function chooseMove(b, me, lvl) {
 
-      const cpu = other(human);
-      const moves = emptyCells(board);
+      const cpu = me;
+      const opp = other(me);
+      const moves = emptyCells(b);
 
-      if (level === "easy") {
+      if (lvl === "easy") {
         return randomOf(moves);
       }
 
-      if (level === "medium") {
+      if (lvl === "medium") {
 
         // Win if possible, then block, then center, then random
-        const win = findWinningMove(board, cpu);
+        const win = findWinningMove(b, cpu);
 
         if (win >= 0) {
           return win;
         }
 
-        const block = findWinningMove(board, human);
+        const block = findWinningMove(b, opp);
 
         if (block >= 0) {
           return block;
         }
 
-        if (!board[4]) {
+        if (!b[4]) {
           return 4;
         }
 
@@ -549,11 +748,11 @@
 
       for (const move of moves) {
 
-        board[move] = cpu;
+        b[move] = cpu;
 
-        const score = minimax(board, human, cpu, 1);
+        const score = minimax(b, opp, cpu, 1);
 
-        board[move] = "";
+        b[move] = "";
 
         if (score > bestScore) {
           bestScore = score;
@@ -566,6 +765,10 @@
 
       return randomOf(bestMoves);
 
+    }
+
+    function pickMove() {
+      return chooseMove(board, other(human), level);
     }
 
     // ---------- Names and text ----------
@@ -581,8 +784,8 @@
 
     function updateLabels() {
 
-      labelX.textContent = nameOf("X") + " (X)";
-      labelO.textContent = nameOf("O") + " (O)";
+      labelX.textContent = nameOf("X") + " (" + symbols.x + ")";
+      labelO.textContent = nameOf("O") + " (" + symbols.o + ")";
 
     }
 
@@ -623,8 +826,8 @@
       }
 
       statusEl.textContent = mode === "ai"
-        ? "Your turn (" + current + ")"
-        : nameOf(current) + "'s turn (" + current + ")";
+        ? "Your turn (" + mark(current) + ")"
+        : nameOf(current) + "'s turn (" + mark(current) + ")";
 
     }
 
@@ -650,6 +853,8 @@
 
     function drawBoard(winLine) {
 
+      lastWin = winLine;
+
       const cells = boardEl.children;
 
       for (let i = 0; i < 9; i++) {
@@ -657,7 +862,7 @@
         const cell = cells[i];
         const value = board[i];
 
-        cell.textContent = value === "X" ? "❌" : value === "O" ? "⭕" : "";
+        cell.textContent = value === "X" ? symbols.x : value === "O" ? symbols.o : "";
 
         cell.classList.toggle("x", value === "X");
         cell.classList.toggle("o", value === "O");
@@ -666,9 +871,13 @@
           Boolean(winLine && winLine.includes(i))
         );
 
+        cell.classList.toggle("hint", i === hintIndex);
+
         cell.disabled = gameOver || Boolean(value);
 
       }
+
+      updatePowerUI();
 
     }
 
@@ -676,74 +885,125 @@
     // outcome: "win", "loss" or "draw" (only used in 1 vs Computer)
     async function saveResult(playedMode, playedLevel, outcome) {
 
-      if (!currentUser) {
+      const note = await saveGameResult(
+        playedMode, playedLevel, outcome, !usedPower
+      );
+
+      rewardNoteEl.textContent = note;
+
+    }
+
+    // ---------- Shop looks ----------
+    function applyStyles() {
+
+      const symbolSet = TIC_SYMBOLS[saved.ticSymbol];
+
+      symbols = symbolSet
+        ? { x: symbolSet.x, o: symbolSet.o }
+        : { x: "❌", o: "⭕" };
+
+      const look = TIC_BOARDS[saved.ticBoard];
+
+      boardEl.style.setProperty("--cell-bg", look ? look.cell : "");
+      boardEl.style.setProperty("--cell-border", look ? look.border : "");
+      boardEl.style.setProperty("--cell-hover", look ? look.hover : "");
+
+      updateLabels();
+      drawBoard(lastWin);
+
+    }
+
+    // ---------- Power-ups ----------
+    function updatePowerUI() {
+
+      const undos = num(saved.undos);
+      const hints = num(saved.gameHints);
+
+      const show = mode === "ai" &&
+        (undos > 0 || hints > 0 || undoUsed > 0 || hintUsed > 0);
+
+      powerRow.classList.toggle("hidden", !show);
+      powerInfo.classList.toggle("hidden", !show);
+
+      const myTurn = mode === "ai" && !gameOver && !busy && current === human;
+
+      undoBtn.textContent = "↩️ Undo (" + undos + ")";
+      hintBtn.textContent = "💡 Hint (" + hints + ")";
+
+      undoBtn.disabled =
+        !myTurn || undos <= 0 || undoUsed >= POWER_LIMIT || history.length === 0;
+
+      hintBtn.disabled =
+        !myTurn || hints <= 0 || hintUsed >= POWER_LIMIT;
+
+    }
+
+    function powerNote() {
+
+      rewardNoteEl.textContent = level === "hard"
+        ? "Power-up used: no coins or XP for this game."
+        : "";
+
+    }
+
+    undoBtn.addEventListener("click", async () => {
+
+      if (undoBtn.disabled) {
         return;
       }
 
-      try {
+      undoBtn.disabled = true;
 
-        const ref = doc(db, "players", currentUser.uid);
+      const ok = await spendItem("undos");
 
-        const snap = await getDoc(ref);
-
-        const data = snap.exists() ? snap.data() : {};
-
-        const num = (key) => Number(data[key]) || 0;
-
-        const changes = {};
-
-        let note = "";
-
-        if (playedMode === "pvp") {
-
-          changes.tttPvpGames = num("tttPvpGames") + 1;
-
-        } else if (outcome === "win") {
-
-          const key = playedLevel === "easy"
-            ? "tttWinsEasy"
-            : playedLevel === "medium"
-              ? "tttWinsMedium"
-              : "tttWinsHard";
-
-          changes[key] = num(key) + 1;
-
-          if (playedLevel === "hard") {
-
-            changes.coins = num("coins") + HARD_WIN_COINS;
-
-            note = "🪙 +" + HARD_WIN_COINS + " coins for beating Hard!";
-
-          } else {
-
-            note = "Win saved. (No coins on Easy or Medium)";
-
-          }
-
-        } else if (outcome === "loss") {
-
-          changes.tttLosses = num("tttLosses") + 1;
-
-        } else {
-
-          changes.tttDraws = num("tttDraws") + 1;
-
-        }
-
-        await setDoc(ref, changes, { merge: true });
-
-        rewardNoteEl.textContent = note;
-
-      } catch (error) {
-
-        console.error("Tic tac toe save error:", error);
-
-        rewardNoteEl.textContent =
-          "Could not save to your profile. Check Firestore rules.";
-
+      if (!ok) {
+        rewardNoteEl.textContent = "You have no Undo left.";
+        updatePowerUI();
+        return;
       }
 
-    }
+      const snapshot = history.pop();
+
+      board = snapshot.board;
+      current = snapshot.current;
+      gameOver = false;
+      hintIndex = -1;
+
+      undoUsed++;
+      usedPower = true;
+
+      drawBoard(null);
+      showTurn();
+      powerNote();
+
+    });
+
+    hintBtn.addEventListener("click", async () => {
+
+      if (hintBtn.disabled) {
+        return;
+      }
+
+      hintBtn.disabled = true;
+
+      const ok = await spendItem("gameHints");
+
+      if (!ok) {
+        rewardNoteEl.textContent = "You have no Hints left.";
+        updatePowerUI();
+        return;
+      }
+
+      hintUsed++;
+      usedPower = true;
+
+      // A decent move (wins, blocks, or takes the center), not always the best
+      hintIndex = chooseMove(board, human, "medium");
+
+      drawBoard(null);
+      powerNote();
+
+    });
 
     // ---------- Playing ----------
     function startRound() {
@@ -751,6 +1011,12 @@
       roundId++;
 
       rewardNoteEl.textContent = "";
+
+      history = [];
+      undoUsed = 0;
+      hintUsed = 0;
+      usedPower = false;
+      hintIndex = -1;
 
       board = Array(9).fill("");
       current = "X";
@@ -789,7 +1055,7 @@
             : "💻 Computer wins!";
         } else {
           statusEl.textContent =
-            "🎉 " + nameOf(result.winner) + " (" + result.winner + ") wins!";
+            "🎉 " + nameOf(result.winner) + " (" + mark(result.winner) + ") wins!";
         }
 
       } else {
@@ -837,6 +1103,8 @@
 
       busy = true;
 
+      updatePowerUI();
+
       const myRound = roundId;
 
       setTimeout(() => {
@@ -871,6 +1139,11 @@
 
       if (board[index]) {
         return;
+      }
+
+      if (mode === "ai") {
+        history.push({ board: board.slice(), current: current });
+        hintIndex = -1;
       }
 
       place(index);
@@ -951,7 +1224,7 @@
     applySettings();
 
     // Login check
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
 
       if (!user) {
         window.location.replace("login.html");
@@ -959,6 +1232,10 @@
       }
 
       currentUser = user;
+
+      await loadSaved();
+
+      applyStyles();
 
     });
 

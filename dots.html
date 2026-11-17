@@ -202,24 +202,24 @@
       width: 100%;
       height: auto;
       display: block;
-      background: #08172e;
+      background: var(--board-bg, #08172e);
       border: 2px solid #294a70;
       border-radius: 14px;
     }
 
     .ln {
-      stroke: #2d4c75;
+      stroke: var(--line, #2d4c75);
       stroke-width: 3;
       stroke-linecap: round;
     }
 
     .ln.p1 {
-      stroke: #20d5ff;
+      stroke: var(--p1, #20d5ff);
       stroke-width: 5;
     }
 
     .ln.p2 {
-      stroke: #f6ca45;
+      stroke: var(--p2, #f6ca45);
       stroke-width: 5;
     }
 
@@ -249,15 +249,17 @@
     }
 
     .bx.p1 {
-      fill: rgba(32, 213, 255, 0.30);
+      fill: var(--p1, #20d5ff);
+      fill-opacity: 0.3;
     }
 
     .bx.p2 {
-      fill: rgba(246, 202, 69, 0.30);
+      fill: var(--p2, #f6ca45);
+      fill-opacity: 0.3;
     }
 
     .bt {
-      fill: #ffffff;
+      fill: var(--box-text, #ffffff);
       font-weight: bold;
       text-anchor: middle;
       dominant-baseline: central;
@@ -265,8 +267,22 @@
     }
 
     .dot {
-      fill: #b9c9df;
+      fill: var(--dot, #b9c9df);
     }
+
+    .ln.hintline {
+      stroke: #ffffff;
+      stroke-width: 6;
+      stroke-dasharray: 5 4;
+    }
+
+    .note {
+      min-height: 20px;
+      margin: -6px 0 14px;
+      font-size: 14px;
+      color: #f6ca45;
+    }
+
 
     .live {
       display: flex;
@@ -279,11 +295,11 @@
     }
 
     .live .p1 strong {
-      color: #20d5ff;
+      color: var(--p1, #20d5ff);
     }
 
     .live .p2 strong {
-      color: #f6ca45;
+      color: var(--p2, #f6ca45);
     }
   </style>
 </head>
@@ -368,9 +384,27 @@
            aria-label="Dots and boxes board"></svg>
     </div>
 
+    <p class="note" id="rewardNote"></p>
+
+    <div class="row hidden" id="powerRow">
+      <button class="opt" id="undoBtn" type="button">↩️ Undo</button>
+      <button class="opt" id="hintBtn" type="button">💡 Hint</button>
+    </div>
+
+    <p class="info hidden" id="powerInfo">
+      Undo and Hint work 2 times per game. On Hard, using one means
+      no coins or XP for that game.
+    </p>
+
     <p class="info">
       Take turns drawing a line between two dots. Close a box to score
       it and play again. The player with the most boxes wins.
+    </p>
+
+    <p class="info">
+      Your wins against the computer are saved to your profile. Beat
+      <strong>Hard</strong> to earn 5 🪙 and 5 XP per win (no power-ups).
+      Easy, Medium and 1 vs 1 give none.
     </p>
 
     <button class="primary" id="newRoundBtn">New Round</button>
@@ -395,6 +429,13 @@
       signOut
     } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
 
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
+
     // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyDhigYBT68Dv4pdboLzVYxnLVMK6VUFFWY",
@@ -408,7 +449,180 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
 
+
+
+    // ---------- Your saved profile (items and rewards) ----------
+    // Reward for beating the computer on Hard (only if you used no power-ups)
+    const HARD_REWARD = { coins: 5, xp: 5 };
+
+    // Undo and Hint can each be used this many times per game
+    const POWER_LIMIT = 2;
+
+    let currentUser = null;
+    let saved = {};          // your saved profile data
+
+    const num = (value) => Number(value) || 0;
+
+    async function loadSaved() {
+
+      try {
+
+        const snap = await getDoc(doc(db, "players", currentUser.uid));
+
+        saved = snap.exists() ? snap.data() : {};
+
+      } catch (error) {
+
+        console.error("Profile load error:", error);
+
+        saved = {};
+
+      }
+
+    }
+
+    // Use up one power-up item (checked against your saved data)
+    async function spendItem(field) {
+
+      try {
+
+        const ref = doc(db, "players", currentUser.uid);
+
+        const snap = await getDoc(ref);
+
+        const data = snap.exists() ? snap.data() : {};
+
+        if (num(data[field]) <= 0) {
+          saved = data;
+          return false;
+        }
+
+        const value = num(data[field]) - 1;
+
+        await setDoc(ref, { [field]: value }, { merge: true });
+
+        saved = { ...data, [field]: value };
+
+        return true;
+
+      } catch (error) {
+
+        console.error("Item use error:", error);
+
+        return false;
+
+      }
+
+    }
+
+    // Save a finished game: your stats, plus coins and XP for beating Hard.
+    // Returns a short message to show.
+    async function saveGameResult(playedMode, playedLevel, outcome, rewardOk) {
+
+      if (!currentUser) {
+        return "";
+      }
+
+      try {
+
+        const ref = doc(db, "players", currentUser.uid);
+
+        const snap = await getDoc(ref);
+
+        const data = snap.exists() ? snap.data() : {};
+
+        const changes = {};
+
+        let note = "";
+
+        if (playedMode === "pvp") {
+
+          changes["dotsPvpGames"] = num(data["dotsPvpGames"]) + 1;
+
+        } else if (outcome === "win") {
+
+          const key = "dotsWins" + (
+            playedLevel === "easy" ? "Easy"
+              : playedLevel === "medium" ? "Medium" : "Hard"
+          );
+
+          changes[key] = num(data[key]) + 1;
+
+          if (playedLevel === "hard") {
+
+            if (rewardOk) {
+
+              changes.coins = num(data.coins) + HARD_REWARD.coins;
+              changes.xp = num(data.xp) + HARD_REWARD.xp;
+
+              note = "🪙 +" + HARD_REWARD.coins + " coins and +" +
+                HARD_REWARD.xp + " XP for beating Hard!";
+
+            } else {
+
+              note = "Win saved. You used a power-up, so no coins or XP this game.";
+
+            }
+
+          } else {
+
+            note = "Win saved. (No coins or XP on Easy or Medium)";
+
+          }
+
+        } else if (outcome === "loss") {
+
+          changes["dotsLosses"] = num(data["dotsLosses"]) + 1;
+
+        } else {
+
+          changes["dotsDraws"] = num(data["dotsDraws"]) + 1;
+
+        }
+
+        await setDoc(ref, changes, { merge: true });
+
+        saved = { ...data, ...changes };
+
+        return note;
+
+      } catch (error) {
+
+        console.error("Game save error:", error);
+
+        return "Could not save to your profile. Check Firestore rules.";
+
+      }
+
+    }
+
+    // Looks bought in the shop (look only, they never change the game)
+    const DOTS_COLORS = {
+      "neon": {"p1": "#39ff14", "p2": "#ff2bd6"},
+      "fireice": {"p1": "#ff6b35", "p2": "#7ad7ff"},
+      "royal": {"p1": "#b983ff", "p2": "#ffd166"},
+      "mono": {"p1": "#ffffff", "p2": "#8f9bab"},
+      "sunset": {"p1": "#ff5f6d", "p2": "#ffc371"}
+    };
+
+    const DOTS_BOARDS = {
+      "chalk": {"bg": "#1f3a2a", "dot": "#e8f1ea", "line": "#3b5a49", "text": "#ffffff"},
+      "night": {"bg": "#05060f", "dot": "#8aa0ff", "line": "#1c2140", "text": "#ffffff"},
+      "blueprint": {"bg": "#0a3a6b", "dot": "#cfe6ff", "line": "#2f6aa8", "text": "#ffffff"},
+      "candy": {"bg": "#3a1030", "dot": "#ffd1ec", "line": "#6b2a5a", "text": "#ffffff"},
+      "paper": {"bg": "#f4ecd8", "dot": "#5a4a2a", "line": "#cbbf9f", "text": "#333333"}
+    };
+
+    const gameEl = document.querySelector(".game");
+
+    // Power-up state for the current round
+    let history = [];       // snapshots from before each of your moves
+    let undoUsed = 0;
+    let hintUsed = 0;
+    let usedPower = false;
+    let hintMove = null;
 
     // Elements
     const boardEl = document.getElementById("board");
@@ -428,6 +642,11 @@
     const resetBtn = document.getElementById("resetBtn");
     const homeBtn = document.getElementById("homeBtn");
     const logoutBtn = document.getElementById("logoutBtn");
+    const rewardNoteEl = document.getElementById("rewardNote");
+    const powerRow = document.getElementById("powerRow");
+    const powerInfo = document.getElementById("powerInfo");
+    const undoBtn = document.getElementById("undoBtn");
+    const hintBtn = document.getElementById("hintBtn");
 
     const modeButtons = document.querySelectorAll("#modeRow .opt");
     const levelButtons = document.querySelectorAll("#levelRow .opt");
@@ -640,13 +859,13 @@
     }
 
     // Choose the computer's line
-    function pickMove() {
+    function pickMove(lvl = level) {
 
       const moves = availableMoves();
 
       const captures = moves.filter(isCapture);
 
-      if (level === "easy") {
+      if (lvl === "easy") {
 
         // Sometimes grabs a box, otherwise plays at random
         if (captures.length > 0 && Math.random() < 0.5) {
@@ -668,7 +887,7 @@
         return randomOf(safe);
       }
 
-      if (level === "medium") {
+      if (lvl === "medium") {
         return randomOf(moves);
       }
 
@@ -1003,7 +1222,165 @@
       boxes1El.textContent = boxes[1];
       boxes2El.textContent = boxes[2];
 
+      // Show the line suggested by a hint
+      if (hintMove) {
+
+        const lineEl = hintMove.type === "h"
+          ? hLines[hintMove.r][hintMove.c]
+          : vLines[hintMove.r][hintMove.c];
+
+        lineEl.setAttribute("class", lineEl.getAttribute("class") + " hintline");
+
+      }
+
+      updatePowerUI();
+
     }
+
+    // ---------- Saving results to your profile ----------
+    // outcome: "win", "loss" or "draw" (only used in 1 vs Computer)
+    async function saveResult(playedMode, playedLevel, outcome) {
+
+      const note = await saveGameResult(
+        playedMode, playedLevel, outcome, !usedPower
+      );
+
+      rewardNoteEl.textContent = note;
+
+    }
+
+    // ---------- Shop looks ----------
+    function applyStyles() {
+
+      const colors = DOTS_COLORS[saved.dotsColor];
+      const look = DOTS_BOARDS[saved.dotsBoard];
+
+      const set = (name, value) => gameEl.style.setProperty(name, value || "");
+
+      set("--p1", colors && colors.p1);
+      set("--p2", colors && colors.p2);
+      set("--board-bg", look && look.bg);
+      set("--dot", look && look.dot);
+      set("--line", look && look.line);
+      set("--box-text", look && look.text);
+
+    }
+
+    // ---------- Power-ups ----------
+    function snapshot() {
+
+      const copy = (rows) => rows.map((row) => row.slice());
+
+      return {
+        h: copy(h), v: copy(v), owner: copy(owner),
+        hOwner: copy(hOwner), vOwner: copy(vOwner),
+        boxes: { 1: boxes[1], 2: boxes[2] },
+        linesLeft: linesLeft, turn: turn, lastMove: lastMove
+      };
+
+    }
+
+    function restore(state) {
+
+      h = state.h;
+      v = state.v;
+      owner = state.owner;
+      hOwner = state.hOwner;
+      vOwner = state.vOwner;
+      boxes = state.boxes;
+      linesLeft = state.linesLeft;
+      turn = state.turn;
+      lastMove = state.lastMove;
+
+    }
+
+    function updatePowerUI() {
+
+      const undos = num(saved.undos);
+      const hints = num(saved.gameHints);
+
+      const show = mode === "ai" &&
+        (undos > 0 || hints > 0 || undoUsed > 0 || hintUsed > 0);
+
+      powerRow.classList.toggle("hidden", !show);
+      powerInfo.classList.toggle("hidden", !show);
+
+      const myTurn = mode === "ai" && !gameOver && !busy && turn === 1;
+
+      undoBtn.textContent = "↩️ Undo (" + undos + ")";
+      hintBtn.textContent = "💡 Hint (" + hints + ")";
+
+      undoBtn.disabled =
+        !myTurn || undos <= 0 || undoUsed >= POWER_LIMIT || history.length === 0;
+
+      hintBtn.disabled =
+        !myTurn || hints <= 0 || hintUsed >= POWER_LIMIT;
+
+    }
+
+    function powerNote() {
+
+      rewardNoteEl.textContent = level === "hard"
+        ? "Power-up used: no coins or XP for this game."
+        : "";
+
+    }
+
+    undoBtn.addEventListener("click", async () => {
+
+      if (undoBtn.disabled) {
+        return;
+      }
+
+      undoBtn.disabled = true;
+
+      const ok = await spendItem("undos");
+
+      if (!ok) {
+        rewardNoteEl.textContent = "You have no Undo left.";
+        updatePowerUI();
+        return;
+      }
+
+      restore(history.pop());
+
+      hintMove = null;
+
+      undoUsed++;
+      usedPower = true;
+
+      drawBoard();
+      showTurn(false);
+      powerNote();
+
+    });
+
+    hintBtn.addEventListener("click", async () => {
+
+      if (hintBtn.disabled) {
+        return;
+      }
+
+      hintBtn.disabled = true;
+
+      const ok = await spendItem("gameHints");
+
+      if (!ok) {
+        rewardNoteEl.textContent = "You have no Hints left.";
+        updatePowerUI();
+        return;
+      }
+
+      hintUsed++;
+      usedPower = true;
+
+      // A decent line (takes a box, or avoids giving one away), not always the best
+      hintMove = pickMove("medium");
+
+      drawBoard();
+      powerNote();
+
+    });
 
     // ---------- Playing ----------
     function startRound() {
@@ -1011,6 +1388,14 @@
       roundId++;
 
       busy = false;
+
+      rewardNoteEl.textContent = "";
+
+      history = [];
+      undoUsed = 0;
+      hintUsed = 0;
+      usedPower = false;
+      hintMove = null;
 
       newGame();
       buildBoard();
@@ -1022,6 +1407,12 @@
     function finishGame() {
 
       gameOver = true;
+
+      const outcome = boxes[1] > boxes[2]
+        ? "win"
+        : boxes[2] > boxes[1] ? "loss" : "draw";
+
+      saveResult(mode, level, outcome);
 
       if (boxes[1] > boxes[2]) {
 
@@ -1083,6 +1474,8 @@
 
       busy = true;
 
+      updatePowerUI();
+
       const myRound = roundId;
 
       setTimeout(() => {
@@ -1120,6 +1513,14 @@
 
       if ((type === "h" ? h[r][c] : v[r][c])) {
         return;
+      }
+
+      if (mode === "ai") {
+
+        history.push(snapshot());
+
+        hintMove = null;
+
       }
 
       makeMove(type, r, c);
@@ -1199,11 +1600,20 @@
     applySettings();
 
     // Login check
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
 
       if (!user) {
         window.location.replace("login.html");
+        return;
       }
+
+      currentUser = user;
+
+      await loadSaved();
+
+      applyStyles();
+
+      updatePowerUI();
 
     });
 

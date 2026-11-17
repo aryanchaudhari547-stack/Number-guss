@@ -376,6 +376,29 @@
       font-size: 12px;
       margin-top: 8px;
     }
+
+    .dpad {
+      grid-template-columns: repeat(3, 66px);
+      grid-template-rows: repeat(3, 54px);
+    }
+
+    .dpad button {
+      font-size: 20px;
+      padding: 0;
+    }
+
+    .shape-tag {
+      color: #9db3cf;
+      font-size: 13px;
+      margin: -8px 0 12px;
+    }
+
+    .assist-note {
+      min-height: 18px;
+      color: #f6ca45;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
   </style>
 </head>
 
@@ -433,6 +456,7 @@
     <section id="playBox" class="hidden">
 
       <h1 id="playTitle">Level 1</h1>
+      <p class="shape-tag" id="shapeTag"></p>
 
       <div class="stats">
         <div class="stat"><p>Moves</p><strong id="moves">0</strong></div>
@@ -444,12 +468,7 @@
         <canvas id="canvas"></canvas>
       </div>
 
-      <div class="dpad" id="dpad">
-        <button class="up" data-dir="up" aria-label="Up">▲</button>
-        <button class="left" data-dir="left" aria-label="Left">◀</button>
-        <button class="right" data-dir="right" aria-label="Right">▶</button>
-        <button class="down" data-dir="down" aria-label="Down">▼</button>
-      </div>
+      <div class="dpad" id="dpad"></div>
 
       <div class="win-box hidden" id="winBox">
         <h3 id="winTitle">Level complete!</h3>
@@ -458,6 +477,18 @@
         <p class="save-note" id="saveNote"></p>
         <button class="primary" id="nextBtn" style="margin-top:12px">Next Level ➜</button>
       </div>
+
+      <p class="assist-note" id="assistNote"></p>
+
+      <div class="row hidden" id="assistRow">
+        <button class="opt" id="mazeHintBtn" type="button">💡 Hint</button>
+        <button class="opt" id="breakBtn" type="button">🔨 Wall Breaker</button>
+      </div>
+
+      <p class="info hidden" id="assistInfo">
+        Hint and Wall Breaker work 2 times per level. Using either one
+        limits that level to 2 stars.
+      </p>
 
       <button class="secondary" id="restartBtn">Restart Level</button>
       <button class="secondary" id="levelsBtn">All Levels</button>
@@ -512,8 +543,9 @@
     const UNLOCK_LEVEL = 4;
 
     // ---- HOW TO ADD MORE LEVELS ----------------------------------------
-    // Option 1: raise TOTAL_LEVELS. Every extra level is a new random maze
-    //           (the same maze every time, because it uses a fixed seed).
+    // Option 1: raise TOTAL_LEVELS. Every extra level is a new maze that
+    //           follows the same pattern (square, circle, hexagon, diamond)
+    //           and is always the same maze because it uses a fixed seed.
     // Option 2: draw your own maze in CUSTOM_LEVELS. They are played after
     //           the generated levels. Use:
     //             #  wall      S  start      E  exit      any other  path
@@ -533,6 +565,29 @@
 
     // =====================================================================
 
+    // Looks bought in the shop (look only)
+    const MAZE_SKINS = {
+      "turtle": "🐢",
+      "rocket": "🚀",
+      "ghost": "👻",
+      "robot": "🤖",
+      "dragon": "🐲",
+      "unicorn": "🦄"
+    };
+
+    const MAZE_THEMES = {
+      "forest": {"wall": "#2d6a3f", "path": "#0f2a1a", "trail": "#1f5a36"},
+      "lava": {"wall": "#8a2b17", "path": "#2a0f0b", "trail": "#5a2a16"},
+      "ice": {"wall": "#6fb7d9", "path": "#0e2433", "trail": "#1c4a66"},
+      "neon": {"wall": "#b026ff", "path": "#0a0a1f", "trail": "#2b1a5e"},
+      "gold": {"wall": "#b8860b", "path": "#1a1405", "trail": "#4a3a0c"}
+    };
+
+    const DEFAULT_THEME = { wall: "#5aa9ff", path: "#0d2347", trail: "#1c5a86" };
+
+    // Power-ups: each can be used this many times per level
+    const ASSIST_LIMIT = 2;
+
     // Elements
     const lockBox = document.getElementById("lockBox");
     const selectBox = document.getElementById("selectBox");
@@ -546,6 +601,7 @@
     const summaryEl = document.getElementById("summary");
     const levelsEl = document.getElementById("levels");
     const playTitle = document.getElementById("playTitle");
+    const shapeTag = document.getElementById("shapeTag");
     const movesEl = document.getElementById("moves");
     const parEl = document.getElementById("par");
     const bestEl = document.getElementById("best");
@@ -558,14 +614,30 @@
     const winText = document.getElementById("winText");
     const saveNote = document.getElementById("saveNote");
     const nextBtn = document.getElementById("nextBtn");
+    const assistNote = document.getElementById("assistNote");
+    const assistRow = document.getElementById("assistRow");
+    const assistInfo = document.getElementById("assistInfo");
+    const mazeHintBtn = document.getElementById("mazeHintBtn");
+    const breakBtn = document.getElementById("breakBtn");
     const restartBtn = document.getElementById("restartBtn");
     const levelsBtn = document.getElementById("levelsBtn");
     const logoutBtn = document.getElementById("logoutBtn");
 
     const ctx = canvas.getContext("2d");
 
-    // ---------- Maze creation ----------
-    // A maze is a grid of tiles: 1 = wall, 0 = path.
+    // =====================================================================
+    //  MAZE BUILDING
+    //  Every maze (any shape) is a graph:
+    //    edges[id]  = every place a passage could be made
+    //    link[id]   = the passages that are open: { direction: otherId }
+    // =====================================================================
+
+    const SHAPE_CYCLE = ["square", "circle", "hex", "diamond"];
+
+    const SHAPE_NAME = {
+      square: "Square maze", circle: "Circle maze", hex: "Hexagon maze",
+      diamond: "Diamond maze", tiles: "Custom maze"
+    };
 
     // Small random number generator, so the same level is always the same maze
     function makeRandom(seed) {
@@ -582,74 +654,176 @@
 
     }
 
-    // Build a random maze with `cellsW` x `cellsH` rooms
-    function generateMaze(cellsW, cellsH, seed) {
+    function newMaze(shape, count) {
 
-      const random = makeRandom(seed);
+      const make = () => Array.from({ length: count }, () => ({}));
 
-      const rows = cellsH * 2 + 1;
-      const cols = cellsW * 2 + 1;
+      return {
+        shape: shape,
+        count: count,
+        edges: Array.from({ length: count }, () => []),
+        nbr: make(),
+        link: make(),
+        start: 0,
+        exit: count - 1,
+        geom: {},
+        par: 0
+      };
 
-      const grid = [];
+    }
 
-      for (let r = 0; r < rows; r++) {
-        grid.push(Array(cols).fill(1));
+    // A possible passage between u and v ("d" is the way out of u)
+    function addEdge(maze, u, v, d, back) {
+
+      maze.edges[u].push({ v: v, d: d, back: back });
+      maze.edges[v].push({ v: u, d: back, back: d });
+
+      (maze.nbr[u][d] = maze.nbr[u][d] || []).push(v);
+      (maze.nbr[v][back] = maze.nbr[v][back] || []).push(u);
+
+    }
+
+    // Square rooms (also used for the diamond maze, which is drawn tilted)
+    function buildSquare(rooms, shape) {
+
+      const maze = newMaze(shape, rooms * rooms);
+
+      maze.geom = { rows: rooms, cols: rooms };
+
+      for (let r = 0; r < rooms; r++) {
+
+        for (let c = 0; c < rooms; c++) {
+
+          const id = r * rooms + c;
+
+          if (c + 1 < rooms) addEdge(maze, id, id + 1, "right", "left");
+          if (r + 1 < rooms) addEdge(maze, id, id + rooms, "down", "up");
+
+        }
+
       }
 
-      const visited = [];
+      maze.start = 0;
+      maze.exit = rooms * rooms - 1;
 
-      for (let r = 0; r < cellsH; r++) {
-        visited.push(Array(cellsW).fill(false));
+      return maze;
+
+    }
+
+    // Hexagon-shaped board made of hexagon rooms
+    function buildHex(radius) {
+
+      const cells = [];
+      const index = new Map();
+
+      for (let r = -radius; r <= radius; r++) {
+
+        for (let q = -radius; q <= radius; q++) {
+
+          if (Math.abs(q + r) <= radius) {
+            index.set(q + "," + r, cells.length);
+            cells.push({ q: q, r: r });
+          }
+
+        }
+
       }
 
-      // Walk through the rooms and knock down walls (depth-first)
-      const stack = [[0, 0]];
+      const maze = newMaze("hex", cells.length);
 
-      visited[0][0] = true;
-      grid[1][1] = 0;
+      maze.geom = { radius: radius, cells: cells };
 
-      while (stack.length > 0) {
+      // Each pair of neighbors is added once
+      const pairs = [["e", 1, 0, "w"], ["se", 0, 1, "nw"], ["sw", -1, 1, "ne"]];
 
-        const [cr, cc] = stack[stack.length - 1];
+      cells.forEach((cell, id) => {
 
-        const options = [];
+        pairs.forEach(([d, dq, dr, back]) => {
 
-        [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([dr, dc]) => {
+          const other = index.get((cell.q + dq) + "," + (cell.r + dr));
 
-          const nr = cr + dr;
-          const nc = cc + dc;
-
-          if (nr >= 0 && nr < cellsH && nc >= 0 && nc < cellsW &&
-              !visited[nr][nc]) {
-            options.push([nr, nc, dr, dc]);
+          if (other !== undefined) {
+            addEdge(maze, id, other, d, back);
           }
 
         });
 
-        if (options.length === 0) {
-          stack.pop();
-          continue;
-        }
+      });
 
-        const [nr, nc, dr, dc] = options[Math.floor(random() * options.length)];
+      maze.start = index.get((-radius) + ",0");
+      maze.exit = index.get(radius + ",0");
 
-        visited[nr][nc] = true;
+      return maze;
 
-        // Open the wall between the two rooms, then the new room
-        grid[cr * 2 + 1 + dr][cc * 2 + 1 + dc] = 0;
-        grid[nr * 2 + 1][nc * 2 + 1] = 0;
+    }
 
-        stack.push([nr, nc]);
+    // Round maze: rings of rooms, start on the outside, exit in the middle
+    function buildCircle(rings) {
+
+      const counts = [1, 6];
+
+      for (let k = 2; k <= rings; k++) {
+
+        const ideal = 2 * Math.PI * (k + 0.5);
+
+        counts.push(ideal / counts[k - 1] >= 1.5 ? counts[k - 1] * 2 : counts[k - 1]);
 
       }
 
-      return {
-        grid: grid,
-        rows: rows,
-        cols: cols,
-        start: [1, 1],
-        exit: [rows - 2, cols - 2]
+      const offsets = [0, 1];
+
+      for (let k = 2; k <= rings; k++) {
+        offsets.push(offsets[k - 1] + counts[k - 1]);
+      }
+
+      const total = offsets[rings] + counts[rings];
+
+      const maze = newMaze("circle", total);
+
+      const ringOf = [0];
+      const indexOf = [0];
+
+      for (let k = 1; k <= rings; k++) {
+        for (let j = 0; j < counts[k]; j++) {
+          ringOf.push(k);
+          indexOf.push(j);
+        }
+      }
+
+      maze.geom = {
+        rings: rings, counts: counts, offsets: offsets,
+        ringOf: ringOf, indexOf: indexOf
       };
+
+      const id = (k, j) => offsets[k] + j;
+
+      // Around each ring
+      for (let k = 1; k <= rings; k++) {
+        for (let j = 0; j < counts[k]; j++) {
+          addEdge(maze, id(k, j), id(k, (j + 1) % counts[k]), "cw", "ccw");
+        }
+      }
+
+      // The middle connects to the first ring
+      for (let j = 0; j < counts[1]; j++) {
+        addEdge(maze, 0, id(1, j), "out", "in");
+      }
+
+      // Each ring connects to the ring inside it
+      for (let k = 2; k <= rings; k++) {
+
+        const ratio = counts[k] / counts[k - 1];
+
+        for (let j = 0; j < counts[k]; j++) {
+          addEdge(maze, id(k - 1, Math.floor(j / ratio)), id(k, j), "out", "in");
+        }
+
+      }
+
+      maze.start = id(rings, 0);
+      maze.exit = 0;
+
+      return maze;
 
     }
 
@@ -659,10 +833,11 @@
       const rows = lines.length;
       const cols = Math.max(...lines.map((line) => line.length));
 
-      const grid = [];
+      const tileId = [];
 
-      let start = null;
-      let exit = null;
+      let count = 0;
+      let start = -1;
+      let exit = -1;
 
       for (let r = 0; r < rows; r++) {
 
@@ -672,62 +847,161 @@
 
           const ch = lines[r][c] || "#";
 
-          if (ch === "S") start = [r, c];
-          if (ch === "E") exit = [r, c];
+          if (ch === "#") {
+            row.push(-1);
+            continue;
+          }
 
-          row.push(ch === "#" ? 1 : 0);
+          if (ch === "S") start = count;
+          if (ch === "E") exit = count;
+
+          row.push(count);
+          count++;
 
         }
 
-        grid.push(row);
+        tileId.push(row);
 
       }
 
-      if (!start || !exit) {
+      if (start < 0 || exit < 0) {
         throw new Error("A custom maze needs one S (start) and one E (exit).");
       }
 
-      return { grid: grid, rows: rows, cols: cols, start: start, exit: exit };
+      const maze = newMaze("tiles", count);
+
+      maze.geom = { rows: rows, cols: cols, tileId: tileId };
+
+      for (let r = 0; r < rows; r++) {
+
+        for (let c = 0; c < cols; c++) {
+
+          const id = tileId[r][c];
+
+          if (id < 0) continue;
+
+          if (c + 1 < cols && tileId[r][c + 1] >= 0) {
+            addEdge(maze, id, tileId[r][c + 1], "right", "left");
+          }
+
+          if (r + 1 < rows && tileId[r + 1][c] >= 0) {
+            addEdge(maze, id, tileId[r + 1][c], "down", "up");
+          }
+
+        }
+
+      }
+
+      // A hand-drawn maze is fully open between neighboring path tiles
+      for (let id = 0; id < count; id++) {
+
+        maze.edges[id].forEach((edge) => {
+          maze.link[id][edge.d] = edge.v;
+        });
+
+      }
+
+      maze.start = start;
+      maze.exit = exit;
+
+      return maze;
 
     }
 
-    // Shortest number of steps from start to exit
-    function shortestPath(maze) {
+    // Make the passages (growing-tree method: lots of branches and dead ends)
+    function carve(maze, random, newestChance) {
 
-      const dist = [];
+      const visited = Array(maze.count).fill(false);
 
-      for (let r = 0; r < maze.rows; r++) {
-        dist.push(Array(maze.cols).fill(-1));
-      }
+      const active = [maze.start];
 
-      const queue = [maze.start];
+      visited[maze.start] = true;
 
-      dist[maze.start[0]][maze.start[1]] = 0;
+      while (active.length > 0) {
 
-      while (queue.length > 0) {
+        const pick = random() < newestChance
+          ? active.length - 1
+          : Math.floor(random() * active.length);
 
-        const [r, c] = queue.shift();
+        const u = active[pick];
 
-        if (r === maze.exit[0] && c === maze.exit[1]) {
-          return dist[r][c];
+        // In the round maze a room opens to only one room on the next ring out
+        const options = maze.edges[u].filter((edge) => {
+
+          if (visited[edge.v]) return false;
+
+          if (edge.d === "out" && maze.link[u].out !== undefined) return false;
+          if (edge.back === "out" && maze.link[edge.v].out !== undefined) return false;
+
+          return true;
+
+        });
+
+        if (options.length === 0) {
+          active.splice(pick, 1);
+          continue;
         }
 
-        [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([dr, dc]) => {
+        const edge = options[Math.floor(random() * options.length)];
 
-          const nr = r + dr;
-          const nc = c + dc;
+        maze.link[u][edge.d] = edge.v;
+        maze.link[edge.v][edge.back] = u;
 
-          if (nr >= 0 && nr < maze.rows && nc >= 0 && nc < maze.cols &&
-              maze.grid[nr][nc] === 0 && dist[nr][nc] === -1) {
-            dist[nr][nc] = dist[r][c] + 1;
-            queue.push([nr, nc]);
+        visited[edge.v] = true;
+
+        active.push(edge.v);
+
+      }
+
+    }
+
+    // Fewest steps from one room to another (also gives the path)
+    function pathBetween(maze, from, to) {
+
+      const previous = Array(maze.count).fill(-2);
+
+      previous[from] = -1;
+
+      const queue = [from];
+
+      for (let i = 0; i < queue.length; i++) {
+
+        const u = queue[i];
+
+        if (u === to) {
+          break;
+        }
+
+        Object.values(maze.link[u]).forEach((v) => {
+
+          if (previous[v] === -2) {
+            previous[v] = u;
+            queue.push(v);
           }
 
         });
 
       }
 
-      return -1;
+      if (previous[to] === -2) {
+        return null;
+      }
+
+      const path = [];
+
+      for (let u = to; u !== -1; u = previous[u]) {
+        path.push(u);
+      }
+
+      return path.reverse();
+
+    }
+
+    function shortestPath(maze) {
+
+      const path = pathBetween(maze, maze.start, maze.exit);
+
+      return path ? path.length - 1 : -1;
 
     }
 
@@ -736,16 +1010,27 @@
     }
 
     // Build level number `n` (1, 2, 3 ...)
+    // Shapes repeat: square, circle, hexagon, diamond. Every 8 levels get bigger.
     function buildLevel(n) {
 
       let maze;
 
       if (n <= TOTAL_LEVELS) {
 
-        // Rooms grow every 7 levels: 3, 4, 5 ... up to 12
-        const rooms = Math.min(12, 3 + Math.floor((n - 1) / 7));
+        const shape = SHAPE_CYCLE[(n - 1) % 4];
+        const grow = Math.floor(Math.floor((n - 1) / 4) / 2);   // 0, 1, 2 ...
 
-        maze = generateMaze(rooms, rooms, n * 7919 + 12345);
+        if (shape === "square") {
+          maze = buildSquare(Math.min(15, 7 + grow), "square");
+        } else if (shape === "diamond") {
+          maze = buildSquare(Math.min(15, 7 + grow), "diamond");
+        } else if (shape === "circle") {
+          maze = buildCircle(Math.min(12, 4 + grow));
+        } else {
+          maze = buildHex(Math.min(10, 4 + Math.floor(grow * 2 / 3)));
+        }
+
+        carve(maze, makeRandom(n * 7919 + 12345), 0.75);
 
       } else {
 
@@ -759,11 +1044,311 @@
 
     }
 
-    // ---------- Player data ----------
+    // =====================================================================
+    //  DRAWING
+    // =====================================================================
+    const SQRT3 = Math.sqrt(3);
+
+    // Work out the canvas size and where things go for this maze
+    function makeLayout(maze, available) {
+
+      const g = maze.geom;
+
+      if (maze.shape === "square" || maze.shape === "tiles") {
+
+        const t = Math.max(10, Math.floor(available / g.cols));
+
+        return { t: t, w: t * g.cols, h: t * g.rows, m: [1, 0, 0, 1, 0, 0] };
+
+      }
+
+      if (maze.shape === "diamond") {
+
+        const t = Math.max(10, Math.floor(available / (g.cols * Math.SQRT2)));
+        const side = t * g.cols;
+        const w = Math.ceil(side * Math.SQRT2) + 4;
+        const k = Math.SQRT1_2;
+
+        // Turn the square 45 degrees around the middle of the canvas
+        return { t: t, w: w, h: w, m: [k, k, -k, k, w / 2, w / 2 - k * side] };
+
+      }
+
+      if (maze.shape === "hex") {
+
+        const n = g.radius;
+        const s = Math.max(7, available / (SQRT3 * (2 * n + 1)));
+
+        return {
+          t: s,
+          w: Math.ceil(SQRT3 * s * (2 * n + 1)) + 4,
+          h: Math.ceil(s * (3 * n + 2)) + 4,
+          m: [1, 0, 0, 1, 0, 0]
+        };
+
+      }
+
+      // circle
+      const t = Math.max(8, Math.floor((available - 6) / (2 * (g.rings + 1))));
+      const size = 2 * (g.rings + 1) * t + 6;
+
+      return { t: t, w: size, h: size, m: [1, 0, 0, 1, 0, 0] };
+
+    }
+
+    // Corner points of a pointy-top hexagon, in the order used below
+    function hexPoint(cx, cy, s, k) {
+
+      const angle = (60 * k - 30) * Math.PI / 180;
+
+      return [cx + s * Math.cos(angle), cy + s * Math.sin(angle)];
+
+    }
+
+    // Which two corners make each side of a hexagon
+    const HEX_SIDES = {
+      e: [0, 1], se: [1, 2], sw: [2, 3], w: [3, 4], nw: [4, 5], ne: [5, 0]
+    };
+
+    // Center of a room in "drawing" coordinates (before any tilt)
+    function roomCenter(maze, L, id) {
+
+      const g = maze.geom;
+
+      if (maze.shape === "square" || maze.shape === "diamond") {
+
+        return [(id % g.cols + 0.5) * L.t, (Math.floor(id / g.cols) + 0.5) * L.t];
+
+      }
+
+      if (maze.shape === "tiles") {
+
+        // Tile centers come from the lookup made in tileSpot
+        const spot = g.spots[id];
+
+        return [(spot[1] + 0.5) * L.t, (spot[0] + 0.5) * L.t];
+
+      }
+
+      if (maze.shape === "hex") {
+
+        const cell = g.cells[id];
+
+        return [
+          L.w / 2 + L.t * SQRT3 * (cell.q + cell.r / 2),
+          L.h / 2 + L.t * 1.5 * cell.r
+        ];
+
+      }
+
+      // circle
+      if (id === 0) {
+        return [L.w / 2, L.h / 2];
+      }
+
+      const k = g.ringOf[id];
+      const n = g.counts[k];
+      const angle = -Math.PI / 2 + (g.indexOf[id] + 0.5) * 2 * Math.PI / n;
+      const radius = (k + 0.5) * L.t;
+
+      return [L.w / 2 + radius * Math.cos(angle), L.h / 2 + radius * Math.sin(angle)];
+
+    }
+
+    // Fill one room with a color
+    function fillRoom(c, maze, L, id, color) {
+
+      const g = maze.geom;
+
+      c.fillStyle = color;
+
+      if (maze.shape === "square" || maze.shape === "diamond") {
+
+        c.fillRect((id % g.cols) * L.t, Math.floor(id / g.cols) * L.t, L.t, L.t);
+
+        return;
+
+      }
+
+      if (maze.shape === "tiles") {
+
+        const spot = g.spots[id];
+
+        c.fillRect(spot[1] * L.t, spot[0] * L.t, L.t, L.t);
+
+        return;
+
+      }
+
+      if (maze.shape === "hex") {
+
+        const [cx, cy] = roomCenter(maze, L, id);
+
+        c.beginPath();
+
+        for (let k = 0; k < 6; k++) {
+
+          const [x, y] = hexPoint(cx, cy, L.t, k);
+
+          if (k === 0) c.moveTo(x, y);
+          else c.lineTo(x, y);
+
+        }
+
+        c.closePath();
+        c.fill();
+
+        return;
+
+      }
+
+      // circle
+      const centerX = L.w / 2;
+      const centerY = L.h / 2;
+
+      c.beginPath();
+
+      if (id === 0) {
+
+        c.arc(centerX, centerY, L.t, 0, Math.PI * 2);
+
+      } else {
+
+        const k = g.ringOf[id];
+        const step = 2 * Math.PI / g.counts[k];
+        const a0 = -Math.PI / 2 + g.indexOf[id] * step;
+        const a1 = a0 + step;
+
+        c.arc(centerX, centerY, (k + 1) * L.t, a0, a1);
+        c.arc(centerX, centerY, k * L.t, a1, a0, true);
+        c.closePath();
+
+      }
+
+      c.fill();
+
+    }
+
+    function line(c, x1, y1, x2, y2) {
+
+      c.moveTo(x1, y1);
+      c.lineTo(x2, y2);
+
+    }
+
+    // Draw the walls of a maze
+    function drawWalls(c, maze, L, color) {
+
+      const g = maze.geom;
+
+      c.strokeStyle = color;
+      c.lineCap = "round";
+      c.lineJoin = "round";
+      c.lineWidth = Math.max(2, Math.min(4, L.t / 5));
+
+      c.beginPath();
+
+      if (maze.shape === "square" || maze.shape === "diamond") {
+
+        for (let id = 0; id < maze.count; id++) {
+
+          const r = Math.floor(id / g.cols);
+          const col = id % g.cols;
+          const x = col * L.t;
+          const y = r * L.t;
+
+          if (maze.link[id].up === undefined) line(c, x, y, x + L.t, y);
+
+          // The start and exit have a gap in the outer wall
+          if (maze.link[id].left === undefined && id !== maze.start) {
+            line(c, x, y, x, y + L.t);
+          }
+
+          if (r === g.rows - 1) line(c, x, y + L.t, x + L.t, y + L.t);
+
+          if (col === g.cols - 1 && id !== maze.exit) {
+            line(c, x + L.t, y, x + L.t, y + L.t);
+          }
+
+        }
+
+      } else if (maze.shape === "hex") {
+
+        for (let id = 0; id < maze.count; id++) {
+
+          const [cx, cy] = roomCenter(maze, L, id);
+
+          Object.keys(HEX_SIDES).forEach((dir) => {
+
+            if (maze.link[id][dir] !== undefined) return;
+
+            // The start and exit have a gap in the outer wall
+            if (id === maze.start && dir === "w") return;
+            if (id === maze.exit && dir === "e") return;
+
+            const [a, b] = HEX_SIDES[dir];
+            const p1 = hexPoint(cx, cy, L.t, a);
+            const p2 = hexPoint(cx, cy, L.t, b);
+
+            line(c, p1[0], p1[1], p2[0], p2[1]);
+
+          });
+
+        }
+
+      } else if (maze.shape === "circle") {
+
+        const centerX = L.w / 2;
+        const centerY = L.h / 2;
+
+        for (let id = 1; id < maze.count; id++) {
+
+          const k = g.ringOf[id];
+          const step = 2 * Math.PI / g.counts[k];
+          const a0 = -Math.PI / 2 + g.indexOf[id] * step;
+          const a1 = a0 + step;
+          const inner = k * L.t;
+          const outer = (k + 1) * L.t;
+
+          // Wall on the clockwise side
+          if (maze.link[id].cw === undefined) {
+            line(
+              c,
+              centerX + inner * Math.cos(a1), centerY + inner * Math.sin(a1),
+              centerX + outer * Math.cos(a1), centerY + outer * Math.sin(a1)
+            );
+          }
+
+          // Wall on the inside
+          if (maze.link[id].in === undefined) {
+            c.moveTo(centerX + inner * Math.cos(a0), centerY + inner * Math.sin(a0));
+            c.arc(centerX, centerY, inner, a0, a1);
+          }
+
+          // Outer wall (with a gap at the start)
+          if (k === g.rings && id !== maze.start) {
+            c.moveTo(centerX + outer * Math.cos(a0), centerY + outer * Math.sin(a0));
+            c.arc(centerX, centerY, outer, a0, a1);
+          }
+
+        }
+
+      }
+
+      c.stroke();
+
+    }
+
+    // =====================================================================
+    //  PLAYER DATA
+    // =====================================================================
     let currentUser = null;
     let xp = 0;
     let completed = 0;     // highest level finished
     let bestMoves = {};    // { "1": 14, "2": 22 ... }
+    let saved = {};        // your saved profile data
+
+    const num = (value) => Number(value) || 0;
 
     // Level = 1 + floor(sqrt(xp / 100))
     function levelFromXp(value) {
@@ -789,8 +1374,10 @@
 
       const data = snap.exists() ? snap.data() : {};
 
-      xp = Number(data.xp) || 0;
-      completed = Number(data.mazeCompleted) || 0;
+      saved = data;
+
+      xp = num(data.xp);
+      completed = num(data.mazeCompleted);
       bestMoves = data.mazeBest && typeof data.mazeBest === "object"
         ? data.mazeBest
         : {};
@@ -801,7 +1388,7 @@
 
       const key = String(level);
 
-      const oldBest = Number(bestMoves[key]) || 0;
+      const oldBest = num(bestMoves[key]);
 
       const newBest = oldBest > 0 ? Math.min(oldBest, moves) : moves;
 
@@ -821,7 +1408,43 @@
 
     }
 
-    // ---------- Screens ----------
+    // Use up one power-up item (checked against your saved data)
+    async function spendItem(field) {
+
+      try {
+
+        const ref = doc(db, "players", currentUser.uid);
+
+        const snap = await getDoc(ref);
+
+        const data = snap.exists() ? snap.data() : {};
+
+        if (num(data[field]) <= 0) {
+          saved = data;
+          return false;
+        }
+
+        const value = num(data[field]) - 1;
+
+        await setDoc(ref, { [field]: value }, { merge: true });
+
+        saved = { ...data, [field]: value };
+
+        return true;
+
+      } catch (error) {
+
+        console.error("Item use error:", error);
+
+        return false;
+
+      }
+
+    }
+
+    // =====================================================================
+    //  SCREENS
+    // =====================================================================
     function showScreen(name) {
 
       lockBox.classList.toggle("hidden", name !== "lock");
@@ -866,7 +1489,7 @@
         button.className = "lvl";
         button.dataset.level = n;
 
-        const best = Number(bestMoves[String(n)]) || 0;
+        const best = num(bestMoves[String(n)]);
 
         const label = document.createElement("span");
         label.textContent = n;
@@ -903,37 +1526,156 @@
 
     }
 
-    // ---------- Playing ----------
+    // =====================================================================
+    //  PLAYING
+    // =====================================================================
     let level = 1;
     let maze = null;
-    let player = [1, 1];
+    let layout = null;
+    let player = 0;
     let moves = 0;
     let finished = false;
     let trail = new Set();
-    let tile = 20;
+    let hintRooms = new Set();
+    let hintTimer = null;
+
+    // Power-ups for this level
+    let hintUsed = 0;
+    let breakUsed = 0;
+    let breakMode = false;
+    let assisted = false;
+
+    // The buttons for each shape: [direction, label, column, row]
+    const PADS = {
+      square: [["up", "▲", 2, 1], ["left", "◀", 1, 2], ["right", "▶", 3, 2], ["down", "▼", 2, 3]],
+      diamond: [["left", "↖", 1, 1], ["up", "↗", 3, 1], ["down", "↙", 1, 3], ["right", "↘", 3, 3]],
+      hex: [
+        ["nw", "↖", 1, 1], ["ne", "↗", 3, 1],
+        ["w", "◀", 1, 2], ["e", "▶", 3, 2],
+        ["sw", "↙", 1, 3], ["se", "↘", 3, 3]
+      ],
+      circle: [["out", "▲ Out", 2, 1], ["ccw", "↺", 1, 2], ["cw", "↻", 3, 2], ["in", "▼ In", 2, 3]]
+    };
+
+    PADS.tiles = PADS.square;
+
+    // Keyboard keys for each shape
+    const KEYS = {
+      square: {
+        arrowup: "up", w: "up", arrowdown: "down", s: "down",
+        arrowleft: "left", a: "left", arrowright: "right", d: "right"
+      },
+      diamond: {
+        arrowup: "up", e: "up", arrowdown: "down", z: "down",
+        arrowleft: "left", q: "left", arrowright: "right", c: "right"
+      },
+      hex: {
+        q: "nw", e: "ne", a: "w", d: "e", z: "sw", c: "se",
+        arrowleft: "w", arrowright: "e"
+      },
+      circle: {
+        arrowup: "out", w: "out", arrowdown: "in", s: "in",
+        arrowleft: "ccw", a: "ccw", arrowright: "cw", d: "cw"
+      }
+    };
+
+    KEYS.tiles = KEYS.square;
+
+    function buildPad() {
+
+      dpad.replaceChildren();
+
+      PADS[maze.shape].forEach(([dir, label, col, row]) => {
+
+        const button = document.createElement("button");
+
+        button.dataset.dir = dir;
+        button.textContent = label;
+        button.style.gridColumn = col;
+        button.style.gridRow = row;
+        button.setAttribute("aria-label", dir);
+
+        dpad.appendChild(button);
+
+      });
+
+    }
+
+    function clearHint() {
+
+      hintRooms = new Set();
+
+      if (hintTimer) {
+        clearTimeout(hintTimer);
+        hintTimer = null;
+      }
+
+    }
+
+    function updateAssistUI() {
+
+      const hints = num(saved.gameHints);
+      const breakers = num(saved.wallBreakers);
+
+      const show = hints > 0 || breakers > 0 || hintUsed > 0 || breakUsed > 0;
+
+      assistRow.classList.toggle("hidden", !show);
+      assistInfo.classList.toggle("hidden", !show);
+
+      mazeHintBtn.textContent = "💡 Hint (" + hints + ")";
+      breakBtn.textContent = breakMode
+        ? "🔨 Pick a direction..."
+        : "🔨 Wall Breaker (" + breakers + ")";
+
+      mazeHintBtn.disabled = finished || hints <= 0 || hintUsed >= ASSIST_LIMIT;
+      breakBtn.disabled =
+        finished || (!breakMode && (breakers <= 0 || breakUsed >= ASSIST_LIMIT));
+
+    }
 
     function startLevel(n) {
 
+      clearHint();
+
       level = n;
       maze = buildLevel(n);
-      player = maze.start.slice();
+      player = maze.start;
       moves = 0;
       finished = false;
-      trail = new Set([player[0] + "," + player[1]]);
+      trail = new Set([player]);
+
+      hintUsed = 0;
+      breakUsed = 0;
+      breakMode = false;
+      assisted = false;
+
+      if (maze.shape === "tiles") {
+        maze.geom.spots = [];
+        maze.geom.tileId.forEach((row, r) => {
+          row.forEach((id, c) => {
+            if (id >= 0) maze.geom.spots[id] = [r, c];
+          });
+        });
+      }
 
       playTitle.textContent = "Level " + n + " of " + totalLevels();
+      shapeTag.textContent = SHAPE_NAME[maze.shape];
       movesEl.textContent = "0";
       parEl.textContent = maze.par;
 
-      const best = Number(bestMoves[String(n)]) || 0;
+      const best = num(bestMoves[String(n)]);
 
       bestEl.textContent = best ? best : "-";
 
+      assistNote.textContent = "";
       winBox.classList.add("hidden");
+
+      buildPad();
       dpad.classList.remove("hidden");
 
       showScreen("play");
 
+      updateAssistUI();
       drawMaze();
 
     }
@@ -946,71 +1688,118 @@
 
       const available = Math.min(mazeWrap.clientWidth || 340, 400);
 
-      tile = Math.max(10, Math.floor(available / maze.cols));
-
-      const width = tile * maze.cols;
-      const height = tile * maze.rows;
+      layout = makeLayout(maze, available);
 
       const ratio = window.devicePixelRatio || 1;
 
-      canvas.width = width * ratio;
-      canvas.height = height * ratio;
-      canvas.style.width = width + "px";
-      canvas.style.height = height + "px";
+      canvas.width = layout.w * ratio;
+      canvas.height = layout.h * ratio;
+      canvas.style.width = layout.w + "px";
+      canvas.style.height = layout.h + "px";
 
-      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      const look = MAZE_THEMES[saved.mazeTheme] || DEFAULT_THEME;
 
-      for (let r = 0; r < maze.rows; r++) {
+      const [a, b, c, d, e, f] = layout.m;
 
-        for (let c = 0; c < maze.cols; c++) {
+      // Everything below is drawn in the (possibly tilted) maze space
+      ctx.setTransform(ratio * a, ratio * b, ratio * c, ratio * d, ratio * e, ratio * f);
 
-          if (maze.grid[r][c] === 1) {
-            ctx.fillStyle = "#1a4fa3";
-          } else if (trail.has(r + "," + c)) {
-            ctx.fillStyle = "#1c5a86";
-          } else {
-            ctx.fillStyle = "#0d2347";
+      // Background (only the maze itself, not the corners around it)
+      ctx.fillStyle = look.path;
+
+      if (maze.shape === "hex") {
+
+        for (let id = 0; id < maze.count; id++) {
+          fillRoom(ctx, maze, layout, id, look.path);
+        }
+
+      } else if (maze.shape === "circle") {
+
+        ctx.beginPath();
+        ctx.arc(layout.w / 2, layout.h / 2, (maze.geom.rings + 1) * layout.t, 0, Math.PI * 2);
+        ctx.fill();
+
+      } else {
+
+        const g = maze.geom;
+
+        ctx.fillRect(0, 0, g.cols * layout.t, g.rows * layout.t);
+
+      }
+
+      if (maze.shape === "tiles") {
+
+        // Hand-drawn mazes: walls are solid tiles
+        const g = maze.geom;
+
+        ctx.fillStyle = look.wall;
+
+        for (let r = 0; r < g.rows; r++) {
+          for (let col = 0; col < g.cols; col++) {
+            if (g.tileId[r][col] < 0) {
+              ctx.fillRect(col * layout.t, r * layout.t, layout.t, layout.t);
+            }
           }
-
-          ctx.fillRect(c * tile, r * tile, tile, tile);
-
         }
 
       }
 
-      // Exit
-      ctx.font = Math.floor(tile * 0.85) + "px Arial";
+      // Start room, the path you walked, then the hint
+      fillRoom(ctx, maze, layout, maze.start, "rgba(69, 230, 160, 0.35)");
+
+      trail.forEach((id) => fillRoom(ctx, maze, layout, id, look.trail));
+
+      hintRooms.forEach((id) => fillRoom(ctx, maze, layout, id, "rgba(246, 202, 69, 0.6)"));
+
+      if (maze.shape !== "tiles") {
+        drawWalls(ctx, maze, layout, look.wall);
+      }
+
+      // The player and the exit are drawn upright (not tilted)
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+      const place = (id) => {
+
+        const [x, y] = roomCenter(maze, layout, id);
+
+        return [a * x + c * y + e, b * x + d * y + f];
+
+      };
+
+      const size = layout.t;
+
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(
-        "⭐",
-        maze.exit[1] * tile + tile / 2,
-        maze.exit[0] * tile + tile / 2 + 1
-      );
+
+      // Exit
+      const [exitX, exitY] = place(maze.exit);
+
+      ctx.font = Math.floor(size * 0.95) + "px Arial";
+      ctx.fillText("⭐", exitX, exitY + 1);
 
       // Player
-      ctx.beginPath();
-      ctx.arc(
-        player[1] * tile + tile / 2,
-        player[0] * tile + tile / 2,
-        tile * 0.36,
-        0,
-        Math.PI * 2
-      );
-      ctx.fillStyle = "#f6ca45";
-      ctx.shadowColor = "#f6ca45";
-      ctx.shadowBlur = 8;
-      ctx.fill();
-      ctx.shadowBlur = 0;
+      const [px, py] = place(player);
+
+      const skin = MAZE_SKINS[saved.mazeSkin];
+
+      if (skin) {
+
+        ctx.font = Math.floor(size * 0.95) + "px Arial";
+        ctx.fillText(skin, px, py + 1);
+
+      } else {
+
+        ctx.beginPath();
+        ctx.arc(px, py, size * 0.36, 0, Math.PI * 2);
+        ctx.fillStyle = "#f6ca45";
+        ctx.shadowColor = "#f6ca45";
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+      }
 
     }
-
-    const DIRECTIONS = {
-      up: [-1, 0],
-      down: [1, 0],
-      left: [0, -1],
-      right: [0, 1]
-    };
 
     function step(direction) {
 
@@ -1018,39 +1807,103 @@
         return;
       }
 
-      const [dr, dc] = DIRECTIONS[direction];
+      const target = maze.link[player][direction];
 
-      const nr = player[0] + dr;
-      const nc = player[1] + dc;
+      // Wall Breaker: knock down the wall in this direction
+      if (breakMode) {
 
-      if (nr < 0 || nr >= maze.rows || nc < 0 || nc >= maze.cols) {
+        breakWall(direction);
+
+        return;
+
+      }
+
+      if (target === undefined) {
         return;
       }
 
-      if (maze.grid[nr][nc] === 1) {
-        return;
-      }
-
-      player = [nr, nc];
+      player = target;
       moves++;
 
-      trail.add(nr + "," + nc);
+      trail.add(player);
 
       movesEl.textContent = moves;
 
+      clearHint();
       drawMaze();
 
-      if (nr === maze.exit[0] && nc === maze.exit[1]) {
+      if (player === maze.exit) {
         win();
       }
+
+    }
+
+    async function breakWall(direction) {
+
+      const options = (maze.nbr[player][direction] || []).filter(
+        (id) => maze.link[player][direction] !== id
+      );
+
+      if (maze.link[player][direction] !== undefined) {
+
+        assistNote.textContent = "That way is already open.";
+
+        return;
+      }
+
+      if (options.length === 0) {
+
+        assistNote.textContent = "That is the outer wall. It cannot be broken.";
+
+        return;
+      }
+
+      breakMode = false;
+
+      const ok = await spendItem("wallBreakers");
+
+      if (!ok) {
+
+        assistNote.textContent = "You have no Wall Breakers left.";
+
+        updateAssistUI();
+
+        return;
+      }
+
+      const other = options[0];
+
+      // Open the passage in both directions
+      const back = maze.edges[player].find(
+        (edge) => edge.v === other && edge.d === direction
+      ).back;
+
+      maze.link[player][direction] = other;
+      maze.link[other][back] = player;
+
+      breakUsed++;
+      assisted = true;
+
+      assistNote.textContent = "🔨 Wall smashed! (Level limited to 2 stars)";
+
+      updateAssistUI();
+      drawMaze();
 
     }
 
     async function win() {
 
       finished = true;
+      breakMode = false;
 
-      const stars = starsFor(moves, maze.par);
+      clearHint();
+
+      let stars = starsFor(moves, maze.par);
+
+      if (assisted) {
+        stars = Math.min(stars, 2);
+      }
+
       const isLast = level >= totalLevels();
 
       winTitle.textContent = "🎉 Level " + level + " complete!";
@@ -1068,9 +1921,12 @@
       winBox.classList.remove("hidden");
       dpad.classList.add("hidden");
 
+      updateAssistUI();
+
       try {
 
-        const improved = await saveProgress(level, moves);
+        // Only the real shortest-path score counts when you did not use help
+        const improved = await saveProgress(level, assisted ? Math.max(moves, Math.ceil(maze.par * 1.2)) : moves);
 
         saveNote.textContent = improved
           ? "Progress saved. New best!"
@@ -1088,6 +1944,62 @@
       }
 
     }
+
+    // ---------- Power-ups ----------
+    mazeHintBtn.addEventListener("click", async () => {
+
+      if (mazeHintBtn.disabled || finished) {
+        return;
+      }
+
+      mazeHintBtn.disabled = true;
+
+      const ok = await spendItem("gameHints");
+
+      if (!ok) {
+
+        assistNote.textContent = "You have no Hints left.";
+
+        updateAssistUI();
+
+        return;
+      }
+
+      hintUsed++;
+      assisted = true;
+
+      // Show the next few rooms on the shortest way to the exit
+      const path = pathBetween(maze, player, maze.exit) || [];
+
+      hintRooms = new Set(path.slice(1, 7));
+
+      assistNote.textContent = "💡 Follow the gold rooms. (Level limited to 2 stars)";
+
+      updateAssistUI();
+      drawMaze();
+
+      hintTimer = setTimeout(() => {
+        hintRooms = new Set();
+        drawMaze();
+      }, 3500);
+
+    });
+
+    breakBtn.addEventListener("click", () => {
+
+      if (finished) {
+        return;
+      }
+
+      breakMode = !breakMode;
+
+      assistNote.textContent = breakMode
+        ? "🔨 Press a direction to smash the wall that way."
+        : "";
+
+      updateAssistUI();
+
+    });
 
     // ---------- Controls ----------
     // D-pad: tap to move, hold to keep moving
@@ -1118,7 +2030,10 @@
 
       stopHold();
 
-      holdTimer = setInterval(() => step(direction), 130);
+      // Holding does not repeat while smashing a wall
+      if (!breakMode) {
+        holdTimer = setInterval(() => step(direction), 140);
+      }
 
     });
 
@@ -1131,26 +2046,59 @@
     // Keyboard
     window.addEventListener("keydown", (event) => {
 
-      if (playBox.classList.contains("hidden")) {
+      if (playBox.classList.contains("hidden") || !maze) {
         return;
       }
 
-      const keys = {
-        ArrowUp: "up", w: "up", W: "up",
-        ArrowDown: "down", s: "down", S: "down",
-        ArrowLeft: "left", a: "left", A: "left",
-        ArrowRight: "right", d: "right", D: "right"
-      };
+      const direction = KEYS[maze.shape][event.key.toLowerCase()];
 
-      if (keys[event.key]) {
+      if (direction) {
         event.preventDefault();
-        step(keys[event.key]);
+        step(direction);
       }
 
     });
 
     // Swipe on the maze
     let touchStart = null;
+
+    // Work out which direction a swipe means for this maze shape
+    function swipeDirection(dx, dy) {
+
+      const shape = maze.shape;
+
+      if (shape === "square" || shape === "tiles") {
+
+        if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? "right" : "left";
+
+        return dy > 0 ? "down" : "up";
+
+      }
+
+      if (shape === "diamond") {
+
+        if (dx > 0) return dy > 0 ? "right" : "up";
+
+        return dy > 0 ? "down" : "left";
+
+      }
+
+      if (shape === "circle") {
+
+        if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? "cw" : "ccw";
+
+        return dy > 0 ? "in" : "out";
+
+      }
+
+      // hex: six directions, 60 degrees each
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      const names = ["e", "se", "sw", "w", "nw", "ne"];
+      const slot = Math.round(((angle + 360) % 360) / 60) % 6;
+
+      return names[slot];
+
+    }
 
     mazeWrap.addEventListener("touchstart", (event) => {
 
@@ -1162,7 +2110,7 @@
 
     mazeWrap.addEventListener("touchend", (event) => {
 
-      if (!touchStart) {
+      if (!touchStart || !maze) {
         return;
       }
 
@@ -1177,11 +2125,7 @@
         return;
       }
 
-      if (Math.abs(dx) > Math.abs(dy)) {
-        step(dx > 0 ? "right" : "left");
-      } else {
-        step(dy > 0 ? "down" : "up");
-      }
+      step(swipeDirection(dx, dy));
 
     }, { passive: true });
 
@@ -1210,6 +2154,7 @@
 
     levelsBtn.addEventListener("click", () => {
       stopHold();
+      clearHint();
       showLevelSelect();
     });
 

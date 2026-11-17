@@ -455,7 +455,7 @@
         Every Number Guess win gives coins and XP. Higher scores give more.
         Win several games in a row with the <strong>same number of guesses</strong>
         to build a streak and earn bonus coins. In Tic Tac Toe, beating the
-        computer on Hard gives 3 coins. Level up to unlock rarer cosmetics.
+        computer on Hard in Tic Tac Toe, Connect 4 or Dots &amp; Boxes gives coins and a little XP (no power-ups used). Level up to unlock rarer cosmetics.
         Cosmetics are only for style: nothing in the shop can raise your
         leaderboard score.
       </p>
@@ -600,6 +600,73 @@
       {"id": "fireworks", "emoji": "🎆", "name": "Fireworks", "price": 1400, "level": 7, "pieces": ["🎆", "🎇", "✨"]}
     ];
 
+    // ---- Game items (Tic Tac Toe, Connect 4, Dots & Boxes, Mini Maze) ----
+    const TIC_SYMBOLS = [
+      {"id": "stars", "name": "Star & Moon", "x": "⭐", "o": "🌙", "price": 600, "level": 3, "emoji": "⭐🌙"},
+      {"id": "fireice", "name": "Fire & Ice", "x": "🔥", "o": "❄️", "price": 700, "level": 3, "emoji": "🔥❄️"},
+      {"id": "catdog", "name": "Cat & Dog", "x": "🐱", "o": "🐶", "price": 800, "level": 4, "emoji": "🐱🐶"},
+      {"id": "fruit", "name": "Apple & Orange", "x": "🍎", "o": "🍊", "price": 800, "level": 4, "emoji": "🍎🍊"},
+      {"id": "space", "name": "Space", "x": "🚀", "o": "🛸", "price": 1000, "level": 5, "emoji": "🚀🛸"},
+      {"id": "royal", "name": "Royal", "x": "👑", "o": "💎", "price": 1400, "level": 7, "emoji": "👑💎"}
+    ];
+
+    const TIC_BOARDS = [
+      {"id": "neon", "name": "Neon Grid", "cell": "#0b1a3a", "border": "#20d5ff", "hover": "#16306a", "price": 600, "level": 3, "swatch": "linear-gradient(135deg, #0b1a3a 50%, #20d5ff 50%)", "wide": true},
+      {"id": "wood", "name": "Wood", "cell": "#7a4f2a", "border": "#4a2d12", "hover": "#8f6035", "price": 700, "level": 4, "swatch": "linear-gradient(135deg, #7a4f2a 50%, #4a2d12 50%)", "wide": true},
+      {"id": "ice", "name": "Ice", "cell": "#2a5d7c", "border": "#9fdcff", "hover": "#3a7ba1", "price": 800, "level": 4, "swatch": "linear-gradient(135deg, #2a5d7c 50%, #9fdcff 50%)", "wide": true},
+      {"id": "candy", "name": "Candy", "cell": "#7a2b6e", "border": "#ff8fd0", "hover": "#963a88", "price": 900, "level": 5, "swatch": "linear-gradient(135deg, #7a2b6e 50%, #ff8fd0 50%)", "wide": true},
+      {"id": "gold", "name": "Gold", "cell": "#5a4410", "border": "#f6ca45", "hover": "#735817", "price": 1600, "level": 8, "swatch": "linear-gradient(135deg, #5a4410 50%, #f6ca45 50%)", "wide": true}
+    ];
+
+    const FOUR_DISCS = [
+      {"id": "pinkgreen", "name": "Pink & Green", "c1": "#ff6ec7", "c2": "#45e6a0", "price": 600, "level": 3, "swatch": "linear-gradient(90deg, #ff6ec7 50%, #45e6a0 50%)"},
+      {"id": "purpleorange", "name": "Purple & Orange", "c1": "#a66bff", "c2": "#ff9f43", "price": 600, "level": 3, "swatch": "linear-gradient(90deg, #a66bff 50%, #ff9f43 50%)"},
+      {"id": "blackwhite", "name": "Black & White", "c1": "#2e3340", "c2": "#f3f4f6", "price": 800, "level": 4, "swatch": "linear-gradient(90deg, #2e3340 50%, #f3f4f6 50%)"},
+      {"id": "fireice", "name": "Fire & Ice", "c1": "#ff6b35", "c2": "#7ad7ff", "price": 900, "level": 5, "swatch": "linear-gradient(90deg, #ff6b35 50%, #7ad7ff 50%)"},
+      {"id": "goldsilver", "name": "Gold & Silver", "c1": "#e8b923", "c2": "#cfd8dc", "price": 1400, "level": 7, "swatch": "linear-gradient(90deg, #e8b923 50%, #cfd8dc 50%)"}
+    ];
+
+    const FOUR_BOARDS = [
+      {"id": "green", "name": "Green", "bg": "#1f8a4c", "border": "#166a3a", "price": 600, "level": 3, "swatch": "#1f8a4c", "wide": true},
+      {"id": "purple", "name": "Purple", "bg": "#6b3fbf", "border": "#4f2c92", "price": 700, "level": 4, "swatch": "#6b3fbf", "wide": true},
+      {"id": "red", "name": "Red", "bg": "#b3261e", "border": "#8a1c16", "price": 700, "level": 4, "swatch": "#b3261e", "wide": true},
+      {"id": "black", "name": "Black", "bg": "#2b2f3a", "border": "#1a1d25", "price": 800, "level": 5, "swatch": "#2b2f3a", "wide": true},
+      {"id": "rainbow", "name": "Rainbow", "bg": "linear-gradient(135deg, #ff5f6d, #ffc371, #45e6a0, #20d5ff, #c471f5)", "border": "#ffffff", "price": 1500, "level": 8, "swatch": "linear-gradient(135deg, #ff5f6d, #ffc371, #45e6a0, #20d5ff, #c471f5)", "wide": true}
+    ];
+
+    const DOTS_COLORS = [
+      {"id": "neon", "name": "Neon", "p1": "#39ff14", "p2": "#ff2bd6", "price": 600, "level": 3, "swatch": "linear-gradient(90deg, #39ff14 50%, #ff2bd6 50%)"},
+      {"id": "fireice", "name": "Fire & Ice", "p1": "#ff6b35", "p2": "#7ad7ff", "price": 700, "level": 4, "swatch": "linear-gradient(90deg, #ff6b35 50%, #7ad7ff 50%)"},
+      {"id": "royal", "name": "Royal", "p1": "#b983ff", "p2": "#ffd166", "price": 700, "level": 4, "swatch": "linear-gradient(90deg, #b983ff 50%, #ffd166 50%)"},
+      {"id": "mono", "name": "Mono", "p1": "#ffffff", "p2": "#8f9bab", "price": 800, "level": 5, "swatch": "linear-gradient(90deg, #ffffff 50%, #8f9bab 50%)"},
+      {"id": "sunset", "name": "Sunset", "p1": "#ff5f6d", "p2": "#ffc371", "price": 900, "level": 5, "swatch": "linear-gradient(90deg, #ff5f6d 50%, #ffc371 50%)"}
+    ];
+
+    const DOTS_BOARDS = [
+      {"id": "chalk", "name": "Chalkboard", "bg": "#1f3a2a", "dot": "#e8f1ea", "line": "#3b5a49", "text": "#ffffff", "price": 700, "level": 4, "swatch": "linear-gradient(135deg, #1f3a2a 50%, #e8f1ea 50%)", "wide": true},
+      {"id": "night", "name": "Night", "bg": "#05060f", "dot": "#8aa0ff", "line": "#1c2140", "text": "#ffffff", "price": 700, "level": 4, "swatch": "linear-gradient(135deg, #05060f 50%, #8aa0ff 50%)", "wide": true},
+      {"id": "blueprint", "name": "Blueprint", "bg": "#0a3a6b", "dot": "#cfe6ff", "line": "#2f6aa8", "text": "#ffffff", "price": 800, "level": 5, "swatch": "linear-gradient(135deg, #0a3a6b 50%, #cfe6ff 50%)", "wide": true},
+      {"id": "candy", "name": "Candy", "bg": "#3a1030", "dot": "#ffd1ec", "line": "#6b2a5a", "text": "#ffffff", "price": 900, "level": 5, "swatch": "linear-gradient(135deg, #3a1030 50%, #ffd1ec 50%)", "wide": true},
+      {"id": "paper", "name": "Paper", "bg": "#f4ecd8", "dot": "#5a4a2a", "line": "#cbbf9f", "text": "#333333", "price": 1000, "level": 6, "swatch": "linear-gradient(135deg, #f4ecd8 50%, #5a4a2a 50%)", "wide": true}
+    ];
+
+    const MAZE_SKINS = [
+      {"id": "turtle", "name": "Turtle", "emoji": "🐢", "price": 600, "level": 3},
+      {"id": "rocket", "name": "Rocket", "emoji": "🚀", "price": 700, "level": 4},
+      {"id": "ghost", "name": "Ghost", "emoji": "👻", "price": 800, "level": 4},
+      {"id": "robot", "name": "Robot", "emoji": "🤖", "price": 900, "level": 5},
+      {"id": "dragon", "name": "Dragon", "emoji": "🐲", "price": 1200, "level": 6},
+      {"id": "unicorn", "name": "Unicorn", "emoji": "🦄", "price": 1500, "level": 7}
+    ];
+
+    const MAZE_THEMES = [
+      {"id": "forest", "name": "Forest", "wall": "#2d6a3f", "path": "#0f2a1a", "trail": "#1f5a36", "price": 700, "level": 4, "swatch": "linear-gradient(135deg, #2d6a3f 50%, #0f2a1a 50%)", "wide": true},
+      {"id": "lava", "name": "Lava", "wall": "#8a2b17", "path": "#2a0f0b", "trail": "#5a2a16", "price": 800, "level": 5, "swatch": "linear-gradient(135deg, #8a2b17 50%, #2a0f0b 50%)", "wide": true},
+      {"id": "ice", "name": "Ice", "wall": "#6fb7d9", "path": "#0e2433", "trail": "#1c4a66", "price": 800, "level": 5, "swatch": "linear-gradient(135deg, #6fb7d9 50%, #0e2433 50%)", "wide": true},
+      {"id": "neon", "name": "Neon", "wall": "#b026ff", "path": "#0a0a1f", "trail": "#2b1a5e", "price": 1000, "level": 6, "swatch": "linear-gradient(135deg, #b026ff 50%, #0a0a1f 50%)", "wide": true},
+      {"id": "gold", "name": "Gold", "wall": "#b8860b", "path": "#1a1405", "trail": "#4a3a0c", "price": 1600, "level": 8, "swatch": "linear-gradient(135deg, #b8860b 50%, #1a1405 50%)", "wide": true}
+    ];
+
     // How each cosmetic category works
     //   owned     = list of owned item ids saved on the player
     //   equip     = field that stores the equipped item
@@ -660,23 +727,75 @@
         hint: "Plays an animation in the game when you win.",
         label: "win celebration", list: CELEBRATIONS, owned: "celebrations",
         equip: "celebration", value: (i) => i.id, sync: false, removable: true
+      },
+      ticSymbol: {
+        title: "❌⭕ Tic Tac Toe Symbols",
+        hint: "The marks you play with in Tic Tac Toe.",
+        label: "tic tac toe symbols", list: TIC_SYMBOLS, owned: "ticSymbols", equip: "ticSymbol",
+        value: (i) => i.id, sync: false, removable: true
+      },
+      ticBoard: {
+        title: "🟫 Tic Tac Toe Boards",
+        hint: "The look of the Tic Tac Toe board.",
+        label: "tic tac toe board", list: TIC_BOARDS, owned: "ticBoards", equip: "ticBoard",
+        value: (i) => i.id, sync: false, removable: true
+      },
+      fourDisc: {
+        title: "🔴🟡 Connect 4 Discs",
+        hint: "Your disc colors in Connect 4 (first and second player).",
+        label: "connect 4 discs", list: FOUR_DISCS, owned: "fourDiscs", equip: "fourDisc",
+        value: (i) => i.id, sync: false, removable: true
+      },
+      fourBoard: {
+        title: "🟦 Connect 4 Boards",
+        hint: "The color of the Connect 4 board.",
+        label: "connect 4 board", list: FOUR_BOARDS, owned: "fourBoards", equip: "fourBoard",
+        value: (i) => i.id, sync: false, removable: true
+      },
+      dotsColor: {
+        title: "🔷🔶 Dots & Boxes Colors",
+        hint: "Your line and box colors in Dots & Boxes.",
+        label: "dots and boxes colors", list: DOTS_COLORS, owned: "dotsColors", equip: "dotsColor",
+        value: (i) => i.id, sync: false, removable: true
+      },
+      dotsBoard: {
+        title: "📋 Dots & Boxes Boards",
+        hint: "The background of the Dots & Boxes board.",
+        label: "dots and boxes board", list: DOTS_BOARDS, owned: "dotsBoards", equip: "dotsBoard",
+        value: (i) => i.id, sync: false, removable: true
+      },
+      mazeSkin: {
+        title: "🐢 Maze Characters",
+        hint: "The character you move in the Mini Maze.",
+        label: "maze character", list: MAZE_SKINS, owned: "mazeSkins", equip: "mazeSkin",
+        value: (i) => i.id, sync: false, removable: true
+      },
+      mazeTheme: {
+        title: "🧱 Maze Themes",
+        hint: "The colors of the Mini Maze.",
+        label: "maze theme", list: MAZE_THEMES, owned: "mazeThemes", equip: "mazeTheme",
+        value: (i) => i.id, sync: false, removable: true
       }
     };
 
     const SHOP_ORDER = [
       "badge", "title", "color", "effect", "avatar",
-      "frame", "banner", "theme", "celebration"
+      "frame", "banner", "theme", "celebration",
+      "ticSymbol", "ticBoard", "fourDisc", "fourBoard", "dotsColor", "dotsBoard", "mazeSkin", "mazeTheme"
     ];
 
-    // Power-ups. Only these two exist so the leaderboard stays fair:
-    // hints cost points, and Second Chance never changes your score.
+    // Power-ups. They never raise your leaderboard score. In the board games,
+    // using Undo or Hint on Hard means no coins or XP for that game.
     const POWERUPS = [
       { id: "hint", field: "hintCharges", emoji: "🔮", name: "Extra Oracle Hint",
         price: 300, level: 3, needsOracle: true,
         note: "Use more than 1 hint in a game. Every hint costs 200 points." },
       { id: "shield", field: "shields", emoji: "🛡️", name: "Second Chance",
         price: 400, level: 4,
-        note: "Saves a streak of 2+ once. Does not change your score." }
+        note: "Saves a streak of 2+ once. Does not change your score." },
+      {"id": "undo", "field": "undos", "emoji": "↩️", "name": "Undo Move", "price": 400, "level": 3, "note": "Take back your last move against the computer (Tic Tac Toe, Connect 4, Dots & Boxes). 2 per game."},
+      {"id": "gamehint", "field": "gameHints", "emoji": "💡", "name": "Game Hint", "price": 500, "level": 3, "note": "Shows a decent move in the board games, or a path in the maze. 2 per game."},
+      {"id": "wallbreaker", "field": "wallBreakers", "emoji": "🔨", "name": "Wall Breaker", "price": 600, "level": 4, "note": "Mini Maze: smash one inner wall. 2 per level."}
     ];
 
     const CHEST = {
@@ -777,6 +896,14 @@
         banners: listOf(data.banners),
         themes: themes,
         celebrations: listOf(data.celebrations),
+        ticSymbols: listOf(data.ticSymbols),
+        ticBoards: listOf(data.ticBoards),
+        fourDiscs: listOf(data.fourDiscs),
+        fourBoards: listOf(data.fourBoards),
+        dotsColors: listOf(data.dotsColors),
+        dotsBoards: listOf(data.dotsBoards),
+        mazeSkins: listOf(data.mazeSkins),
+        mazeThemes: listOf(data.mazeThemes),
 
         badge: data.badge || "",
         title: data.title || "Rookie",
@@ -787,10 +914,21 @@
         banner: data.banner || "",
         theme: data.theme || "default",
         celebration: data.celebration || "",
+        ticSymbol: data.ticSymbol || "",
+        ticBoard: data.ticBoard || "",
+        fourDisc: data.fourDisc || "",
+        fourBoard: data.fourBoard || "",
+        dotsColor: data.dotsColor || "",
+        dotsBoard: data.dotsBoard || "",
+        mazeSkin: data.mazeSkin || "",
+        mazeTheme: data.mazeTheme || "",
 
         oracle: data.oracle === true,
         hintCharges: Number(data.hintCharges) || 0,
         shields: Number(data.shields) || 0,
+        undos: Number(data.undos) || 0,
+        gameHints: Number(data.gameHints) || 0,
+        wallBreakers: Number(data.wallBreakers) || 0,
 
         tttWinsEasy: Number(data.tttWinsEasy) || 0,
         tttWinsMedium: Number(data.tttWinsMedium) || 0,
@@ -903,8 +1041,9 @@
       makeBox(
         "powerup",
         "⚡ Power-ups & Chest",
-        "Only two power-ups exist so the leaderboard stays fair. " +
-        "Extra hints cost 200 points each, and Second Chance never changes your score."
+        "Power-ups never raise your leaderboard score. Extra hints cost 200 points each. " +
+        "In Tic Tac Toe, Connect 4 and Dots & Boxes, using Undo or Hint on Hard means " +
+        "no coins or XP for that game."
       );
 
       shopsEl.addEventListener("click", handleShopClick);
@@ -1042,8 +1181,8 @@
             kind: kind,
             id: item.id,
             emoji: item.emoji,
-            swatch: kind === "color" ? item.hex : item.bg,
-            swatchTheme: kind === "theme" || kind === "banner",
+            swatch: kind === "color" ? item.hex : (item.swatch || item.bg),
+            swatchTheme: kind === "theme" || kind === "banner" || item.wide === true,
             border: item.border,
             shadow: item.shadow,
             effect: kind === "effect" ? item.id : "",

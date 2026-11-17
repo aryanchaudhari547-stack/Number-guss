@@ -473,7 +473,7 @@
 
       <p class="hint">
         Separate from your Number Guess stats. Only wins against the
-        computer count here. Beat <strong>Hard</strong> to earn 3 🪙 per win.
+        computer count here. Beat <strong>Hard</strong> to earn 3 🪙 and 3 XP per win (without power-ups).
       </p>
 
       <div class="stats">
@@ -517,10 +517,123 @@
         </div>
 
         <div class="stat">
-          <p>🪙 Coins from Hard</p>
+          <p>🎮 Games vs Computer</p>
           <strong id="tttCoins">0</strong>
         </div>
 
+      </div>
+
+    </section>
+
+    <section class="box">
+
+      <h2>🔴🟡 Connect 4</h2>
+
+      <p class="hint">
+        Wins against the computer are saved here. Beat <strong>Hard</strong> to
+        earn 6 🪙 and 6 XP per win (without power-ups).
+      </p>
+
+      <div class="stats">
+        <div class="stat">
+          <p>🏆 Total Wins</p>
+          <strong id="fourTotal">0</strong>
+          <small>Against the computer</small>
+        </div>
+        <div class="stat">
+          <p>🔥 Hard Wins</p>
+          <strong id="fourHard">0</strong>
+          <small>6 🪙 and 6 XP each</small>
+        </div>
+        <div class="stat">
+          <p>⚡ Medium Wins</p>
+          <strong id="fourMedium">0</strong>
+        </div>
+        <div class="stat">
+          <p>🌱 Easy Wins</p>
+          <strong id="fourEasy">0</strong>
+        </div>
+        <div class="stat">
+          <p>💔 Losses</p>
+          <strong id="fourLosses">0</strong>
+        </div>
+        <div class="stat">
+          <p>🤝 Draws</p>
+          <strong id="fourDraws">0</strong>
+        </div>
+        <div class="stat">
+          <p>👥 1 vs 1 Games</p>
+          <strong id="fourPvp">0</strong>
+          <small>Played with a friend</small>
+        </div>
+        <div class="stat">
+          <p>🎮 Games vs Computer</p>
+          <strong id="fourGames">0</strong>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="box">
+
+      <h2>🔷🔶 Dots &amp; Boxes</h2>
+
+      <p class="hint">
+        Wins against the computer are saved here. Beat <strong>Hard</strong> to
+        earn 5 🪙 and 5 XP per win (without power-ups).
+      </p>
+
+      <div class="stats">
+        <div class="stat">
+          <p>🏆 Total Wins</p>
+          <strong id="dotsTotal">0</strong>
+          <small>Against the computer</small>
+        </div>
+        <div class="stat">
+          <p>🔥 Hard Wins</p>
+          <strong id="dotsHard">0</strong>
+          <small>5 🪙 and 5 XP each</small>
+        </div>
+        <div class="stat">
+          <p>⚡ Medium Wins</p>
+          <strong id="dotsMedium">0</strong>
+        </div>
+        <div class="stat">
+          <p>🌱 Easy Wins</p>
+          <strong id="dotsEasy">0</strong>
+        </div>
+        <div class="stat">
+          <p>💔 Losses</p>
+          <strong id="dotsLosses">0</strong>
+        </div>
+        <div class="stat">
+          <p>🤝 Draws</p>
+          <strong id="dotsDraws">0</strong>
+        </div>
+        <div class="stat">
+          <p>👥 1 vs 1 Games</p>
+          <strong id="dotsPvp">0</strong>
+          <small>Played with a friend</small>
+        </div>
+        <div class="stat">
+          <p>🎮 Games vs Computer</p>
+          <strong id="dotsGames">0</strong>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="box">
+
+      <h2>🧩 Mini Maze</h2>
+
+      <p class="hint">Unlocks at level 7. Progress is saved as you finish levels.</p>
+
+      <div class="stats">
+        <div class="stat">
+          <p>✅ Levels Completed</p>
+          <strong id="mazeDone">0</strong>
+        </div>
       </div>
 
     </section>
@@ -533,7 +646,8 @@
         Every Number Guess win gives coins and XP. Higher scores give more.
         Win several games in a row with the <strong>same number of guesses</strong>
         to build a streak and earn bonus coins. In Tic Tac Toe, beating the
-        computer on Hard gives 3 coins. Spend your coins in the shop.
+        computer on Hard in Tic Tac Toe, Connect 4 or Dots &amp; Boxes gives coins
+        and a little XP (only if you did not use a power-up). Spend your coins in the shop.
       </p>
 
     </section>
@@ -624,6 +738,21 @@
     const totalXpEl = document.getElementById("totalXp");
     const itemsOwnedEl = document.getElementById("itemsOwned");
     const logoutBtn = document.getElementById("logoutBtn");
+
+    // Stats boxes for Connect 4 and Dots & Boxes
+    const gameEls = {};
+
+    ["four", "dots"].forEach((prefix) => {
+
+      gameEls[prefix] = {};
+
+      ["Total", "Hard", "Medium", "Easy", "Losses", "Draws", "Pvp", "Games"].forEach((key) => {
+        gameEls[prefix][key] = document.getElementById(prefix + key);
+      });
+
+    });
+
+    const mazeDoneEl = document.getElementById("mazeDone");
 
     const tttEls = {
       total: document.getElementById("tttTotal"),
@@ -716,7 +845,29 @@
         tttWinsHard: Number(data.tttWinsHard) || 0,
         tttLosses: Number(data.tttLosses) || 0,
         tttDraws: Number(data.tttDraws) || 0,
-        tttPvpGames: Number(data.tttPvpGames) || 0
+        tttPvpGames: Number(data.tttPvpGames) || 0,
+
+        fourWinsEasy: Number(data.fourWinsEasy) || 0,
+        fourWinsMedium: Number(data.fourWinsMedium) || 0,
+        fourWinsHard: Number(data.fourWinsHard) || 0,
+        fourLosses: Number(data.fourLosses) || 0,
+        fourDraws: Number(data.fourDraws) || 0,
+        fourPvpGames: Number(data.fourPvpGames) || 0,
+        dotsWinsEasy: Number(data.dotsWinsEasy) || 0,
+        dotsWinsMedium: Number(data.dotsWinsMedium) || 0,
+        dotsWinsHard: Number(data.dotsWinsHard) || 0,
+        dotsLosses: Number(data.dotsLosses) || 0,
+        dotsDraws: Number(data.dotsDraws) || 0,
+        dotsPvpGames: Number(data.dotsPvpGames) || 0,
+        ticSymbols: listOf(data.ticSymbols),
+        ticBoards: listOf(data.ticBoards),
+        fourDiscs: listOf(data.fourDiscs),
+        fourBoards: listOf(data.fourBoards),
+        dotsColors: listOf(data.dotsColors),
+        dotsBoards: listOf(data.dotsBoards),
+        mazeSkins: listOf(data.mazeSkins),
+        mazeThemes: listOf(data.mazeThemes),
+        mazeCompleted: Number(data.mazeCompleted) || 0
       };
 
     }
@@ -798,6 +949,14 @@
         player.frames.length +
         player.banners.length +
         player.celebrations.length +
+        player.ticSymbols.length +
+        player.ticBoards.length +
+        player.fourDiscs.length +
+        player.fourBoards.length +
+        player.dotsColors.length +
+        player.dotsBoards.length +
+        player.mazeSkins.length +
+        player.mazeThemes.length +
         player.titles.filter((id) => id !== "rookie").length +
         player.themes.filter((id) => id !== "default").length;
 
@@ -812,7 +971,33 @@
       tttEls.losses.textContent = player.tttLosses;
       tttEls.draws.textContent = player.tttDraws;
       tttEls.pvp.textContent = player.tttPvpGames;
-      tttEls.coins.textContent = player.tttWinsHard * 3;
+      tttEls.coins.textContent =
+        player.tttWinsEasy + player.tttWinsMedium + player.tttWinsHard +
+        player.tttLosses + player.tttDraws;
+
+      // Connect 4 and Dots & Boxes stats
+      ["four", "dots"].forEach((prefix) => {
+
+        const els = gameEls[prefix];
+
+        const easy = player[prefix + "WinsEasy"];
+        const medium = player[prefix + "WinsMedium"];
+        const hard = player[prefix + "WinsHard"];
+        const losses = player[prefix + "Losses"];
+        const draws = player[prefix + "Draws"];
+
+        els.Total.textContent = easy + medium + hard;
+        els.Hard.textContent = hard;
+        els.Medium.textContent = medium;
+        els.Easy.textContent = easy;
+        els.Losses.textContent = losses;
+        els.Draws.textContent = draws;
+        els.Pvp.textContent = player[prefix + "PvpGames"];
+        els.Games.textContent = easy + medium + hard + losses + draws;
+
+      });
+
+      mazeDoneEl.textContent = player.mazeCompleted;
 
       // Page theme
       document.body.style.background =
