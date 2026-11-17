@@ -425,6 +425,19 @@
 
     </section>
 
+    <section class="box" id="notificationBox">
+      <h2>🔔 Notifications</h2>
+      <p class="hint" id="notificationStatus" role="status" aria-live="polite">
+        Enable notifications to receive game updates and announcements.
+      </p>
+      <button class="action" id="enableNotifications" type="button">
+        🔔 Enable Notifications
+      </button>
+      <button class="action" id="dismissNotifications" type="button">
+        Not now
+      </button>
+    </section>
+
     <section class="box">
 
       <h2>📊 Stats</h2>
@@ -673,8 +686,17 @@
     import {
       getFirestore,
       doc,
-      getDoc
+      getDoc,
+      setDoc,
+      serverTimestamp
     } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
+
+    import {
+      getMessaging,
+      getToken,
+      onMessage,
+      isSupported
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-messaging.js";
 
     // Firebase configuration
     const firebaseConfig = {
@@ -738,6 +760,16 @@
     const totalXpEl = document.getElementById("totalXp");
     const itemsOwnedEl = document.getElementById("itemsOwned");
     const logoutBtn = document.getElementById("logoutBtn");
+
+    // Push notification controls
+    const notificationBox = document.getElementById("notificationBox");
+    const notificationStatus = document.getElementById("notificationStatus");
+    const enableNotificationsBtn = document.getElementById("enableNotifications");
+    const dismissNotificationsBtn = document.getElementById("dismissNotifications");
+
+    const VAPID_KEY = "BI6qfEKHG6td5A0i2_3pKp-5UXliPf3Nz2dithz-ImPcMo3W0J1VBFRuD40CZT_tVAG8nSVuvbJzUTvWC66GPcM";
+    let messagingInstance = null;
+    let foregroundMessageHandlerReady = false;
 
     // Stats boxes for Connect 4 and Dots & Boxes
     const gameEls = {};
@@ -1004,6 +1036,139 @@
         THEME_BG[player.theme] || THEME_BG.default;
 
     }
+
+    // Push notifications
+    function setNotificationStatus(text, isError = false) {
+      notificationStatus.textContent = text;
+      notificationStatus.style.color = isError ? "#ff8585" : "#9db3cf";
+    }
+
+    function updateNotificationUI() {
+      if (!("Notification" in window)) {
+        setNotificationStatus("This browser does not support web notifications.", true);
+        enableNotificationsBtn.disabled = true;
+        dismissNotificationsBtn.style.display = "none";
+        return;
+      }
+
+      if (Notification.permission === "denied") {
+        setNotificationStatus(
+          "Notifications are blocked by your browser. Change this site's notification permission in browser settings.",
+          true
+        );
+        enableNotificationsBtn.disabled = true;
+        enableNotificationsBtn.style.display = "none";
+        dismissNotificationsBtn.style.display = "none";
+      } else if (Notification.permission === "granted") {
+        setNotificationStatus(
+          "Notification permission is already allowed. Tap the button to register this device."
+        );
+        enableNotificationsBtn.textContent = "Register This Device";
+        enableNotificationsBtn.disabled = false;
+      } else {
+        setNotificationStatus(
+          "Enable notifications to receive game updates and announcements. Your browser will ask after you tap the button."
+        );
+        enableNotificationsBtn.textContent = "🔔 Enable Notifications";
+        enableNotificationsBtn.disabled = false;
+      }
+    }
+
+    async function prepareForegroundNotifications(messaging) {
+      if (foregroundMessageHandlerReady) return;
+      foregroundMessageHandlerReady = true;
+
+      onMessage(messaging, (payload) => {
+        const title = payload.notification?.title || "Number Guess";
+        const body = payload.notification?.body || "You have a new game update.";
+
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.ready.then((registration) => {
+            registration.showNotification(title, { body });
+          }).catch((error) => {
+            console.error("Could not show foreground notification:", error);
+          });
+        }
+      });
+    }
+
+    enableNotificationsBtn.addEventListener("click", async () => {
+      enableNotificationsBtn.disabled = true;
+
+      try {
+        if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+          throw new Error("This browser does not support web push notifications.");
+        }
+
+        if (!currentUser) {
+          throw new Error("Please sign in again before enabling notifications.");
+        }
+
+        if (Notification.permission !== "granted") {
+          const permission = await Notification.requestPermission();
+
+          if (permission !== "granted") {
+            updateNotificationUI();
+            return;
+          }
+        }
+
+        const supported = await isSupported();
+        if (!supported) {
+          throw new Error("Firebase Messaging is not supported in this browser.");
+        }
+
+        const registration = await navigator.serviceWorker.register(
+          "./firebase-messaging-sw.js"
+        );
+
+        messagingInstance = getMessaging(app);
+        const token = await getToken(messagingInstance, {
+          vapidKey: VAPID_KEY,
+          serviceWorkerRegistration: registration
+        });
+
+        if (!token) {
+          throw new Error("Firebase did not return a notification token. Please try again.");
+        }
+
+        await setDoc(
+          doc(
+            db,
+            "players",
+            currentUser.uid,
+            "fcmTokens",
+            encodeURIComponent(token)
+          ),
+          {
+            token: token,
+            platform: "web",
+            updatedAt: serverTimestamp()
+          },
+          { merge: true }
+        );
+
+        await prepareForegroundNotifications(messagingInstance);
+        setNotificationStatus("✅ This device is registered for notifications!");
+        enableNotificationsBtn.textContent = "Notifications Enabled";
+        enableNotificationsBtn.disabled = true;
+        dismissNotificationsBtn.style.display = "none";
+      } catch (error) {
+        console.error("Notification setup error:", error);
+        setNotificationStatus(
+          error.message || "Could not enable notifications. Please try again.",
+          true
+        );
+        enableNotificationsBtn.disabled = false;
+        updateNotificationUI();
+      }
+    });
+
+    dismissNotificationsBtn.addEventListener("click", () => {
+      notificationBox.style.display = "none";
+    });
+
+    updateNotificationUI();
 
     // Logout
     logoutBtn.addEventListener("click", async () => {
