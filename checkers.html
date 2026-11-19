@@ -1,349 +1,1358 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Checkers | Number Guess</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;background:#101827;color:#f8fafc;font-family:Arial,sans-serif;text-align:center;padding:15px}
-h1{color:#60a5fa}
-.panel{max-width:560px;margin:14px auto;background:#1e293b;padding:15px;border-radius:15px}
-button,select{padding:11px 14px;margin:5px;border:0;border-radius:9px;background:#2563eb;color:white;font-weight:bold;cursor:pointer}
-button:disabled{opacity:.4}
-.board{width:min(94vw,480px);aspect-ratio:1;display:grid;grid-template-columns:repeat(8,1fr);margin:15px auto;border:5px solid #475569;border-radius:9px;overflow:hidden}
-.square{display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer}
-.light{background:#e2e8f0}
-.dark{background:#854d0e}
-.piece{width:76%;height:76%;border-radius:50%;border:4px solid #111827;box-shadow:0 3px 5px #0008;display:flex;align-items:center;justify-content:center;font-size:clamp(15px,4vw,25px);font-weight:bold}
-.red{background:#ef4444;color:white}
-.black{background:#1e293b;color:white}
-.king{border-color:#facc15}
-.selected{outline:4px solid #facc15;outline-offset:-4px}
-.target{box-shadow:inset 0 0 0 5px #22c55e}
-.status{color:#facc15;min-height:24px}
-.muted{color:#94a3b8;font-size:13px}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Checkers | Number Guess</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #07152f, #123c69);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    header {
+      max-width: 900px;
+      margin: 10px auto 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    header h2 {
+      color: #20d5ff;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin: 10px auto 20px;
+      max-width: 900px;
+    }
+
+    nav a {
+      background: #193c63;
+      color: white;
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    nav a:hover {
+      background: #087fa9;
+    }
+
+    .logout {
+      background: #e84b61;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+
+    h1 {
+      color: #20d5ff;
+      margin-bottom: 6px;
+    }
+
+    .muted {
+      color: #9db3cf;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .panel {
+      max-width: 560px;
+      margin: 14px auto;
+      padding: 16px;
+      background: #101f3d;
+      border: 1px solid #294a70;
+      border-radius: 16px;
+    }
+
+    button,
+    select {
+      padding: 11px 14px;
+      margin: 4px;
+      border: none;
+      border-radius: 9px;
+      background: #087fa9;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    select {
+      background: #08172e;
+      border: 1px solid #395779;
+    }
+
+    button:hover:not(:disabled) {
+      background: #08a9d5;
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    button.secondary {
+      background: #263d5c;
+      border: 1px solid #395779;
+    }
+
+    .status {
+      color: #f6ca45;
+      min-height: 24px;
+      margin: 8px 0 2px;
+      font-weight: bold;
+    }
+
+    .turn {
+      color: #b9c9df;
+      min-height: 22px;
+    }
+
+    .banner {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 12px;
+      background: #08172e;
+      border: 2px solid #45e6a0;
+      line-height: 1.6;
+    }
+
+    .banner.lose {
+      border-color: #ff8585;
+    }
+
+    .banner.draw {
+      border-color: #f6ca45;
+    }
+
+    .counts {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 560px;
+      margin: 12px auto;
+    }
+
+    .count-box {
+      flex: 1;
+      min-width: 160px;
+      padding: 10px;
+      background: #101f3d;
+      border: 2px solid #294a70;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .count-box.active {
+      border-color: #f6ca45;
+    }
+
+    .board {
+      width: min(94vw, 480px);
+      aspect-ratio: 1;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      margin: 15px auto;
+      border: 6px solid #5a3a14;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 12px 30px #0007;
+    }
+
+    .square {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .light {
+      background: #ecd9b0;
+    }
+
+    .dark {
+      background: #8b5a2b;
+    }
+
+    .square.last {
+      background: #b98a3e;
+    }
+
+    .square.selected {
+      outline: 4px solid #f6ca45;
+      outline-offset: -4px;
+    }
+
+    .square.hint {
+      outline: 4px dashed #ffffff;
+      outline-offset: -4px;
+    }
+
+    .square.target::after {
+      content: "";
+      position: absolute;
+      width: 30%;
+      height: 30%;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 10px #22c55e;
+    }
+
+    .piece {
+      width: 78%;
+      height: 78%;
+      border-radius: 50%;
+      border: 3px solid #1b1208;
+      box-shadow: 0 4px 6px #0009, inset 0 -4px 6px #0004, inset 0 3px 5px #fff3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(14px, 4.4vw, 26px);
+      z-index: 1;
+    }
+
+    .piece.red {
+      background: radial-gradient(circle at 35% 30%, #ff8a8a, #ef4444 55%, #b91c1c);
+    }
+
+    .piece.black {
+      background: radial-gradient(circle at 35% 30%, #64748b, #1e293b 55%, #0b1220);
+    }
+
+    .piece.king {
+      border-color: #f6ca45;
+    }
+
+    .piece.movable {
+      animation: glow 1s ease-in-out infinite alternate;
+    }
+
+    .piece.moved {
+      animation: land 0.25s ease-out;
+    }
+
+    @keyframes glow {
+      from { box-shadow: 0 4px 6px #0009, 0 0 0 0 #45e6a000; }
+      to   { box-shadow: 0 4px 6px #0009, 0 0 12px 3px #45e6a0; }
+    }
+
+    @keyframes land {
+      0%   { transform: scale(1.25); }
+      100% { transform: scale(1); }
+    }
+
+    footer {
+      color: #9db3cf;
+      font-size: 13px;
+      margin: 30px 0 10px;
+    }
+  </style>
 </head>
+
 <body>
-<h1>♟ Checkers</h1>
-<p class="muted">Capture your opponent's pieces and reach the other side to become a king.</p>
 
-<div class="panel">
- <select id="mode">
-  <option value="computer">Vs Computer</option>
-  <option value="local">Local 2 Player</option>
- </select>
- <select id="difficulty">
-  <option value="easy">Easy</option>
-  <option value="medium">Medium</option>
-  <option value="hard">Hard</option>
- </select>
- <button id="newGame">New Game</button>
- <p id="status" class="status">Red moves first.</p>
- <p id="turn">Red's turn</p>
- <p id="extra" class="muted"></p>
-</div>
+  <header>
+    <h2>🎯 Number Guess</h2>
+    <button class="logout" id="logoutBtn">Logout</button>
+  </header>
 
-<div id="board" class="board"></div>
+  <nav>
+    <a href="home.html">Home</a>
+    <a href="shop.html">Shop</a>
+    <a href="profile.html">Profile</a>
+  </nav>
 
-<div class="panel">
- <p>🔴 Red: You / Player 1</p>
- <p>⚫ Black: Computer / Player 2</p>
- <p class="muted">Captures are mandatory. Continue jumping when another capture is available.</p>
- <p class="muted">Hard computer wins only: +30 XP and +20 coins.</p>
-</div>
+  <h1>♟ Checkers</h1>
+  <p class="muted">Capture the other side's pieces and crown your kings.</p>
 
-<script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
-import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
-import {getFirestore,doc,setDoc,updateDoc,increment,serverTimestamp} from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
+  <section class="panel">
 
-const firebaseConfig={
- apiKey:"AIzaSyDhigYBT68Dv4pdboLzVxnLVMK6VUFFWY",
- authDomain:"number-guss.firebaseapp.com",
- projectId:"number-guss",
- storageBucket:"number-guss.firebasestorage.app",
- messagingSenderId:"471501648483",
- appId:"1:471501648483:web:3cbe55c24fd4e0c92b3e56",
- measurementId:"G-4FYB07JSC5"
-};
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app),db=getFirestore(app);
-let currentUser=null;
-const authReady=new Promise(resolve=>onAuthStateChanged(auth,u=>{currentUser=u;resolve(u)}));
+    <select id="mode" aria-label="Game mode">
+      <option value="computer">1 vs Computer</option>
+      <option value="local">1 vs 1 (same device)</option>
+    </select>
 
-const $=id=>document.getElementById(id);
-const pos=(r,c)=>r*8+c;
-const inside=(r,c)=>r>=0&&r<8&&c>=0&&c<8;
-let board=[],turn="r",mode="computer",difficulty="easy";
-let selected=null,legal=[],over=true,rewardGiven=false;
-let quietMoves=0,thinking=false;
-let searchNodes=0;
+    <select id="difficulty" aria-label="Computer level">
+      <option value="easy">Easy</option>
+      <option value="medium">Medium</option>
+      <option value="hard">Hard</option>
+    </select>
 
-function initialBoard(){
- const b=Array(64).fill(null);
- for(let r=0;r<3;r++)for(let c=0;c<8;c++)
-  if((r+c)%2===1)b[pos(r,c)]="b";
- for(let r=5;r<8;r++)for(let c=0;c<8;c++)
-  if((r+c)%2===1)b[pos(r,c)]="r";
- return b;
-}
-function clone(b){return b.slice()}
-function side(p){return p?p.toLowerCase():null}
-function king(p){return p==="R"||p==="B"}
-function dirs(p){
- if(king(p))return [[-1,-1],[-1,1],[1,-1],[1,1]];
- return p==="r"?[[-1,-1],[-1,1]]:[[1,-1],[1,1]];
-}
-function capturesFrom(b,start){
- const p=b[start];if(!p)return [];
- const r=Math.floor(start/8),c=start%8,out=[];
- for(const [dr,dc] of dirs(p)){
-  const mr=r+dr,mc=c+dc,tr=r+2*dr,tc=c+2*dc;
-  if(!inside(tr,tc)||!inside(mr,mc))continue;
-  const mid=pos(mr,mc),to=pos(tr,tc);
-  if(b[mid]&&side(b[mid])!==side(p)&&!b[to])
-   out.push({from:start,to,capture:mid});
- }
- return out;
-}
-function continueCaptures(b,current,path){
- const jumps=capturesFrom(b,current);
- if(!jumps.length)return [path];
- let all=[];
- for(const m of jumps){
-  const next=clone(b),piece=next[m.from];
-  next[m.from]=null;next[m.capture]=null;
-  const row=Math.floor(m.to/8);
-  const promotes=(piece==="r"&&row===0)||(piece==="b"&&row===7);
-  next[m.to]=promotes?piece.toUpperCase():piece;
-  const newPath=[...path,m];
-  if(promotes)all.push(newPath);
-  else all.push(...continueCaptures(next,m.to,newPath));
- }
- return all;
-}
-function allLegal(b,player){
- let captures=[];
- for(let i=0;i<64;i++)if(side(b[i])===player){
-  for(const m of capturesFrom(b,i)){
-   const next=clone(b),piece=next[m.from];
-   next[m.from]=null;next[m.capture]=null;
-   const row=Math.floor(m.to/8);
-   const promotes=(piece==="r"&&row===0)||(piece==="b"&&row===7);
-   next[m.to]=promotes?piece.toUpperCase():piece;
-   const paths=promotes?[[m]]:continueCaptures(next,m.to,[m]);
-   captures.push(...paths);
-  }
- }
- if(captures.length)return captures;
- let moves=[];
- for(let i=0;i<64;i++)if(side(b[i])===player){
-  const p=b[i],r=Math.floor(i/8),c=i%8;
-  for(const [dr,dc] of dirs(p)){
-   const rr=r+dr,cc=c+dc;
-   if(inside(rr,cc)&&!b[pos(rr,cc)])
-    moves.push([{from:i,to:pos(rr,cc),capture:null}]);
-  }
- }
- return moves;
-}
-function applyPath(b,path){
- const next=clone(b);
- for(const m of path){
-  let p=next[m.from];next[m.from]=null;
-  if(m.capture!==null)next[m.capture]=null;
-  const row=Math.floor(m.to/8);
-  if(p==="r"&&row===0)p="R";
-  if(p==="b"&&row===7)p="B";
-  next[m.to]=p;
- }
- return next;
-}
-function render(){
- const root=$("board");root.innerHTML="";
- for(let r=0;r<8;r++)for(let c=0;c<8;c++){
-  const i=pos(r,c),sq=document.createElement("div");
-  sq.className="square "+((r+c)%2?"dark":"light");
-  if(selected===i)sq.classList.add("selected");
-  if(legal.some(path=>path[0].to===i))sq.classList.add("target");
-  const p=board[i];
-  if(p){
-   const piece=document.createElement("div");
-   piece.className="piece "+(side(p)==="r"?"red":"black")+(king(p)?" king":"");
-   piece.textContent=king(p)?"♛":"";
-   sq.appendChild(piece);
-  }
-  sq.onclick=()=>click(i);
-  root.appendChild(sq);
- }
- $("turn").textContent=(turn==="r"?"Red":"Black")+"'s turn";
-}
-function newGame(){
- mode=$("mode").value;difficulty=$("difficulty").value;
- $("difficulty").disabled=mode==="local";
- board=initialBoard();turn="r";selected=null;legal=[];
- over=false;rewardGiven=false;quietMoves=0;thinking=false;
- $("status").textContent="Red moves first.";
- $("extra").textContent="";
- render();
-}
-function click(i){
- if(over||thinking||(mode==="computer"&&turn==="b"))return;
- if(selected!==null){
-  const choices=legal.filter(path=>path[0].to===i);
-  if(choices.length){
-   // All full capture sequences are shown. If a jump has several continuations,
-   // choose the sequence whose first landing square was selected.
-   const chosen=choices[0];
-   playPath(chosen);
-   return;
-  }
- }
- if(side(board[i])===turn){
-  const all=allLegal(board,turn);
-  selected=i;
-  legal=all.filter(path=>path[0].from===i);
-  render();
- }else{
-  selected=null;legal=[];render();
- }
-}
-function playPath(path){
- const captures=path.filter(m=>m.capture!==null).length;
- const oldPiece=board[path[0].from];
- board=applyPath(board,path);
- if(captures)quietMoves=0;else quietMoves++;
- selected=null;legal=[];
- turn=turn==="r"?"b":"r";
- render();
- if(!allLegal(board,turn).length){finish(turn==="r"?"b":"r");return}
- if(quietMoves>=80){finish("draw");return}
- if(mode==="computer"&&turn==="b"){
-  thinking=true;
-  $("status").textContent="Computer is thinking...";
-  setTimeout(()=>{computerTurn();thinking=false;render()},250);
- }else{
-  $("status").textContent=captures?`${captures} capture${captures>1?"s":""}!`:"Move made.";
- }
-}
-function evaluate(b){
- let score=0;
- for(let i=0;i<64;i++){
-  const p=b[i];if(!p)continue;
-  const r=Math.floor(i/8),c=i%8;
-  let value=king(p)?180:100;
-  if(!king(p)){
-   value+=(side(p)==="b"?r:7-r)*5;
-   if(c>=2&&c<=5)value+=4;
-  }
-  if(c===0||c===7)value+=3;
-  score+=side(p)==="b"?value:-value;
- }
- return score;
-}
-function minimax(b,player,depth,alpha,beta){
- searchNodes++;
- const moves=allLegal(b,player);
- if(!moves.length)return player==="b"?-100000-depth:100000+depth;
- if(depth===0)return evaluate(b);
- if(player==="b"){
-  let best=-Infinity;
-  for(const path of moves){
-   const score=minimax(applyPath(b,path),"r",depth-1,alpha,beta);
-   best=Math.max(best,score);alpha=Math.max(alpha,best);
-   if(beta<=alpha)break;
-  }
-  return best;
- }else{
-  let best=Infinity;
-  for(const path of moves){
-   const score=minimax(applyPath(b,path),"b",depth-1,alpha,beta);
-   best=Math.min(best,score);beta=Math.min(beta,best);
-   if(beta<=alpha)break;
-  }
-  return best;
- }
-}
-function computerTurn(){
- if(over)return;
- const moves=allLegal(board,"b");
- if(!moves.length){finish("r");return}
- let chosen=moves[Math.floor(Math.random()*moves.length)];
- if(difficulty==="medium"){
-  let best=-Infinity;
-  for(const m of moves){
-   const score=evaluate(applyPath(board,m));
-   if(score>best){best=score;chosen=m}
-  }
- }
- if(difficulty==="hard"){
-  searchNodes=0;let best=-Infinity,options=[];
-  // Depth 6 with alpha-beta pruning.
-  for(const m of moves){
-   const score=minimax(applyPath(board,m),"r",5,-Infinity,Infinity);
-   if(score>best){best=score;options=[m]}
-   else if(score===best)options.push(m);
-  }
-  chosen=options[Math.floor(Math.random()*options.length)];
-  $("extra").textContent="Hard AI searched "+searchNodes+" positions.";
- }
- const captures=chosen.filter(m=>m.capture!==null).length;
- board=applyPath(board,chosen);
- if(captures)quietMoves=0;else quietMoves++;
- turn="r";render();
- if(!allLegal(board,"r").length){finish("b");return}
- if(quietMoves>=80){finish("draw");return}
- $("status").textContent=captures?`Computer captured ${captures} piece${captures>1?"s":""}.`:"Your turn.";
-}
-async function finish(winner){
- over=true;thinking=false;
- if(winner==="draw"){
-  $("status").textContent="Draw! No capture for 80 moves.";
-  if(mode==="computer")await saveResult("draw");
-  render();return;
- }
- const youWin=winner==="r";
- $("status").textContent=mode==="local"
-  ?(youWin?"Red wins!":"Black wins!")
-  :(youWin?"You win!":"Computer wins!");
- if(mode==="computer"){
-  await saveResult(youWin?"win":"loss");
-  if(youWin&&difficulty==="hard")await giveReward();
- }
- render();
-}
-async function saveResult(result){
- if(!currentUser)return;
- try{
-  const ref=doc(db,"players",currentUser.uid);
-  await setDoc(ref,{gameStats:{}},{merge:true});
-  await updateDoc(ref,{
-   [`gameStats.checkers.${result}`]:increment(1),
-   [`gameStats.checkers.games`]:increment(1),
-   updatedAt:serverTimestamp()
-  });
- }catch(e){console.error("Checkers stats:",e)}
-}
-async function giveReward(){
- if(rewardGiven)return;
- rewardGiven=true;
- await authReady;
- if(!currentUser){$("status").textContent+=" Sign in to save rewards.";return}
- try{
-  await updateDoc(doc(db,"players",currentUser.uid),{
-   coins:increment(20),xp:increment(30),wins:increment(1),
-   [`gameStats.checkers.rewards`]:increment(1),
-   updatedAt:serverTimestamp()
-  });
-  $("status").textContent+=" Reward: +30 XP and +20 coins!";
- }catch(e){console.error(e);$("status").textContent+=" Reward could not be saved."}
-}
-$("newGame").onclick=newGame;
-$("mode").onchange=()=>{$("difficulty").disabled=$("mode").value==="local"};
-newGame();
-</script>
+    <button id="newGame">New Game</button>
+
+    <div>
+      <button class="secondary" id="undoBtn">↩ Undo</button>
+      <button class="secondary" id="hintBtn">💡 Hint</button>
+    </div>
+
+    <p class="status" id="status">Red moves first.</p>
+    <p class="turn" id="turn">Red's turn</p>
+    <p class="muted" id="extra"></p>
+
+    <div class="banner hidden" id="banner" style="display:none"></div>
+
+  </section>
+
+  <div class="counts">
+    <div class="count-box" id="redBox"></div>
+    <div class="count-box" id="blackBox"></div>
+  </div>
+
+  <div id="board" class="board"></div>
+
+  <section class="panel">
+    <p>🔴 Red: You / Player 1 &nbsp;&nbsp; ⚫ Black: Computer / Player 2</p>
+    <p class="muted">
+      Captures are required. If you can jump again, you must keep jumping
+      with the same piece. Glowing pieces are the ones that can move.
+    </p>
+    <p class="muted">
+      Beat the <strong>Hard</strong> computer to earn <strong>8 🪙 and 8 XP</strong>.
+      Undo and Hint are turned off on Hard. Easy, Medium and 1 vs 1 give no rewards.
+    </p>
+    <p class="muted">A game is a draw after 80 moves without a capture.</p>
+  </section>
+
+  <footer>© 2026 Number Guess</footer>
+
+  <script type="module">
+
+    import {
+      initializeApp
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
+
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
+
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      increment,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDhigYBT68Dv4pdboLzVYxnLVMK6VUFFWY",
+      authDomain: "number-guss.firebaseapp.com",
+      projectId: "number-guss",
+      storageBucket: "number-guss.firebasestorage.app",
+      messagingSenderId: "471501648483",
+      appId: "1:471501648483:web:3cbe55c24fd4e0c92b3e56",
+      measurementId: "G-4FYB07JSC5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Reward for beating the Hard computer
+    const HARD_REWARD = { coins: 8, xp: 8 };
+
+    // How many moves ahead the Hard computer looks
+    const HARD_DEPTH = 6;
+
+    const $ = (id) => document.getElementById(id);
+
+    let currentUser = null;
+
+    // ---------- Board basics ----------
+    const pos = (r, c) => r * 8 + c;
+    const inside = (r, c) => r >= 0 && r < 8 && c >= 0 && c < 8;
+
+    // "r" / "b" = men, "R" / "B" = kings
+    let board = [];
+    let turn = "r";
+    let mode = "computer";
+    let difficulty = "easy";
+
+    let selected = null;       // square of the piece you picked
+    let candidates = [];       // full jump or move sequences you can still finish
+    let chain = [];            // jumps already made this turn
+    let over = true;
+    let thinking = false;
+    let quietMoves = 0;        // moves in a row without a capture
+    let history = [];          // for Undo
+    let lastMove = null;       // { from, to }
+    let hint = null;           // { from, to }
+    let movedSquare = -1;
+
+    function initialBoard() {
+
+      const b = Array(64).fill(null);
+
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 8; c++) {
+          if ((r + c) % 2 === 1) b[pos(r, c)] = "b";
+        }
+      }
+
+      for (let r = 5; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          if ((r + c) % 2 === 1) b[pos(r, c)] = "r";
+        }
+      }
+
+      return b;
+
+    }
+
+    function side(p) {
+      return p ? p.toLowerCase() : null;
+    }
+
+    function isKing(p) {
+      return p === "R" || p === "B";
+    }
+
+    function dirs(p) {
+
+      if (isKing(p)) {
+        return [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+      }
+
+      return p === "r" ? [[-1, -1], [-1, 1]] : [[1, -1], [1, 1]];
+
+    }
+
+    // Single jumps a piece can make right now
+    function capturesFrom(b, start) {
+
+      const p = b[start];
+
+      if (!p) {
+        return [];
+      }
+
+      const r = Math.floor(start / 8);
+      const c = start % 8;
+
+      const out = [];
+
+      for (const [dr, dc] of dirs(p)) {
+
+        const mr = r + dr, mc = c + dc;
+        const tr = r + 2 * dr, tc = c + 2 * dc;
+
+        if (!inside(tr, tc) || !inside(mr, mc)) {
+          continue;
+        }
+
+        const mid = pos(mr, mc);
+        const to = pos(tr, tc);
+
+        if (b[mid] && side(b[mid]) !== side(p) && !b[to]) {
+          out.push({ from: start, to: to, capture: mid });
+        }
+
+      }
+
+      return out;
+
+    }
+
+    function becomesKing(piece, row) {
+      return (piece === "r" && row === 0) || (piece === "b" && row === 7);
+    }
+
+    // Every way to keep jumping from `current` (a man that reaches the last row stops)
+    function continueCaptures(b, current, path) {
+
+      const jumps = capturesFrom(b, current);
+
+      if (!jumps.length) {
+        return [path];
+      }
+
+      let all = [];
+
+      for (const m of jumps) {
+
+        const next = b.slice();
+        const piece = next[m.from];
+
+        next[m.from] = null;
+        next[m.capture] = null;
+
+        const promotes = becomesKing(piece, Math.floor(m.to / 8));
+
+        next[m.to] = promotes ? piece.toUpperCase() : piece;
+
+        const newPath = [...path, m];
+
+        if (promotes) {
+          all.push(newPath);
+        } else {
+          all.push(...continueCaptures(next, m.to, newPath));
+        }
+
+      }
+
+      return all;
+
+    }
+
+    // Every legal turn for a player. Captures are required.
+    function allLegal(b, player) {
+
+      const captures = [];
+
+      for (let i = 0; i < 64; i++) {
+
+        if (side(b[i]) !== player) {
+          continue;
+        }
+
+        for (const m of capturesFrom(b, i)) {
+
+          const next = b.slice();
+          const piece = next[m.from];
+
+          next[m.from] = null;
+          next[m.capture] = null;
+
+          const promotes = becomesKing(piece, Math.floor(m.to / 8));
+
+          next[m.to] = promotes ? piece.toUpperCase() : piece;
+
+          captures.push(...(promotes ? [[m]] : continueCaptures(next, m.to, [m])));
+
+        }
+
+      }
+
+      if (captures.length) {
+        return captures;
+      }
+
+      const moves = [];
+
+      for (let i = 0; i < 64; i++) {
+
+        if (side(b[i]) !== player) {
+          continue;
+        }
+
+        const p = b[i];
+        const r = Math.floor(i / 8);
+        const c = i % 8;
+
+        for (const [dr, dc] of dirs(p)) {
+
+          const rr = r + dr, cc = c + dc;
+
+          if (inside(rr, cc) && !b[pos(rr, cc)]) {
+            moves.push([{ from: i, to: pos(rr, cc), capture: null }]);
+          }
+
+        }
+
+      }
+
+      return moves;
+
+    }
+
+    function applyPath(b, path) {
+
+      const next = b.slice();
+
+      for (const m of path) {
+
+        let p = next[m.from];
+
+        next[m.from] = null;
+
+        if (m.capture !== null) {
+          next[m.capture] = null;
+        }
+
+        const row = Math.floor(m.to / 8);
+
+        if (p === "r" && row === 0) p = "R";
+        if (p === "b" && row === 7) p = "B";
+
+        next[m.to] = p;
+
+      }
+
+      return next;
+
+    }
+
+    // The board as it looks in the middle of a multi-jump
+    function viewBoard() {
+      return chain.length ? applyPath(board, chain) : board;
+    }
+
+    function count(b, player) {
+
+      let pieces = 0;
+      let kings = 0;
+
+      b.forEach((p) => {
+
+        if (side(p) === player) {
+          pieces++;
+          if (isKing(p)) kings++;
+        }
+
+      });
+
+      return { pieces: pieces, kings: kings };
+
+    }
+
+    // ---------- Drawing ----------
+    function setStatus(text) {
+      $("status").textContent = text;
+    }
+
+    function render() {
+
+      const root = $("board");
+
+      root.replaceChildren();
+
+      const vb = viewBoard();
+
+      // Pieces that can move this turn (and whether a capture is required)
+      const humanTurn = !over && !thinking && (mode === "local" || turn === "r");
+
+      let movable = new Set();
+      let mustCapture = false;
+
+      if (humanTurn && !chain.length) {
+
+        const all = allLegal(board, turn);
+
+        all.forEach((path) => movable.add(path[0].from));
+
+        mustCapture = all.some((path) => path[0].capture !== null);
+
+      }
+
+      const targets = new Set(
+        candidates.map((path) => path[chain.length]).filter(Boolean).map((m) => m.to)
+      );
+
+      for (let r = 0; r < 8; r++) {
+
+        for (let c = 0; c < 8; c++) {
+
+          const i = pos(r, c);
+
+          const square = document.createElement("div");
+
+          square.className = "square " + ((r + c) % 2 ? "dark" : "light");
+
+          if (lastMove && (lastMove.from === i || lastMove.to === i)) {
+            square.classList.add("last");
+          }
+
+          if (selected === i) {
+            square.classList.add("selected");
+          }
+
+          if (targets.has(i)) {
+            square.classList.add("target");
+          }
+
+          if (hint && (hint.from === i || hint.to === i)) {
+            square.classList.add("hint");
+          }
+
+          const p = vb[i];
+
+          if (p) {
+
+            const piece = document.createElement("div");
+
+            piece.className = "piece " + (side(p) === "r" ? "red" : "black") +
+              (isKing(p) ? " king" : "") +
+              (movable.has(i) && selected === null ? " movable" : "") +
+              (i === movedSquare ? " moved" : "");
+
+            piece.textContent = isKing(p) ? "👑" : "";
+
+            square.appendChild(piece);
+
+          }
+
+          square.onclick = () => click(i);
+
+          root.appendChild(square);
+
+        }
+
+      }
+
+      // Piece counts
+      const red = count(vb, "r");
+      const black = count(vb, "b");
+
+      $("redBox").innerHTML = "";
+      $("blackBox").innerHTML = "";
+
+      $("redBox").textContent =
+        "🔴 Red: " + red.pieces + " left (" + red.kings + " kings) · captured " + (12 - black.pieces);
+
+      $("blackBox").textContent =
+        "⚫ Black: " + black.pieces + " left (" + black.kings + " kings) · captured " + (12 - red.pieces);
+
+      $("redBox").classList.toggle("active", !over && turn === "r");
+      $("blackBox").classList.toggle("active", !over && turn === "b");
+
+      if (!over) {
+
+        const who = turn === "r" ? "Red" : "Black";
+
+        $("turn").textContent = mode === "computer"
+          ? (turn === "r" ? "Your turn (Red)" : "The computer is thinking...")
+          : who + "'s turn";
+
+      }
+
+      $("extra").textContent = chain.length
+        ? "Keep jumping with the same piece!"
+        : mustCapture
+          ? "⚠️ A capture is required. Pick a glowing piece."
+          : "No captures for " + quietMoves + " of 80 moves.";
+
+      $("undoBtn").disabled =
+        over || thinking || history.length === 0 ||
+        (mode === "computer" && difficulty === "hard");
+
+      $("hintBtn").disabled =
+        over || thinking || !humanTurn || chain.length > 0 ||
+        mode !== "computer" || difficulty === "hard";
+
+      movedSquare = -1;
+
+    }
+
+    // ---------- Starting ----------
+    function newGame() {
+
+      mode = $("mode").value;
+      difficulty = $("difficulty").value;
+
+      $("difficulty").disabled = mode === "local";
+
+      board = initialBoard();
+      turn = "r";
+      selected = null;
+      candidates = [];
+      chain = [];
+      over = false;
+      thinking = false;
+      quietMoves = 0;
+      history = [];
+      lastMove = null;
+      hint = null;
+
+      $("banner").style.display = "none";
+
+      setStatus("Red moves first.");
+
+      render();
+
+    }
+
+    // ---------- Playing ----------
+    function click(i) {
+
+      if (over || thinking || (mode === "computer" && turn === "b")) {
+        return;
+      }
+
+      hint = null;
+
+      // Pick where to jump or move next
+      if (selected !== null) {
+
+        const step = chain.length;
+
+        const choices = candidates.filter(
+          (path) => path[step] && path[step].to === i
+        );
+
+        if (choices.length) {
+
+          chain.push(choices[0][step]);
+
+          candidates = choices;
+
+          // Finished, or must keep jumping?
+          if (candidates.every((path) => path.length === chain.length)) {
+
+            playPath(chain);
+
+          } else {
+
+            selected = i;
+
+            setStatus("Nice jump! Keep going.");
+
+            render();
+
+          }
+
+          return;
+
+        }
+
+      }
+
+      // In the middle of a multi-jump you must finish it
+      if (chain.length) {
+        return;
+      }
+
+      if (side(board[i]) === turn) {
+
+        const all = allLegal(board, turn);
+
+        selected = i;
+        candidates = all.filter((path) => path[0].from === i);
+
+        if (!candidates.length) {
+          setStatus("That piece cannot move. Try a glowing one.");
+        }
+
+        render();
+
+      } else {
+
+        selected = null;
+        candidates = [];
+
+        render();
+
+      }
+
+    }
+
+    function playPath(path) {
+
+      const captures = path.filter((m) => m.capture !== null).length;
+
+      if (mode === "local" || turn === "r") {
+        history.push({
+          board: board.slice(), turn: turn,
+          quiet: quietMoves, last: lastMove
+        });
+      }
+
+      board = applyPath(board, path);
+
+      lastMove = { from: path[0].from, to: path[path.length - 1].to };
+      movedSquare = lastMove.to;
+
+      quietMoves = captures ? 0 : quietMoves + 1;
+
+      selected = null;
+      candidates = [];
+      chain = [];
+      hint = null;
+
+      turn = turn === "r" ? "b" : "r";
+
+      render();
+
+      if (!allLegal(board, turn).length) {
+        finish(turn === "r" ? "b" : "r");
+        return;
+      }
+
+      if (quietMoves >= 80) {
+        finish("draw");
+        return;
+      }
+
+      if (mode === "computer" && turn === "b") {
+
+        thinking = true;
+
+        setStatus(captures
+          ? "You captured " + captures + " piece" + (captures > 1 ? "s" : "") + "!"
+          : "The computer is thinking...");
+
+        render();
+
+        setTimeout(() => {
+          computerTurn();
+          thinking = false;
+          render();
+        }, 300);
+
+      } else {
+
+        setStatus(captures
+          ? captures + " capture" + (captures > 1 ? "s" : "") + "!"
+          : "Move made.");
+
+      }
+
+    }
+
+    // ---------- The computer ----------
+    function evaluate(b) {
+
+      let score = 0;
+
+      for (let i = 0; i < 64; i++) {
+
+        const p = b[i];
+
+        if (!p) {
+          continue;
+        }
+
+        const r = Math.floor(i / 8);
+        const c = i % 8;
+
+        let value = isKing(p) ? 190 : 100;
+
+        if (!isKing(p)) {
+
+          // Men are worth more the closer they are to becoming kings
+          value += (side(p) === "b" ? r : 7 - r) * 6;
+
+          // Keeping the back row guarded stops enemy kings
+          if ((side(p) === "b" && r === 0) || (side(p) === "r" && r === 7)) {
+            value += 8;
+          }
+
+          if (c >= 2 && c <= 5 && r >= 2 && r <= 5) {
+            value += 4;
+          }
+
+        } else {
+
+          // Kings are stronger in the middle
+          value += (3.5 - Math.abs(3.5 - c)) * 2 + (3.5 - Math.abs(3.5 - r)) * 2;
+
+        }
+
+        if (c === 0 || c === 7) {
+          value += 2;
+        }
+
+        score += side(p) === "b" ? value : -value;
+
+      }
+
+      return score;
+
+    }
+
+    // Looks ahead. Black wants a high score, Red wants a low one.
+    function minimax(b, player, depth, alpha, beta) {
+
+      const moves = allLegal(b, player);
+
+      if (!moves.length) {
+        return player === "b" ? -100000 - depth : 100000 + depth;
+      }
+
+      if (depth === 0) {
+        return evaluate(b);
+      }
+
+      // Look at longer captures first (faster search)
+      moves.sort((a, c) => c.length - a.length);
+
+      if (player === "b") {
+
+        let best = -Infinity;
+
+        for (const path of moves) {
+
+          best = Math.max(best, minimax(applyPath(b, path), "r", depth - 1, alpha, beta));
+
+          alpha = Math.max(alpha, best);
+
+          if (beta <= alpha) break;
+
+        }
+
+        return best;
+
+      }
+
+      let best = Infinity;
+
+      for (const path of moves) {
+
+        best = Math.min(best, minimax(applyPath(b, path), "b", depth - 1, alpha, beta));
+
+        beta = Math.min(beta, best);
+
+        if (beta <= alpha) break;
+
+      }
+
+      return best;
+
+    }
+
+    function randomOf(list) {
+      return list[Math.floor(Math.random() * list.length)];
+    }
+
+    // Pick the computer's turn (it plays Black)
+    function pickPath() {
+
+      const moves = allLegal(board, "b");
+
+      if (difficulty === "easy") {
+        return randomOf(moves);
+      }
+
+      if (difficulty === "medium") {
+
+        // One move ahead
+        let best = -Infinity;
+        let options = [];
+
+        for (const m of moves) {
+
+          const score = evaluate(applyPath(board, m));
+
+          if (score > best) {
+            best = score;
+            options = [m];
+          } else if (score === best) {
+            options.push(m);
+          }
+
+        }
+
+        return randomOf(options);
+
+      }
+
+      // Hard: look several moves ahead
+      let best = -Infinity;
+      let options = [];
+
+      for (const m of moves) {
+
+        const score = minimax(applyPath(board, m), "r", HARD_DEPTH - 1, -Infinity, Infinity);
+
+        if (score > best) {
+          best = score;
+          options = [m];
+        } else if (score === best) {
+          options.push(m);
+        }
+
+      }
+
+      return randomOf(options);
+
+    }
+
+    function computerTurn() {
+
+      if (over) {
+        return;
+      }
+
+      const moves = allLegal(board, "b");
+
+      if (!moves.length) {
+        finish("r");
+        return;
+      }
+
+      const chosen = pickPath();
+
+      const captures = chosen.filter((m) => m.capture !== null).length;
+
+      board = applyPath(board, chosen);
+
+      lastMove = { from: chosen[0].from, to: chosen[chosen.length - 1].to };
+      movedSquare = lastMove.to;
+
+      quietMoves = captures ? 0 : quietMoves + 1;
+
+      turn = "r";
+
+      render();
+
+      if (!allLegal(board, "r").length) {
+        finish("b");
+        return;
+      }
+
+      if (quietMoves >= 80) {
+        finish("draw");
+        return;
+      }
+
+      setStatus(captures
+        ? "The computer captured " + captures + " piece" + (captures > 1 ? "s" : "") + ". Your turn."
+        : "Your turn.");
+
+    }
+
+    // ---------- Undo and Hint ----------
+    $("undoBtn").onclick = () => {
+
+      if (over || thinking || !history.length) {
+        return;
+      }
+
+      if (mode === "computer" && difficulty === "hard") {
+        return;
+      }
+
+      const saved = history.pop();
+
+      board = saved.board;
+      turn = saved.turn;
+      quietMoves = saved.quiet;
+      lastMove = saved.last;
+
+      selected = null;
+      candidates = [];
+      chain = [];
+      hint = null;
+
+      setStatus("Move undone.");
+
+      render();
+
+    };
+
+    $("hintBtn").onclick = () => {
+
+      if (over || thinking || turn !== "r" || mode !== "computer") {
+        return;
+      }
+
+      const moves = allLegal(board, "r");
+
+      if (!moves.length) {
+        return;
+      }
+
+      // Red wants the lowest score
+      let best = Infinity;
+      let options = [];
+
+      for (const m of moves) {
+
+        const score = minimax(applyPath(board, m), "b", 3, -Infinity, Infinity);
+
+        if (score < best) {
+          best = score;
+          options = [m];
+        } else if (score === best) {
+          options.push(m);
+        }
+
+      }
+
+      const pick = randomOf(options);
+
+      hint = { from: pick[0].from, to: pick[0].to };
+
+      setStatus("💡 Try moving the highlighted piece to the highlighted square.");
+
+      render();
+
+    };
+
+    // ---------- Saving results ----------
+    async function saveGame(outcome) {
+
+      if (!currentUser) {
+        return "";
+      }
+
+      try {
+
+        const data = { updatedAt: serverTimestamp() };
+
+        let note = "";
+
+        if (mode === "local") {
+
+          data.chkPvpGames = increment(1);
+
+        } else if (outcome === "win") {
+
+          const key = "chkWins" + (
+            difficulty === "easy" ? "Easy"
+              : difficulty === "medium" ? "Medium" : "Hard"
+          );
+
+          data[key] = increment(1);
+
+          if (difficulty === "hard") {
+
+            data.coins = increment(HARD_REWARD.coins);
+            data.xp = increment(HARD_REWARD.xp);
+
+            note = "🪙 +" + HARD_REWARD.coins + " coins and +" +
+              HARD_REWARD.xp + " XP for beating Hard!";
+
+          } else {
+
+            note = "Win saved. (No coins or XP on Easy or Medium)";
+
+          }
+
+        } else if (outcome === "loss") {
+
+          data.chkLosses = increment(1);
+
+        } else {
+
+          data.chkDraws = increment(1);
+
+        }
+
+        await setDoc(doc(db, "players", currentUser.uid), data, { merge: true });
+
+        return note;
+
+      } catch (error) {
+
+        console.error("Checkers save error:", error);
+
+        return "Could not save to your profile. Check Firestore rules.";
+
+      }
+
+    }
+
+    async function finish(winner) {
+
+      over = true;
+      thinking = false;
+      selected = null;
+      candidates = [];
+      chain = [];
+
+      const banner = $("banner");
+
+      banner.style.display = "block";
+      banner.classList.remove("lose", "draw");
+
+      let text;
+      let outcome;
+
+      if (winner === "draw") {
+
+        text = "🤝 Draw! No capture for 80 moves.";
+        outcome = "draw";
+        banner.classList.add("draw");
+
+      } else if (mode === "local") {
+
+        text = winner === "r" ? "🏆 Red wins!" : "🏆 Black wins!";
+        outcome = "win";
+
+      } else if (winner === "r") {
+
+        text = "🏆 You win!";
+        outcome = "win";
+
+      } else {
+
+        text = "💀 The computer wins.";
+        outcome = "loss";
+        banner.classList.add("lose");
+
+      }
+
+      banner.textContent = text;
+      $("turn").textContent = "Game over";
+
+      setStatus(text);
+
+      render();
+
+      const note = await saveGame(outcome);
+
+      if (note) {
+        banner.textContent = text + " " + note;
+      }
+
+    }
+
+    // ---------- Buttons ----------
+    $("newGame").onclick = newGame;
+
+    $("mode").onchange = () => {
+      $("difficulty").disabled = $("mode").value === "local";
+    };
+
+    $("logoutBtn").onclick = async () => {
+
+      try {
+
+        await signOut(auth);
+
+      } catch (error) {
+
+        console.error(error);
+
+      }
+
+      window.location.replace("login.html");
+
+    };
+
+    // Login check
+    onAuthStateChanged(auth, (user) => {
+
+      if (!user) {
+        window.location.replace("login.html");
+        return;
+      }
+
+      currentUser = user;
+
+    });
+
+    newGame();
+
+  </script>
+
 </body>
 </html>
