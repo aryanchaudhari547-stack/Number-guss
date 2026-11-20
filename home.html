@@ -7,144 +7,86 @@
   <title>Number Guess - Home</title>
 
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
     body {
       min-height: 100vh;
-      background: linear-gradient(135deg, #07152f, #123c69);
-      color: white;
-      padding: 20px;
+      color: #f4f8ff;
+      padding: 24px;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(32, 213, 255, .16), transparent 28%),
+        radial-gradient(circle at 90% 85%, rgba(104, 92, 255, .16), transparent 30%),
+        linear-gradient(135deg, #07152f, #102d50 55%, #091b35);
     }
-
+    .page-shell { width: min(1120px, 100%); margin: 0 auto; }
     header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 15px;
-      flex-wrap: wrap;
-      max-width: 1000px;
-      margin: 10px auto 40px;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 16px; flex-wrap: wrap; margin: 4px auto 34px;
+      padding: 16px 20px; border: 1px solid rgba(126, 177, 226, .22);
+      border-radius: 16px; background: rgba(9, 26, 51, .72);
+      box-shadow: 0 12px 35px rgba(0,0,0,.18);
     }
-
-    header h2 {
-      color: #20d5ff;
-    }
-
+    header h2 { color: #35d8ff; letter-spacing: .4px; }
     .logout {
-      border: none;
-      background: #e84b61;
-      color: white;
-      padding: 11px 18px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
+      border: 1px solid rgba(255,255,255,.12); background: #e84b61; color: white;
+      padding: 11px 18px; border-radius: 9px; cursor: pointer; font-weight: bold;
+      transition: transform .2s, background .2s;
     }
-
-    .welcome {
-      text-align: center;
-      margin: 35px auto;
-    }
-
-    .welcome h1 {
-      font-size: 35px;
-      color: #20d5ff;
-      margin-bottom: 12px;
-    }
-
-    .welcome p {
-      color: #c6d8ef;
-      font-size: 16px;
-    }
-
-    .username {
-      color: #ffffff;
-      font-weight: bold;
-    }
-
+    .logout:hover { background: #d83d54; transform: translateY(-2px); }
+    .welcome { text-align: center; margin: 28px auto 34px; }
+    .welcome h1 { font-size: clamp(30px, 5vw, 42px); color: #35d8ff; margin-bottom: 12px; }
+    .welcome p { color: #c6d8ef; font-size: 16px; }
+    .username { color: #fff; font-weight: bold; }
+    .section-heading { margin: 0 0 16px; color: #dcecff; font-size: 18px; }
     .cards {
-      max-width: 1000px;
-      margin: 35px auto;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 22px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
     }
-
     .card {
-      background: #101f3d;
-      border: 1px solid #294a70;
-      border-radius: 16px;
-      padding: 28px 20px;
-      text-align: center;
-      transition: transform 0.2s;
+      display: flex; flex-direction: column; align-items: stretch;
+      min-width: 0; padding: 24px 20px; text-align: center;
+      background: linear-gradient(155deg, rgba(21, 44, 78, .98), rgba(12, 29, 56, .98));
+      border: 1px solid #294a70; border-radius: 17px;
+      box-shadow: 0 10px 24px rgba(0,0,0,.16);
+      transition: transform .2s, border-color .2s, box-shadow .2s;
     }
-
-    .card:hover {
-      transform: translateY(-5px);
-    }
-
-    .card .emoji {
-      font-size: 48px;
-      margin-bottom: 15px;
-    }
-
-    .card h2 {
-      margin-bottom: 12px;
-      color: #20d5ff;
-    }
-
-    .card p {
-      color: #b9c9df;
-      line-height: 1.5;
-      min-height: 48px;
-      margin-bottom: 20px;
-    }
-
+    .card:hover { transform: translateY(-5px); border-color: #20c9f3; box-shadow: 0 15px 30px rgba(0,0,0,.24); }
+    .card .emoji { font-size: 42px; margin-bottom: 13px; }
+    .card h2 { margin-bottom: 10px; color: #35d8ff; font-size: 20px; }
+    .card p { color: #b9c9df; line-height: 1.55; flex: 1; min-height: 48px; margin-bottom: 18px; font-size: 14px; }
     .card button {
-      width: 100%;
-      padding: 13px;
-      border: none;
-      border-radius: 8px;
-      background: #079fc9;
-      color: white;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
+      width: 100%; padding: 12px 14px; border: 0; border-radius: 9px;
+      background: linear-gradient(135deg, #08a9d4, #087fa9); color: white;
+      font-size: 14px; font-weight: bold; cursor: pointer;
+      transition: filter .2s, transform .2s;
     }
-
-    .card button:hover {
-      background: #087fa9;
-    }
-
-    .card.locked {
-      opacity: 0.75;
-    }
-
-    .card button:disabled {
-      background: #395779;
-      cursor: not-allowed;
-    }
-
+    .card button:hover:not(:disabled) { filter: brightness(1.12); transform: translateY(-1px); }
+    .card.locked { opacity: .72; }
+    .card button:disabled { background: #395779; cursor: not-allowed; }
     footer {
-      text-align: center;
-      margin: 50px auto 15px;
-      color: #9db3cf;
-      font-size: 13px;
+      text-align: center; margin: 38px auto 12px; padding: 18px 12px;
+      border-top: 1px solid rgba(157,179,207,.2); color: #9db3cf; font-size: 13px;
+      line-height: 2;
     }
-
-    footer a {
-      color: #20d5ff;
-      text-decoration: none;
-      margin: 0 8px;
+    footer a { color: #35d8ff; text-decoration: none; margin: 0 9px; white-space: nowrap; }
+    footer a:hover { text-decoration: underline; }
+    @media (max-width: 850px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 540px) {
+      body { padding: 14px; }
+      header { margin-bottom: 26px; padding: 14px 16px; }
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+      .card { padding: 18px 12px; }
+      .card .emoji { font-size: 34px; }
+      .card h2 { font-size: 17px; }
+      .card p { font-size: 12px; min-height: 62px; }
+      .card button { padding: 11px 8px; font-size: 12px; }
+      .welcome { margin: 24px auto 28px; }
     }
   </style>
 </head>
 
 <body>
+  <main class="page-shell">
 
   <header>
     <h2>🎯 Number Guess</h2>
@@ -159,6 +101,7 @@
     </p>
   </section>
 
+  <h2 class="section-heading">Choose a game or explore</h2>
   <section class="cards">
 
     <div class="card">
@@ -192,8 +135,36 @@
     <div class="card" id="mazeCard">
       <div class="emoji">🧩</div>
       <h2>Mini Maze</h2>
-      <p id="mazeText">50 mazes to escape. Unlocks at Level 7.</p>
+      <p id="mazeText">50 mazes to escape. Unlocks at Level 4.</p>
       <button id="mazeBtn" disabled>🔒 Checking level...</button>
+    </div>
+
+    <div class="card">
+      <div class="emoji">🚢</div>
+      <h2>Battleship</h2>
+      <p>Place your fleet and find the hidden ships.</p>
+      <button id="battleshipBtn">Play Battleship</button>
+    </div>
+
+    <div class="card">
+      <div class="emoji">♟️</div>
+      <h2>Checkers</h2>
+      <p>Plan your moves and try to capture your opponent's pieces.</p>
+      <button id="checkersBtn">Play Checkers</button>
+    </div>
+
+    <div class="card">
+      <div class="emoji">🧱</div>
+      <h2>Quoridor</h2>
+      <p>Race to the other side while navigating the walls.</p>
+      <button id="quoridorBtn">Play Quoridor</button>
+    </div>
+
+    <div class="card">
+      <div class="emoji">⚫⚪</div>
+      <h2>Go</h2>
+      <p>Capture territory in this classic strategy game.</p>
+      <button id="goBtn">Play Go</button>
     </div>
 
     <div class="card">
@@ -240,6 +211,8 @@
     <a href="quoridor.html">quoridor</a>
     <a href="go.html">Go</a>
   </footer>
+
+  </main>
 
   <script type="module">
 
@@ -372,6 +345,14 @@
 
     document.getElementById("dotsBtn").addEventListener("click", () => {
       window.location.href = "dots.html";
+    });
+
+    document.getElementById("quoridorBtn").addEventListener("click", () => {
+      window.location.href = "quoridor.html";
+    });
+
+    document.getElementById("goBtn").addEventListener("click", () => {
+      window.location.href = "go.html";
     });
 
     mazeBtn.addEventListener("click", () => {
