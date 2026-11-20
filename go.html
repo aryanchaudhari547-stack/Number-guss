@@ -1,0 +1,3247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Go | Number Guess</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #07152f, #123c69);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    header {
+      max-width: 900px;
+      margin: 10px auto 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    header h2 {
+      color: #20d5ff;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin: 10px auto 20px;
+      max-width: 900px;
+    }
+
+    nav a {
+      background: #193c63;
+      color: white;
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    nav a:hover {
+      background: #087fa9;
+    }
+
+    .logout {
+      background: #e84b61;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+
+    h1 {
+      color: #20d5ff;
+      margin-bottom: 6px;
+    }
+
+    .muted {
+      color: #9db3cf;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .panel {
+      max-width: 660px;
+      margin: 14px auto;
+      padding: 16px;
+      background: #101f3d;
+      border: 1px solid #294a70;
+      border-radius: 16px;
+    }
+
+    .panel h3 {
+      color: #20d5ff;
+      margin-bottom: 8px;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+      margin: 8px 0;
+    }
+
+    label {
+      color: #b9c9df;
+      font-size: 13px;
+    }
+
+    button,
+    select,
+    input[type="number"] {
+      padding: 11px 14px;
+      border: none;
+      border-radius: 9px;
+      background: #087fa9;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    select,
+    input[type="number"] {
+      background: #08172e;
+      border: 1px solid #395779;
+    }
+
+    input[type="number"] {
+      width: 84px;
+      cursor: text;
+    }
+
+    button:hover:not(:disabled) {
+      background: #08a9d5;
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    button.secondary {
+      background: #263d5c;
+      border: 1px solid #395779;
+    }
+
+    button.good {
+      background: #1f8f66;
+    }
+
+    .status {
+      color: #f6ca45;
+      min-height: 40px;
+      margin: 10px 0 4px;
+      font-weight: bold;
+      line-height: 1.4;
+    }
+
+    .banner {
+      display: none;
+      margin: 12px 0;
+      padding: 14px;
+      border-radius: 12px;
+      background: #08172e;
+      border: 2px solid #45e6a0;
+      line-height: 1.6;
+    }
+
+    .banner.lose {
+      border-color: #ff8585;
+    }
+
+    .players {
+      display: flex;
+      gap: 10px;
+    }
+
+    .pcard {
+      flex: 1;
+      padding: 10px;
+      background: #08172e;
+      border: 2px solid #294a70;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .pcard.active {
+      border-color: #f6ca45;
+      box-shadow: 0 0 12px #f6ca4555;
+    }
+
+    .stone {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      vertical-align: -3px;
+      margin-right: 4px;
+    }
+
+    .stone.b {
+      background: radial-gradient(circle at 35% 30%, #777, #000);
+    }
+
+    .stone.w {
+      background: radial-gradient(circle at 35% 30%, #fff, #bbb);
+    }
+
+    .info-line {
+      display: flex;
+      justify-content: space-between;
+      color: #b9c9df;
+      font-size: 14px;
+      margin: 10px 4px 0;
+    }
+
+    #boardWrap {
+      width: 100%;
+      max-width: 620px;
+      margin: 10px auto;
+      touch-action: manipulation;
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+      border-radius: 8px;
+      box-shadow: 0 10px 28px #0007;
+    }
+
+    .toggles {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin: 6px 0;
+    }
+
+    .toggles label {
+      cursor: pointer;
+    }
+
+    .history {
+      text-align: left;
+      max-height: 130px;
+      overflow-y: auto;
+      line-height: 1.9;
+      font-size: 13px;
+      color: #b9c9df;
+    }
+
+    .mv {
+      display: inline-block;
+      margin: 0 4px 0 0;
+      padding: 1px 7px;
+      border-radius: 6px;
+      background: #08172e;
+    }
+
+    .mv.now {
+      background: #f6ca45;
+      color: #101f3d;
+      font-weight: bold;
+    }
+
+    .mv.later {
+      opacity: 0.35;
+    }
+
+    .score-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0;
+      font-size: 14px;
+    }
+
+    .score-table td {
+      padding: 8px;
+      border-bottom: 1px solid #29415f;
+    }
+
+    .score-table td:first-child {
+      text-align: left;
+      color: #20d5ff;
+    }
+
+    .replay-item {
+      display: block;
+      width: 100%;
+      margin: 6px 0;
+      text-align: left;
+      font-weight: normal;
+      line-height: 1.4;
+    }
+
+    details {
+      text-align: left;
+      margin: 8px 0;
+      background: #08172e;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    summary {
+      cursor: pointer;
+      color: #20d5ff;
+      font-weight: bold;
+    }
+
+    details p {
+      color: #b9c9df;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    footer {
+      color: #9db3cf;
+      font-size: 13px;
+      margin: 30px 0 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h2>🎯 Number Guess</h2>
+    <button class="logout" id="logoutBtn">Logout</button>
+  </header>
+
+  <nav>
+    <a href="home.html">Home</a>
+    <a href="quoridor.html">Quoridor</a>
+    <a href="shop.html">Shop</a>
+    <a href="profile.html">Profile</a>
+  </nav>
+
+  <h1>⚫ Go ⚪</h1>
+  <p class="muted">Surround territory and capture stones. Japanese scoring, 6.5 komi by default.</p>
+
+  <!-- Setup -->
+  <section class="panel" id="setupPanel">
+
+    <div class="row">
+
+      <label>Board
+        <select id="size">
+          <option value="9">9 × 9</option>
+          <option value="13">13 × 13</option>
+          <option value="19">19 × 19</option>
+        </select>
+      </label>
+
+      <label>Mode
+        <select id="mode">
+          <option value="computer">1 vs Computer</option>
+          <option value="local">1 vs 1 (same device)</option>
+          <option value="practice">Practice (both sides, undo)</option>
+        </select>
+      </label>
+
+    </div>
+
+    <div class="row">
+
+      <label id="levelRow">Computer
+        <select id="level">
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </label>
+
+      <label id="sideRow">You play
+        <select id="side">
+          <option value="black">Black (first)</option>
+          <option value="white">White</option>
+        </select>
+      </label>
+
+      <label>Komi
+        <input type="number" id="komi" value="6.5" min="0" max="30" step="0.5">
+      </label>
+
+    </div>
+
+    <div class="row">
+      <button id="startBtn">New Game</button>
+      <button class="secondary hidden" id="continueBtn">▶ Resume saved game</button>
+      <button class="secondary hidden" id="replayListBtn">🎞 Replays</button>
+    </div>
+
+    <p class="muted">
+      Beat the <strong>Hard</strong> computer to earn <strong>20 🪙 and 30 XP</strong>.
+      Easy, Medium, 1 vs 1 and Practice give no rewards.
+    </p>
+
+  </section>
+
+  <!-- Replay list -->
+  <section class="panel hidden" id="replayPanel">
+    <h3>Finished games</h3>
+    <div id="replayList"></div>
+  </section>
+
+  <!-- Game -->
+  <section class="panel hidden" id="gamePanel">
+
+    <div class="players">
+
+      <div class="pcard" id="blackCard">
+        <span class="stone b"></span><strong id="blackName">Black</strong><br>
+        Captured: <span id="blackCaps">0</span>
+      </div>
+
+      <div class="pcard" id="whiteCard">
+        <span class="stone w"></span><strong id="whiteName">White</strong><br>
+        Captured: <span id="whiteCaps">0</span> · Komi <span id="komiShow">6.5</span>
+      </div>
+
+    </div>
+
+    <div class="info-line">
+      <span id="turn">Black's turn</span>
+      <span>⏱ <span id="timer">0:00</span></span>
+    </div>
+
+    <p class="status" id="status"></p>
+
+    <div class="banner" id="banner"></div>
+
+    <div id="boardWrap">
+      <canvas id="board" aria-label="Go board"></canvas>
+    </div>
+
+    <div class="toggles">
+      <label><input type="checkbox" id="legalBox"> Show legal moves</label>
+      <label><input type="checkbox" id="territoryBox"> Show territory estimate</label>
+    </div>
+
+    <div class="row">
+      <button id="passBtn">Pass</button>
+      <button class="secondary" id="resignBtn">Resign</button>
+      <button class="secondary" id="undoBtn">↩ Undo</button>
+      <button class="secondary" id="hintBtn">💡 Suggest</button>
+    </div>
+
+    <div class="row hidden" id="replayBar">
+      <button class="secondary" id="rFirst">⏮</button>
+      <button class="secondary" id="rPrev">◀</button>
+      <button class="good" id="playReplayBtn">▶ Play</button>
+      <button class="secondary" id="rNext">▶</button>
+      <button class="secondary" id="rLast">⏭</button>
+      <button class="secondary" id="closeReplayBtn">Close</button>
+    </div>
+
+    <div class="row">
+      <button class="secondary" id="newAfterBtn">⚙ New game / setup</button>
+    </div>
+
+  </section>
+
+  <!-- Scoring -->
+  <section class="panel hidden" id="scorePanel">
+
+    <h3>Scoring</h3>
+
+    <p class="muted">
+      Tap a group to mark it dead (red X) or alive again. Small squares show
+      territory. Dead stones count as prisoners.
+    </p>
+
+    <table class="score-table">
+      <tr><td>⚫ Black</td><td id="sBlack">0</td></tr>
+      <tr><td>⚪ White (with komi)</td><td id="sWhite">0</td></tr>
+      <tr><td>Result</td><td id="sResult">-</td></tr>
+    </table>
+
+    <p class="muted">Territory + prisoners (captured + dead stones) + komi for White.</p>
+
+    <div class="row">
+      <button class="secondary" id="autoMarkBtn">🔍 Auto-mark dead stones</button>
+      <button class="good" id="confirmBtn">✔ Confirm result</button>
+      <button class="secondary" id="resumeBtn">Resume play</button>
+    </div>
+
+  </section>
+
+  <!-- Move history -->
+  <section class="panel hidden" id="historyPanel">
+    <h3>Move history</h3>
+    <div class="history" id="history"></div>
+  </section>
+
+  <!-- Rules -->
+  <section class="panel">
+
+    <h3>Rules and tutorial</h3>
+
+    <details>
+      <summary>The basics</summary>
+      <p>
+        Black and White take turns placing a stone on an intersection, Black
+        first. Stones never move. Connected stones of one color form a group.
+        The empty points touching a group are its liberties.
+      </p>
+    </details>
+
+    <details>
+      <summary>Capturing</summary>
+      <p>
+        A group with no liberties is captured and removed. Captured stones are
+        prisoners and count as points for the player who took them.
+      </p>
+    </details>
+
+    <details>
+      <summary>Suicide and ko</summary>
+      <p>
+        You may not play a stone that leaves its own group with no liberties,
+        unless that move captures enemy stones. The ko rule stops you from
+        repeating the position that existed before your opponent's last move,
+        so after a ko capture you must play elsewhere first.
+      </p>
+    </details>
+
+    <details>
+      <summary>Passing and ending</summary>
+      <p>
+        You may pass instead of playing. When both players pass one after the
+        other, play stops and scoring begins. During scoring you mark groups
+        that cannot survive as dead. If you disagree, press Resume play.
+      </p>
+    </details>
+
+    <details>
+      <summary>Scoring (Japanese rules)</summary>
+      <p>
+        Score = territory + prisoners. Territory is the empty points (and the
+        points of dead stones) surrounded by only one color. Prisoners are the
+        stones you captured plus the dead stones you remove at the end. Points
+        between both colors count for nobody. White also gets komi (6.5 by
+        default) because Black moves first.
+      </p>
+    </details>
+
+    <details>
+      <summary>Computer levels</summary>
+      <p>
+        Easy plays simple legal moves and sometimes takes easy captures.
+        Medium reads liberties, captures and groups in atari. Hard plays
+        thousands of fast practice games to choose its moves and takes a few
+        seconds to think, more on bigger boards.
+      </p>
+    </details>
+
+  </section>
+
+  <footer>© 2026 Number Guess</footer>
+
+  <script type="module">
+
+    import {
+      initializeApp
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
+
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
+
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      writeBatch,
+      increment,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
+
+    // Firebase configuration (same as every other page)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDhigYBT68Dv4pdboLzVYxnLVMK6VUFFWY",
+      authDomain: "number-guss.firebaseapp.com",
+      projectId: "number-guss",
+      storageBucket: "number-guss.firebasestorage.app",
+      messagingSenderId: "471501648483",
+      appId: "1:471501648483:web:3cbe55c24fd4e0c92b3e56",
+      measurementId: "G-4FYB07JSC5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // =====================================================================
+    //  GO ENGINE (rules, scoring and the computer players)
+    // =====================================================================
+    const EMPTY = 0, BLACK = 1, WHITE = 2;
+
+    let N = 9;
+    let NN = 81;
+    let NBR = [];       // the points next to each point
+    let DIAG = [];      // the diagonal points
+
+    const mark = new Int32Array(361);
+    const lmark = new Int32Array(361);
+    const stk = new Int32Array(361);
+
+    let stampA = 0;
+    let stampL = 0;
+
+    const tmpG = [];
+    const capList = [];
+
+    function setSize(n) {
+
+      N = n;
+      NN = n * n;
+      NBR = [];
+      DIAG = [];
+
+      for (let p = 0; p < NN; p++) {
+
+        const r = Math.floor(p / N);
+        const c = p % N;
+
+        const orth = [];
+        const diag = [];
+
+        if (r > 0) orth.push(p - N);
+        if (r < N - 1) orth.push(p + N);
+        if (c > 0) orth.push(p - 1);
+        if (c < N - 1) orth.push(p + 1);
+
+        for (const dr of [-1, 1]) {
+          for (const dc of [-1, 1]) {
+
+            const rr = r + dr;
+            const cc = c + dc;
+
+            if (rr >= 0 && rr < N && cc >= 0 && cc < N) {
+              diag.push(rr * N + cc);
+            }
+
+          }
+        }
+
+        NBR.push(orth);
+        DIAG.push(diag);
+
+      }
+
+    }
+
+    // Fills `out` with the stones of the group at p. Returns its liberties.
+    function groupInfo(b, p, out) {
+
+      const color = b[p];
+
+      stampA++;
+      stampL++;
+
+      out.length = 0;
+
+      let libs = 0;
+      let sp = 0;
+
+      stk[sp++] = p;
+      mark[p] = stampA;
+
+      while (sp > 0) {
+
+        const q = stk[--sp];
+
+        out.push(q);
+
+        const nb = NBR[q];
+
+        for (let i = 0; i < nb.length; i++) {
+
+          const x = nb[i];
+          const v = b[x];
+
+          if (v === 0) {
+
+            if (lmark[x] !== stampL) {
+              lmark[x] = stampL;
+              libs++;
+            }
+
+          } else if (v === color && mark[x] !== stampA) {
+
+            mark[x] = stampA;
+            stk[sp++] = x;
+
+          }
+
+        }
+
+      }
+
+      return libs;
+
+    }
+
+    // Plays a stone on the board itself.
+    // Returns the number of stones captured, or -1 if the move is not allowed.
+    // Allowed: not occupied, not suicide (unless it captures), not the ko point.
+    function playStone(b, p, color, koP) {
+
+      if (b[p] !== 0 || p === koP) {
+        return -1;
+      }
+
+      b[p] = color;
+
+      const opp = 3 - color;
+
+      let captured = 0;
+
+      capList.length = 0;
+
+      const nb = NBR[p];
+
+      for (let i = 0; i < nb.length; i++) {
+
+        const q = nb[i];
+
+        if (b[q] === opp) {
+
+          if (groupInfo(b, q, tmpG) === 0) {
+
+            for (let k = 0; k < tmpG.length; k++) {
+              b[tmpG[k]] = 0;
+              capList.push(tmpG[k]);
+            }
+
+            captured += tmpG.length;
+
+          }
+
+        }
+
+      }
+
+      if (captured === 0 && groupInfo(b, p, tmpG) === 0) {
+
+        // Suicide
+        b[p] = 0;
+
+        return -1;
+
+      }
+
+      return captured;
+
+    }
+
+    function sameBoard(a, b) {
+
+      for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) return false;
+      }
+
+      return true;
+
+    }
+
+    // Is this move legal for the game? (prevPos is the position before the
+    // opponent's last move, used for the ko rule)
+    function legalMove(b, p, color, prevPos) {
+
+      if (p < 0 || p >= NN) {
+        return { ok: false, reason: "off the board" };
+      }
+
+      if (b[p] !== 0) {
+        return { ok: false, reason: "That point is already taken." };
+      }
+
+      const t = b.slice();
+
+      if (playStone(t, p, color, -1) < 0) {
+        return { ok: false, reason: "Not allowed: that move would be suicide." };
+      }
+
+      const captured = capList.slice();
+
+      if (prevPos && sameBoard(t, prevPos)) {
+        return { ok: false, reason: "Ko rule: you cannot repeat the previous position. Play somewhere else first." };
+      }
+
+      return { ok: true, board: t, captured: captured };
+
+    }
+
+    // A point surrounded by your own stones that you should not fill
+    function isOwnEye(b, p, color) {
+
+      if (b[p] !== 0) {
+        return false;
+      }
+
+      const nb = NBR[p];
+
+      for (let i = 0; i < nb.length; i++) {
+        if (b[nb[i]] !== color) return false;
+      }
+
+      const diag = DIAG[p];
+
+      let bad = 0;
+
+      for (let i = 0; i < diag.length; i++) {
+        if (b[diag[i]] !== color) bad++;
+      }
+
+      return diag.length === 4 ? bad <= 1 : bad === 0;
+
+    }
+
+    // ---------- Territory and scoring ----------
+    const regOwner = new Int8Array(361);
+    const regSeen = new Uint8Array(361);
+    const regStack = new Int32Array(361);
+    const regList = new Int32Array(361);
+
+    // Fills regOwner for every empty point: 1 = only black stones touch its
+    // region, 2 = only white, 0 = both or neither
+    function fillRegions(b) {
+
+      regOwner.fill(0, 0, NN);
+      regSeen.fill(0, 0, NN);
+
+      for (let start = 0; start < NN; start++) {
+
+        if (b[start] !== 0 || regSeen[start]) {
+          continue;
+        }
+
+        let count = 0;
+        let sp = 0;
+        let touchesBlack = false;
+        let touchesWhite = false;
+
+        regStack[sp++] = start;
+        regSeen[start] = 1;
+
+        while (sp > 0) {
+
+          const q = regStack[--sp];
+
+          regList[count++] = q;
+
+          const nb = NBR[q];
+
+          for (let i = 0; i < nb.length; i++) {
+
+            const x = nb[i];
+            const v = b[x];
+
+            if (v === BLACK) {
+              touchesBlack = true;
+            } else if (v === WHITE) {
+              touchesWhite = true;
+            } else if (!regSeen[x]) {
+              regSeen[x] = 1;
+              regStack[sp++] = x;
+            }
+
+          }
+
+        }
+
+        const who = touchesBlack && !touchesWhite
+          ? BLACK
+          : touchesWhite && !touchesBlack ? WHITE : 0;
+
+        for (let i = 0; i < count; i++) {
+          regOwner[regList[i]] = who;
+        }
+
+      }
+
+    }
+
+    function regions(b) {
+
+      fillRegions(b);
+
+      return regOwner.slice(0, NN);
+
+    }
+
+    // Japanese scoring: territory + prisoners (captured and dead stones) + komi
+    function japaneseScore(b, dead, capByBlack, capByWhite, komi) {
+
+      const t = b.slice();
+
+      dead.forEach((p) => { t[p] = 0; });
+
+      const owner = regions(t);
+
+      let terrB = 0;
+      let terrW = 0;
+
+      for (let p = 0; p < NN; p++) {
+
+        if (t[p] !== 0) continue;
+
+        if (owner[p] === BLACK) terrB++;
+        else if (owner[p] === WHITE) terrW++;
+
+      }
+
+      let deadBlack = 0;
+      let deadWhite = 0;
+
+      dead.forEach((p) => {
+
+        if (b[p] === BLACK) deadBlack++;
+        else if (b[p] === WHITE) deadWhite++;
+
+      });
+
+      const prisB = capByBlack + deadWhite;
+      const prisW = capByWhite + deadBlack;
+
+      return {
+        terrB: terrB, terrW: terrW,
+        prisB: prisB, prisW: prisW,
+        black: terrB + prisB,
+        white: terrW + prisW + komi,
+        owner: owner, board: t
+      };
+
+    }
+
+    // Area score (used inside the computer's practice games)
+    function areaScore(b) {
+
+      fillRegions(b);
+
+      let black = 0;
+      let white = 0;
+
+      for (let p = 0; p < NN; p++) {
+
+        const v = b[p] !== 0 ? b[p] : regOwner[p];
+
+        if (v === BLACK) black++;
+        else if (v === WHITE) white++;
+
+      }
+
+      return { black: black, white: white };
+
+    }
+
+    // A quick guess of who owns what: each empty point goes to the nearer color
+    function estimateTerritory(b) {
+
+      const distB = new Int16Array(NN).fill(-1);
+      const distW = new Int16Array(NN).fill(-1);
+
+      const spread = (color, dist) => {
+
+        const queue = [];
+
+        for (let p = 0; p < NN; p++) {
+          if (b[p] === color) {
+            dist[p] = 0;
+            queue.push(p);
+          }
+        }
+
+        for (let i = 0; i < queue.length; i++) {
+
+          const q = queue[i];
+
+          for (const x of NBR[q]) {
+            if (dist[x] < 0) {
+              dist[x] = dist[q] + 1;
+              queue.push(x);
+            }
+          }
+
+        }
+
+      };
+
+      spread(BLACK, distB);
+      spread(WHITE, distW);
+
+      const owner = new Int8Array(NN);
+
+      for (let p = 0; p < NN; p++) {
+
+        if (b[p] !== 0) continue;
+
+        if (distB[p] >= 0 && (distW[p] < 0 || distB[p] < distW[p])) owner[p] = BLACK;
+        else if (distW[p] >= 0 && (distB[p] < 0 || distW[p] < distB[p])) owner[p] = WHITE;
+
+      }
+
+      return owner;
+
+    }
+
+    // ---------- Random games (used by the Hard computer and dead-stone marking) ----------
+    function applyRandomMove(b, color, koP) {
+
+      for (let tries = 0; tries < 30; tries++) {
+
+        const p = Math.floor(Math.random() * NN);
+
+        if (b[p] !== 0 || p === koP || isOwnEye(b, p, color)) {
+          continue;
+        }
+
+        if (playStone(b, p, color, koP) >= 0) {
+          return p;
+        }
+
+      }
+
+      // Few empty points left: look at all of them
+      const start = Math.floor(Math.random() * NN);
+
+      for (let i = 0; i < NN; i++) {
+
+        const p = (start + i) % NN;
+
+        if (b[p] !== 0 || p === koP || isOwnEye(b, p, color)) {
+          continue;
+        }
+
+        if (playStone(b, p, color, koP) >= 0) {
+          return p;
+        }
+
+      }
+
+      return -1;
+
+    }
+
+    // Capture a group in atari next to the last move, or save your own
+    function applyAtariMove(b, last, color, koP) {
+
+      for (const q of NBR[last]) {
+
+        if (b[q] === 0) continue;
+
+        if (groupInfo(b, q, tmpG) !== 1) continue;
+
+        // Find the only liberty
+        let liberty = -1;
+
+        for (const s of tmpG) {
+          for (const x of NBR[s]) {
+            if (b[x] === 0) liberty = x;
+          }
+        }
+
+        if (liberty < 0) continue;
+
+        if (b[q] === 3 - color || b[q] === color) {
+
+          if (isOwnEye(b, liberty, color) && b[q] === color) continue;
+
+          if (playStone(b, liberty, color, koP) >= 0) {
+            return liberty;
+          }
+
+        }
+
+      }
+
+      return -1;
+
+    }
+
+    // Plays a random game to the end. Returns the final area score.
+    function playout(b, toMove) {
+
+      let color = toMove;
+      let passes = 0;
+      let koP = -1;
+      let last = -1;
+      let moves = 0;
+
+      const maxMoves = NN * 2 + 20;
+
+      while (passes < 2 && moves < maxMoves) {
+
+        let p = -1;
+
+        if (last >= 0 && Math.random() < 0.6) {
+          p = applyAtariMove(b, last, color, koP);
+        }
+
+        if (p < 0) {
+          p = applyRandomMove(b, color, koP);
+        }
+
+        moves++;
+
+        if (p < 0) {
+          passes++;
+          color = 3 - color;
+          koP = -1;
+          last = -1;
+          continue;
+        }
+
+        koP = -1;
+
+        if (capList.length === 1) {
+
+          // A single stone was taken: check for a ko
+          if (groupInfo(b, p, tmpG) === 1 && tmpG.length === 1) {
+            koP = capList[0];
+          }
+
+        }
+
+        passes = 0;
+        last = p;
+        color = 3 - color;
+
+      }
+
+      return areaScore(b);
+
+    }
+
+    // Pass when the other side has passed and you are ahead, and a few other cases
+    function winnerByArea(score, komi) {
+      return score.black > score.white + komi ? BLACK : WHITE;
+    }
+
+    const wait = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    // Runs `step` again and again for `ms` milliseconds without freezing the screen
+    async function think(ms, step) {
+
+      const start = performance.now();
+
+      while (performance.now() - start < ms) {
+
+        const slice = performance.now();
+
+        while (performance.now() - slice < 20 && performance.now() - start < ms) {
+          step();
+        }
+
+        await wait();
+
+      }
+
+    }
+
+    // Chance (0 to 1) that the dead-stone guess says each point ends up black or white
+    async function ownership(b, ms) {
+
+      const blackCount = new Int32Array(NN);
+      const whiteCount = new Int32Array(NN);
+
+      let games = 0;
+
+      await think(ms, () => {
+
+        const t = b.slice();
+
+        playout(t, BLACK);
+
+        fillRegions(t);
+
+        for (let p = 0; p < NN; p++) {
+
+          const v = t[p] !== 0 ? t[p] : regOwner[p];
+
+          if (v === BLACK) blackCount[p]++;
+          else if (v === WHITE) whiteCount[p]++;
+
+        }
+
+        games++;
+
+      });
+
+      return { black: blackCount, white: whiteCount, games: Math.max(1, games) };
+
+    }
+
+    // All the stones of every group on the board
+    function allGroups(b) {
+
+      const seen = new Uint8Array(NN);
+      const groups = [];
+
+      for (let p = 0; p < NN; p++) {
+
+        if (b[p] === 0 || seen[p]) continue;
+
+        groupInfo(b, p, tmpG);
+
+        const stones = tmpG.slice();
+
+        stones.forEach((s) => { seen[s] = 1; });
+
+        groups.push({ color: b[p], stones: stones });
+
+      }
+
+      return groups;
+
+    }
+
+    // Guess which groups are dead at the end of the game
+    async function guessDead(b, ms) {
+
+      const own = await ownership(b, ms);
+
+      const dead = new Set();
+
+      allGroups(b).forEach((group) => {
+
+        let against = 0;
+
+        group.stones.forEach((s) => {
+          against += group.color === BLACK ? own.white[s] : own.black[s];
+        });
+
+        const fraction = against / (group.stones.length * own.games);
+
+        if (fraction > 0.6) {
+          group.stones.forEach((s) => dead.add(s));
+        }
+
+      });
+
+      return dead;
+
+    }
+
+    // Does the computer agree these groups are dead? Returns the groups it doubts.
+    async function doubtedGroups(b, dead, ms) {
+
+      const own = await ownership(b, ms);
+
+      const doubts = [];
+
+      allGroups(b).forEach((group) => {
+
+        if (!group.stones.every((s) => dead.has(s))) return;
+
+        let mine = 0;
+
+        group.stones.forEach((s) => {
+          mine += group.color === BLACK ? own.black[s] : own.white[s];
+        });
+
+        if (mine / (group.stones.length * own.games) > 0.65) {
+          doubts.push(group);
+        }
+
+      });
+
+      return doubts;
+
+    }
+
+    // ---------- The computer's move choice ----------
+    function lineOf(p) {
+
+      const r = Math.floor(p / N);
+      const c = p % N;
+
+      return Math.min(r, c, N - 1 - r, N - 1 - c);
+
+    }
+
+    // A rough score for a move (used by Easy picks, Medium and to shortlist for Hard)
+    function moveScore(b, p, color, last, moveNo) {
+
+      const opp = 3 - color;
+
+      const t = b.slice();
+
+      const captured = playStone(t, p, color, -1);
+
+      if (captured < 0) {
+        return -1000;
+      }
+
+      const r = Math.floor(p / N);
+      const c = p % N;
+      const line = lineOf(p);
+
+      let score = captured * 12;
+
+      // My group after the move
+      const libs = groupInfo(t, p, tmpG);
+      const size = tmpG.length;
+
+      if (libs === 1 && captured === 0) {
+        score -= 20 + size * 4;          // moving into atari
+      } else {
+        score += Math.min(libs, 4) * 0.8;
+      }
+
+      // Groups next to this point
+      for (const q of NBR[p]) {
+
+        if (b[q] === color) {
+
+          const before = groupInfo(b, q, tmpG);
+          const groupSize = tmpG.length;
+
+          if (before === 1 && libs >= 2) score += 10 + groupSize * 3;   // saves a group
+          else if (before === 2 && libs >= 3) score += 2;
+
+        } else if (b[q] === opp) {
+
+          groupInfo(b, q, tmpG);
+
+          const groupSize = tmpG.length;
+
+          if (t[q] === opp) {
+
+            const after = groupInfo(t, q, tmpG);
+
+            if (after === 1) score += 5 + groupSize * 2;                // puts it in atari
+            else if (after === 2) score += 1.2;
+
+          }
+
+        }
+
+      }
+
+      if (isOwnEye(b, p, color)) {
+        score -= 25;
+      }
+
+      const early = moveNo < NN * 0.35;
+
+      if (line === 0) score -= early ? 8 : 3;
+      else if (line === 1) score -= early ? 2 : 0;
+      else if (line <= 3) score += early ? 2.5 : 1;
+
+      let contact = 0;
+
+      for (const q of NBR[p]) {
+        if (b[q] !== 0) contact++;
+      }
+
+      score += contact * 0.4;
+
+      if (last >= 0) {
+
+        const lr = Math.floor(last / N);
+        const lc = last % N;
+        const d = Math.abs(lr - r) + Math.abs(lc - c);
+
+        if (d <= 2) score += 1.5;
+        else if (d <= 4) score += 0.6;
+
+      }
+
+      return score;
+
+    }
+
+    // Every legal move for the game, as a list of points
+    function legalPoints(b, color, prevPos) {
+
+      const out = [];
+
+      for (let p = 0; p < NN; p++) {
+
+        if (b[p] === 0 && legalMove(b, p, color, prevPos).ok) {
+          out.push(p);
+        }
+
+      }
+
+      return out;
+
+    }
+
+    function pick(list) {
+      return list[Math.floor(Math.random() * list.length)];
+    }
+
+    // Territory estimate says who is ahead (used to decide whether to pass)
+    function looksAhead(b, color, capByBlack, capByWhite, komi) {
+
+      const owner = estimateTerritory(b);
+
+      let black = capByBlack;
+      let white = capByWhite + komi;
+
+      for (let p = 0; p < NN; p++) {
+        if (owner[p] === BLACK) black++;
+        else if (owner[p] === WHITE) white++;
+      }
+
+      return color === BLACK ? black > white : white > black;
+
+    }
+
+    // How long the Hard computer thinks (0 = automatic, set by tests only)
+    let hardBudget = 0;
+
+    function setHardBudget(ms) {
+      hardBudget = ms;
+    }
+
+    // `info`: { board, color, prevPos, last, moveNo, opponentPassed, capByBlack, capByWhite, komi }
+    // Returns a point, or -1 to pass.
+    async function chooseMove(level, info) {
+
+      const b = info.board;
+      const color = info.color;
+
+      const legal = legalPoints(b, color, info.prevPos)
+        .filter((p) => !isOwnEye(b, p, color));
+
+      // Nothing sensible left: pass
+      if (legal.length === 0) {
+        return -1;
+      }
+
+      if (level === "easy") {
+
+        if (info.opponentPassed) {
+          return -1;
+        }
+
+        const grabs = legal.filter((p) => {
+          const t = b.slice();
+          return playStone(t, p, color, -1) > 0;
+        });
+
+        if (grabs.length && Math.random() < 0.6) {
+          return pick(grabs);
+        }
+
+        // Prefer the 3rd and 4th lines, avoid the edge and moving into atari
+        const weights = legal.map((p) => {
+
+          const line = lineOf(p);
+
+          let w = line === 0 ? 0.15 : line === 1 ? 0.6 : line <= 3 ? 2 : 1.2;
+
+          const t = b.slice();
+
+          if (playStone(t, p, color, -1) === 0 && groupInfo(t, p, tmpG) === 1 && Math.random() < 0.8) {
+            w *= 0.05;
+          }
+
+          return w;
+
+        });
+
+        const total = weights.reduce((a, w) => a + w, 0);
+
+        let roll = Math.random() * total;
+
+        for (let i = 0; i < legal.length; i++) {
+
+          roll -= weights[i];
+
+          if (roll <= 0) return legal[i];
+
+        }
+
+        return pick(legal);
+
+      }
+
+      // Score every move
+      const scored = legal.map((p) => ({
+        p: p, s: moveScore(b, p, color, info.last, info.moveNo)
+      })).sort((x, y) => y.s - x.s);
+
+      if (level === "medium") {
+
+        if (info.opponentPassed &&
+            looksAhead(b, color, info.capByBlack, info.capByWhite, info.komi)) {
+          return -1;
+        }
+
+        // The late game: only play moves that do something
+        if (info.moveNo > NN * 0.8 && scored[0].s < 2) {
+          return -1;
+        }
+
+        const top = scored.filter((m) => m.s > scored[0].s - 2.5).slice(0, 4);
+
+        return pick(top).p;
+
+      }
+
+      // Hard: try the best-looking moves in many random games
+      const shortlist = scored.slice(0, N >= 13 ? 30 : 24).filter(
+        (m, i) => i < 4 || m.s > -10
+      );
+
+      const stats = shortlist.map((m) => {
+
+        const after = b.slice();
+
+        playStone(after, m.p, color, -1);
+
+        return { p: m.p, prior: m.s, after: after, wins: 0, visits: 0 };
+
+      });
+
+      let total = 0;
+
+      const budget = hardBudget || (N <= 9 ? 2000 : N <= 13 ? 2600 : 3200);
+
+      await think(budget, () => {
+
+        // Choose the most promising move to test next
+        let best = null;
+        let bestValue = -Infinity;
+
+        for (const s of stats) {
+
+          const value = s.visits === 0
+            ? 1e9 + s.prior
+            : s.wins / s.visits +
+              0.45 * Math.sqrt(Math.log(total + 1) / s.visits) +
+              Math.max(0, s.prior) * 0.012 / (1 + s.visits * 0.05);
+
+          if (value > bestValue) {
+            bestValue = value;
+            best = s;
+          }
+
+        }
+
+        const t = best.after.slice();
+
+        const score = playout(t, 3 - color);
+
+        const winner = winnerByArea(score, info.komi);
+
+        best.visits++;
+        total++;
+
+        if (winner === color) {
+          best.wins++;
+        }
+
+      });
+
+      stats.sort((x, y) => y.visits - x.visits);
+
+      const bestMove = stats[0];
+      const winrate = bestMove.visits ? bestMove.wins / bestMove.visits : 0;
+
+      if (info.opponentPassed && winrate > 0.55) {
+        return -1;
+      }
+
+      if (info.moveNo > NN * 0.9 && bestMove.prior < 1) {
+        return -1;
+      }
+
+      return bestMove.p;
+
+    }
+
+    // Convert between a point and a name like "D4"
+    const LETTERS = "ABCDEFGHJKLMNOPQRST";
+
+    function pointName(p) {
+
+      if (p < 0) return "pass";
+
+      return LETTERS[p % N] + (N - Math.floor(p / N));
+
+    }
+
+    // =====================================================================
+    //  THE GAME (screens, saving, scoring flow and your stats)
+    // =====================================================================
+    const $ = (id) => document.getElementById(id);
+
+    // Reward for a verified win against the Hard computer
+    const HARD_REWARD = { coins: 20, xp: 30 };
+
+    let currentUser = null;
+
+    // Game state
+    let board = new Int8Array(81);
+    let prevPos = null;            // position before the last move (ko rule)
+    let toPlay = BLACK;
+    let passes = 0;
+    let captures = [0, 0, 0];      // captures[BLACK] = white stones black has captured
+    let moves = [];                // a point, or -1 for a pass (black moves first)
+    let lastMove = -1;
+    let koMark = -1;
+    let phase = "setup";           // "setup", "play", "scoring", "over", "replay"
+
+    let mode = "computer";         // "computer", "local" or "practice"
+    let level = "easy";
+    let human = BLACK;
+    let komi = 6.5;
+
+    let dead = new Set();          // stones marked dead while scoring
+    let snapshots = [];            // for Undo in practice mode
+    let hintPoint = -1;
+    let hoverPoint = -1;
+
+    let matchId = "";
+    let elapsed = 0;               // seconds
+    let timerHandle = null;
+    let aiBusy = false;
+    let aiToken = 0;               // stops an old computer move after a new game
+    let rewardClaimed = false;
+    let finishedInfo = null;
+
+    // Replay
+    let replay = null;             // { game, step }
+    let replayTimer = null;
+
+    // ---------- Small helpers ----------
+    function colorName(c) {
+      return c === BLACK ? "Black" : "White";
+    }
+
+    function who(c) {
+
+      if (mode === "computer") {
+        return c === human ? "You" : "The computer";
+      }
+
+      return colorName(c);
+
+    }
+
+    function clock(seconds) {
+
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+
+      return m + ":" + String(s).padStart(2, "0");
+
+    }
+
+    function say(text) {
+      $("status").textContent = text;
+    }
+
+    function newId() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    }
+
+    // ---------- Saving on this device ----------
+    const saveKey = () => "go_save_" + (currentUser ? currentUser.uid : "guest");
+    const gamesKey = () => "go_games_" + (currentUser ? currentUser.uid : "guest");
+
+    function saveGame() {
+
+      if (phase !== "play" && phase !== "scoring") {
+        return;
+      }
+
+      try {
+
+        localStorage.setItem(saveKey(), JSON.stringify({
+          id: matchId, size: N, mode: mode, level: level, human: human,
+          komi: komi, moves: moves, elapsed: elapsed, claimed: rewardClaimed
+        }));
+
+      } catch (error) {
+        console.error("Save error:", error);
+      }
+
+    }
+
+    function clearSave() {
+
+      try {
+        localStorage.removeItem(saveKey());
+      } catch (error) {
+        console.error(error);
+      }
+
+    }
+
+    function readSave() {
+
+      try {
+
+        const raw = localStorage.getItem(saveKey());
+
+        return raw ? JSON.parse(raw) : null;
+
+      } catch (error) {
+        return null;
+      }
+
+    }
+
+    function readGames() {
+
+      try {
+
+        const raw = localStorage.getItem(gamesKey());
+
+        return raw ? JSON.parse(raw) : [];
+
+      } catch (error) {
+        return [];
+      }
+
+    }
+
+    function storeFinished(game) {
+
+      try {
+
+        const list = readGames();
+
+        list.unshift(game);
+
+        localStorage.setItem(gamesKey(), JSON.stringify(list.slice(0, 12)));
+
+      } catch (error) {
+        console.error("Could not store the finished game:", error);
+      }
+
+    }
+
+    // ---------- Playing moves through the rules ----------
+    // Rebuilds a position from a list of moves (used for resume, replay and checking)
+    function simulate(list, upto, size) {
+
+      setSize(size);
+
+      let b = new Int8Array(size * size);
+      let prev = null;
+      let color = BLACK;
+      let caps = [0, 0, 0];
+      let pass = 0;
+      let last = -1;
+      let ko = -1;
+
+      for (let i = 0; i < upto; i++) {
+
+        const p = list[i];
+
+        if (p < 0) {
+
+          prev = b.slice();
+          pass++;
+          last = -1;
+          ko = -1;
+
+        } else {
+
+          const result = legalMove(b, p, color, prev);
+
+          if (!result.ok) {
+            return { error: true, at: i };
+          }
+
+          prev = b;
+          b = result.board;
+          caps[color] += result.captured.length;
+          pass = 0;
+          last = p;
+          ko = -1;
+
+          if (result.captured.length === 1 &&
+              groupInfo(b, p, tmpG) === 1 && tmpG.length === 1) {
+            ko = result.captured[0];
+          }
+
+        }
+
+        color = 3 - color;
+
+      }
+
+      return {
+        board: b, prevPos: prev, toPlay: color, captures: caps,
+        passes: pass, lastMove: last, koMark: ko
+      };
+
+    }
+
+    function loadState(state) {
+
+      board = state.board;
+      prevPos = state.prevPos;
+      toPlay = state.toPlay;
+      captures = state.captures;
+      passes = state.passes;
+      lastMove = state.lastMove;
+      koMark = state.koMark;
+
+    }
+
+    // Make a move (a point) or pass (-1) for whoever's turn it is
+    function commit(p) {
+
+      hintPoint = -1;
+
+      snapshots.push({
+        board: board.slice(), prevPos: prevPos ? prevPos.slice() : null,
+        toPlay: toPlay, passes: passes, captures: captures.slice(),
+        lastMove: lastMove, koMark: koMark, count: moves.length
+      });
+
+      if (p < 0) {
+
+        prevPos = board.slice();
+        moves.push(-1);
+        passes++;
+        lastMove = -1;
+        koMark = -1;
+
+      } else {
+
+        const result = legalMove(board, p, toPlay, prevPos);
+
+        prevPos = board;
+        board = result.board;
+        captures[toPlay] += result.captured.length;
+        moves.push(p);
+        passes = 0;
+        lastMove = p;
+        koMark = -1;
+
+        if (result.captured.length === 1 &&
+            groupInfo(board, p, tmpG) === 1 && tmpG.length === 1) {
+          koMark = result.captured[0];
+        }
+
+      }
+
+      toPlay = 3 - toPlay;
+
+      if (passes >= 2) {
+
+        startScoring();
+
+        return;
+
+      }
+
+      refresh();
+      saveGame();
+      maybeComputer();
+
+    }
+
+    function humanCanMove() {
+      return phase === "play" && !aiBusy && !replay &&
+        (mode !== "computer" || toPlay === human);
+    }
+
+    function tryMove(p) {
+
+      if (!humanCanMove()) {
+        return;
+      }
+
+      const result = legalMove(board, p, toPlay, prevPos);
+
+      if (!result.ok) {
+        say(result.reason);
+        return;
+      }
+
+      commit(p);
+
+    }
+
+    // ---------- The computer's turn ----------
+    function maybeComputer() {
+
+      if (phase !== "play" || mode !== "computer" || toPlay === human) {
+        return;
+      }
+
+      aiBusy = true;
+
+      const token = aiToken;
+
+      say("The computer is thinking...");
+
+      refresh();
+
+      setTimeout(async () => {
+
+        const info = {
+          board: board, color: toPlay, prevPos: prevPos, last: lastMove,
+          moveNo: moves.length,
+          opponentPassed: moves.length > 0 && moves[moves.length - 1] === -1,
+          capByBlack: captures[BLACK], capByWhite: captures[WHITE], komi: komi
+        };
+
+        let p = -1;
+
+        try {
+          p = await chooseMove(level, info);
+        } catch (error) {
+          console.error("Computer error:", error);
+        }
+
+        if (token !== aiToken || phase !== "play") {
+          return;
+        }
+
+        aiBusy = false;
+
+        // The computer must never break a rule
+        if (p >= 0 && !legalMove(board, p, toPlay, prevPos).ok) {
+          p = -1;
+        }
+
+        const name = p < 0 ? "passed" : "played " + pointName(p);
+
+        commit(p);
+
+        if (phase === "play") {
+          say("The computer " + name + ". Your turn.");
+        }
+
+      }, 200);
+
+    }
+
+    // ---------- Scoring ----------
+    function currentScore() {
+      return japaneseScore(board, dead, captures[BLACK], captures[WHITE], komi);
+    }
+
+    async function startScoring() {
+
+      phase = "scoring";
+      dead = new Set();
+      hintPoint = -1;
+
+      saveGame();
+
+      refresh();
+
+      say("Both players passed. Working out which stones are dead...");
+
+      $("confirmBtn").disabled = true;
+      $("autoMarkBtn").disabled = true;
+
+      const token = aiToken;
+
+      const ms = N <= 9 ? 700 : N <= 13 ? 900 : 1100;
+
+      try {
+        dead = await guessDead(board, ms);
+      } catch (error) {
+        console.error(error);
+      }
+
+      if (token !== aiToken || phase !== "scoring") {
+        return;
+      }
+
+      $("confirmBtn").disabled = false;
+      $("autoMarkBtn").disabled = false;
+
+      say("Tap a group to mark it dead or alive. Territory is shown on the board.");
+
+      refresh();
+
+    }
+
+    function toggleDead(p) {
+
+      if (board[p] === 0) {
+        return;
+      }
+
+      groupInfo(board, p, tmpG);
+
+      const stones = tmpG.slice();
+
+      const allDead = stones.every((s) => dead.has(s));
+
+      stones.forEach((s) => {
+        if (allDead) dead.delete(s);
+        else dead.add(s);
+      });
+
+      refresh();
+
+    }
+
+    $("autoMarkBtn").onclick = async () => {
+
+      $("autoMarkBtn").disabled = true;
+
+      say("Looking for dead stones...");
+
+      dead = await guessDead(board, N <= 9 ? 700 : 1000);
+
+      $("autoMarkBtn").disabled = false;
+
+      say("Dead stones marked. You can still tap groups to change them.");
+
+      refresh();
+
+    };
+
+    $("resumeBtn").onclick = () => {
+
+      // Back to playing (for example if you disagree about a group)
+      phase = "play";
+      passes = 0;
+      dead = new Set();
+
+      say("Play continues. " + who(toPlay) + (mode === "computer" && toPlay === human ? " move." : " to move."));
+
+      refresh();
+      saveGame();
+      maybeComputer();
+
+    };
+
+    $("confirmBtn").onclick = async () => {
+
+      if (phase !== "scoring") {
+        return;
+      }
+
+      if (mode === "computer") {
+
+        $("confirmBtn").disabled = true;
+
+        say("The computer is checking your marked stones...");
+
+        const doubts = await doubtedGroups(board, dead, 600);
+
+        $("confirmBtn").disabled = false;
+
+        if (doubts.length) {
+
+          doubts.forEach((group) => group.stones.forEach((s) => dead.delete(s)));
+
+          say("The computer thinks " + doubts.length + " of those group" +
+            (doubts.length > 1 ? "s are" : " is") +
+            " still alive, so it unmarked them. Press Confirm again or Resume play.");
+
+          refresh();
+
+          return;
+
+        }
+
+      }
+
+      finish({ type: "score" });
+
+    };
+
+    // ---------- Ending a game ----------
+    function resultText(info) {
+
+      if (info.type === "resign") {
+        return colorName(3 - info.loser) + " wins. " + colorName(info.loser) + " resigned.";
+      }
+
+      const s = info.score;
+
+      if (s.black === s.white) {
+        return "Draw. Both sides have " + s.black + " points.";
+      }
+
+      const winner = s.black > s.white ? "Black" : "White";
+      const diff = Math.abs(s.black - s.white);
+
+      return winner + " wins by " + diff + " point" + (diff === 1 ? "" : "s") + ".";
+
+    }
+
+    // Replays the whole game from the move list and checks the result
+    function verifyGame(winner) {
+
+      const state = simulate(moves, moves.length, N);
+
+      if (state.error) {
+        return false;
+      }
+
+      const score = japaneseScore(
+        state.board, dead, state.captures[BLACK], state.captures[WHITE], komi
+      );
+
+      const checked = score.black > score.white ? BLACK : score.white > score.black ? WHITE : 0;
+
+      return checked === winner && state.passes >= 2;
+
+    }
+
+    async function finish(info) {
+
+      phase = "over";
+      aiToken++;
+      aiBusy = false;
+      stopTimer();
+
+      let winner = 0;
+
+      if (info.type === "resign") {
+
+        winner = 3 - info.loser;
+
+      } else {
+
+        info.score = currentScore();
+
+        const s = info.score;
+
+        winner = s.black > s.white ? BLACK : s.white > s.black ? WHITE : 0;
+
+      }
+
+      finishedInfo = info;
+
+      const text = resultText(info);
+
+      const banner = $("banner");
+
+      banner.style.display = "block";
+      banner.className = "banner";
+
+      let humanWon = false;
+
+      if (mode === "computer") {
+
+        humanWon = winner === human;
+
+        banner.classList.toggle("lose", winner !== human && winner !== 0);
+
+        banner.textContent = (humanWon ? "🏆 You win! " : winner === 0 ? "🤝 " : "💀 You lose. ") + text;
+
+      } else {
+
+        banner.textContent = "🏆 " + text;
+
+      }
+
+      if (info.type === "score") {
+
+        const s = info.score;
+
+        banner.textContent += " Black " + s.terrB + " territory + " + s.prisB +
+          " prisoners = " + s.black + ". White " + s.terrW + " + " + s.prisW +
+          " + " + komi + " komi = " + s.white + ".";
+
+      }
+
+      say(text);
+
+      clearSave();
+
+      storeFinished({
+        id: matchId, when: Date.now(), size: N, mode: mode, level: level,
+        human: human, komi: komi, moves: moves.slice(),
+        dead: [...dead], result: text
+      });
+
+      refresh();
+
+      // Stats and rewards (not for practice games)
+      if (mode === "practice") {
+        return;
+      }
+
+      const verified = info.type === "score" && verifyGame(winner);
+
+      const rewardOk = mode === "computer" && level === "hard" &&
+        humanWon && verified && !rewardClaimed;
+
+      const note = await recordStats(winner, humanWon, rewardOk);
+
+      if (note) {
+        banner.textContent += " " + note;
+      }
+
+    }
+
+    // ---------- Your stats (saved to your profile) ----------
+    async function recordStats(winner, humanWon, rewardOk) {
+
+      if (!currentUser) {
+        return "";
+      }
+
+      const ref = doc(db, "players", currentUser.uid);
+
+      let note = "";
+
+      try {
+
+        const snap = await getDoc(ref);
+
+        const data = snap.exists() ? snap.data() : {};
+
+        const num = (key) => Number(data[key]) || 0;
+
+        const changes = { goLastPlayed: serverTimestamp() };
+
+        if (mode === "local") {
+
+          changes.goPvpGames = increment(1);
+
+        } else {
+
+          changes.goGames = increment(1);
+
+          if (winner === 0) {
+
+            changes.goDraws = increment(1);
+
+          } else if (humanWon) {
+
+            const key = "goWins" + (level === "easy" ? "Easy" : level === "medium" ? "Medium" : "Hard");
+
+            changes[key] = increment(1);
+            changes.goWinStreak = num("goWinStreak") + 1;
+
+            const best = num("goBestTime");
+
+            if (!best || elapsed < best) {
+              changes.goBestTime = Math.max(1, elapsed);
+            }
+
+          } else {
+
+            changes.goLosses = increment(1);
+            changes.goWinStreak = 0;
+
+          }
+
+        }
+
+        if (rewardOk) {
+
+          changes.coins = increment(HARD_REWARD.coins);
+          changes.xp = increment(HARD_REWARD.xp);
+
+        }
+
+        const batch = writeBatch(db);
+
+        batch.set(ref, changes, { merge: true });
+
+        if (rewardOk) {
+
+          // One reward per match: this record can only be created once
+          batch.set(doc(db, "rewards", currentUser.uid + "_" + matchId), {
+            uid: currentUser.uid, game: "go", matchId: matchId,
+            coins: HARD_REWARD.coins, xp: HARD_REWARD.xp,
+            createdAt: serverTimestamp()
+          });
+
+        }
+
+        await batch.commit();
+
+        if (rewardOk) {
+
+          rewardClaimed = true;
+
+          note = "🪙 +" + HARD_REWARD.coins + " coins and +" + HARD_REWARD.xp +
+            " XP for beating Hard!";
+
+        } else if (mode === "computer" && level === "hard" && humanWon) {
+
+          note = "Win saved.";
+
+        } else {
+
+          note = "Result saved.";
+
+        }
+
+      } catch (error) {
+
+        console.error("Stats error:", error);
+
+        note = rewardOk
+          ? "Could not save the reward. Check Firestore rules, or it was already claimed."
+          : "Could not save your result. Check Firestore rules.";
+
+        if (rewardOk) {
+
+          // Still try to keep the result without the reward
+          try {
+            await recordStats(winner, humanWon, false);
+          } catch (inner) {
+            console.error(inner);
+          }
+
+        }
+
+      }
+
+      return note;
+
+    }
+
+    // ---------- Timer ----------
+    function startTimer() {
+
+      stopTimer();
+
+      timerHandle = setInterval(() => {
+
+        if (phase === "play" || phase === "scoring") {
+          elapsed++;
+          $("timer").textContent = clock(elapsed);
+        }
+
+        if (elapsed % 15 === 0) {
+          saveGame();
+        }
+
+      }, 1000);
+
+    }
+
+    function stopTimer() {
+
+      if (timerHandle) {
+        clearInterval(timerHandle);
+        timerHandle = null;
+      }
+
+    }
+
+    // ---------- Drawing the board ----------
+    const canvas = $("board");
+    const ctx = canvas.getContext("2d");
+
+    let cell = 30;
+    let margin = 20;
+
+    function sizeCanvas() {
+
+      const wrap = $("boardWrap");
+
+      const cssSize = Math.min(wrap.clientWidth || 340, 620);
+
+      const ratio = window.devicePixelRatio || 1;
+
+      canvas.style.width = cssSize + "px";
+      canvas.style.height = cssSize + "px";
+      canvas.width = cssSize * ratio;
+      canvas.height = cssSize * ratio;
+
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+      cell = cssSize / (N + 0.5);
+      margin = cell * 0.75;
+
+    }
+
+    const gx = (c) => margin + c * cell;
+    const gy = (r) => margin + r * cell;
+
+    function stars() {
+
+      const list = N === 9 ? [2, 4, 6] : N === 13 ? [3, 6, 9] : [3, 9, 15];
+
+      const out = [];
+
+      list.forEach((r) => list.forEach((c) => out.push([r, c])));
+
+      return out;
+
+    }
+
+    function drawStone(x, y, color, faded) {
+
+      const radius = cell * 0.46;
+
+      const gradient = ctx.createRadialGradient(
+        x - radius * 0.35, y - radius * 0.35, radius * 0.1, x, y, radius
+      );
+
+      if (color === BLACK) {
+        gradient.addColorStop(0, "#666");
+        gradient.addColorStop(1, "#050505");
+      } else {
+        gradient.addColorStop(0, "#ffffff");
+        gradient.addColorStop(1, "#c8c8c8");
+      }
+
+      ctx.save();
+
+      ctx.globalAlpha = faded ? 0.45 : 1;
+
+      ctx.shadowColor = "rgba(0,0,0,0.45)";
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetY = 2;
+
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      ctx.restore();
+
+    }
+
+    // What the board should show right now
+    function view() {
+
+      if (replay) {
+
+        const game = replay.game;
+
+        const state = simulate(game.moves, replay.step, game.size);
+
+        return {
+          board: state.board, last: state.lastMove, ko: state.koMark,
+          dead: replay.step === game.moves.length ? new Set(game.dead) : new Set(),
+          showFinal: replay.step === game.moves.length
+        };
+
+      }
+
+      return { board: board, last: lastMove, ko: koMark, dead: dead, showFinal: false };
+
+    }
+
+    function draw() {
+
+      const v = view();
+
+      const b = v.board;
+
+      const size = parseFloat(canvas.style.width) || 340;
+
+      ctx.clearRect(0, 0, size, size);
+
+      // Wood
+      const wood = ctx.createLinearGradient(0, 0, size, size);
+
+      wood.addColorStop(0, "#e2b45d");
+      wood.addColorStop(1, "#c8963a");
+
+      ctx.fillStyle = wood;
+      ctx.fillRect(0, 0, size, size);
+
+      // Lines
+      ctx.strokeStyle = "#4a3410";
+      ctx.lineWidth = 1;
+
+      ctx.beginPath();
+
+      for (let i = 0; i < N; i++) {
+
+        ctx.moveTo(gx(0), gy(i));
+        ctx.lineTo(gx(N - 1), gy(i));
+        ctx.moveTo(gx(i), gy(0));
+        ctx.lineTo(gx(i), gy(N - 1));
+
+      }
+
+      ctx.stroke();
+
+      // Star points
+      ctx.fillStyle = "#4a3410";
+
+      stars().forEach(([r, c]) => {
+        ctx.beginPath();
+        ctx.arc(gx(c), gy(r), cell * 0.1, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Coordinates
+      ctx.fillStyle = "#6b4c14";
+      ctx.font = Math.max(8, cell * 0.28) + "px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      for (let i = 0; i < N; i++) {
+        ctx.fillText(LETTERS[i], gx(i), margin * 0.38);
+        ctx.fillText(String(N - i), margin * 0.38, gy(i));
+      }
+
+      // Territory view (final score, scoring screen, or the estimate toggle)
+      let territory = null;
+
+      const scoringNow = phase === "scoring" && !replay;
+      const overNow = phase === "over" && !replay;
+
+      if (scoringNow || overNow || v.showFinal) {
+
+        const s = japaneseScore(
+          b, v.dead, 0, 0, 0
+        );
+
+        territory = s.owner;
+
+      } else if ($("territoryBox").checked && phase === "play" && !replay) {
+
+        territory = estimateTerritory(b);
+
+      }
+
+      if (territory) {
+
+        for (let p = 0; p < NN; p++) {
+
+          const ownerHere = territory[p];
+
+          if (!ownerHere) continue;
+
+          const stoneThere = b[p] !== 0 && !v.dead.has(p);
+
+          if (stoneThere) continue;
+
+          const r = Math.floor(p / N);
+          const c = p % N;
+
+          ctx.fillStyle = ownerHere === BLACK ? "rgba(0,0,0,0.65)" : "rgba(255,255,255,0.85)";
+
+          const half = cell * 0.17;
+
+          ctx.fillRect(gx(c) - half, gy(r) - half, half * 2, half * 2);
+
+        }
+
+      }
+
+      // Stones
+      for (let p = 0; p < NN; p++) {
+
+        if (b[p] === 0) continue;
+
+        const r = Math.floor(p / N);
+        const c = p % N;
+
+        drawStone(gx(c), gy(r), b[p], v.dead.has(p));
+
+        if (v.dead.has(p)) {
+
+          ctx.strokeStyle = "#e11d48";
+          ctx.lineWidth = 2.5;
+
+          const k = cell * 0.2;
+
+          ctx.beginPath();
+          ctx.moveTo(gx(c) - k, gy(r) - k);
+          ctx.lineTo(gx(c) + k, gy(r) + k);
+          ctx.moveTo(gx(c) + k, gy(r) - k);
+          ctx.lineTo(gx(c) - k, gy(r) + k);
+          ctx.stroke();
+
+        }
+
+      }
+
+      // Last move
+      if (v.last >= 0) {
+
+        const r = Math.floor(v.last / N);
+        const c = v.last % N;
+
+        ctx.strokeStyle = b[v.last] === BLACK ? "#ffffff" : "#e11d48";
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+        ctx.arc(gx(c), gy(r), cell * 0.2, 0, Math.PI * 2);
+        ctx.stroke();
+
+      }
+
+      // Ko point
+      if (v.ko >= 0 && b[v.ko] === 0 && phase === "play") {
+
+        const r = Math.floor(v.ko / N);
+        const c = v.ko % N;
+
+        ctx.strokeStyle = "#e11d48";
+        ctx.lineWidth = 2;
+
+        const k = cell * 0.2;
+
+        ctx.strokeRect(gx(c) - k, gy(r) - k, k * 2, k * 2);
+
+      }
+
+      if (!replay && phase === "play") {
+
+        // Legal moves
+        if ($("legalBox").checked && humanCanMove()) {
+
+          ctx.fillStyle = "rgba(34,197,94,0.75)";
+
+          for (let p = 0; p < NN; p++) {
+
+            if (b[p] === 0 && legalMove(b, p, toPlay, prevPos).ok) {
+
+              ctx.beginPath();
+              ctx.arc(gx(p % N), gy(Math.floor(p / N)), cell * 0.1, 0, Math.PI * 2);
+              ctx.fill();
+
+            }
+
+          }
+
+        }
+
+        // Hover stone
+        if (hoverPoint >= 0 && humanCanMove() && b[hoverPoint] === 0) {
+
+          ctx.globalAlpha = 0.45;
+
+          drawStone(gx(hoverPoint % N), gy(Math.floor(hoverPoint / N)), toPlay, false);
+
+          ctx.globalAlpha = 1;
+
+        }
+
+        // Suggested move
+        if (hintPoint >= 0) {
+
+          ctx.strokeStyle = "#22c55e";
+          ctx.lineWidth = 3;
+
+          ctx.beginPath();
+          ctx.arc(gx(hintPoint % N), gy(Math.floor(hintPoint / N)), cell * 0.4, 0, Math.PI * 2);
+          ctx.stroke();
+
+        }
+
+      }
+
+    }
+
+    function pointAt(event) {
+
+      const rect = canvas.getBoundingClientRect();
+
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      const c = Math.round((x - margin) / cell);
+      const r = Math.round((y - margin) / cell);
+
+      if (r < 0 || r >= N || c < 0 || c >= N) {
+        return -1;
+      }
+
+      return r * N + c;
+
+    }
+
+    canvas.addEventListener("pointermove", (event) => {
+
+      const p = pointAt(event);
+
+      if (p !== hoverPoint) {
+        hoverPoint = p;
+        draw();
+      }
+
+    });
+
+    canvas.addEventListener("pointerleave", () => {
+      hoverPoint = -1;
+      draw();
+    });
+
+    canvas.addEventListener("pointerup", (event) => {
+
+      if (replay) {
+        return;
+      }
+
+      const p = pointAt(event);
+
+      if (p < 0) {
+        return;
+      }
+
+      if (phase === "scoring") {
+        toggleDead(p);
+      } else if (phase === "play") {
+        tryMove(p);
+      }
+
+    });
+
+    // ---------- Updating the screen ----------
+    function refresh() {
+
+      const playing = phase === "play" || phase === "scoring" || phase === "over";
+
+      $("gamePanel").classList.toggle("hidden", !playing && !replay);
+      $("historyPanel").classList.toggle("hidden", !playing && !replay);
+      $("scorePanel").classList.toggle("hidden", phase !== "scoring" || !!replay);
+
+      // Players
+      $("blackName").textContent = who(BLACK) === "You" ? "Black (You)" : mode === "computer" ? "Black (Computer)" : "Black";
+      $("whiteName").textContent = who(WHITE) === "You" ? "White (You)" : mode === "computer" ? "White (Computer)" : "White";
+
+      $("blackCaps").textContent = captures[BLACK];
+      $("whiteCaps").textContent = captures[WHITE];
+      $("komiShow").textContent = komi;
+
+      $("blackCard").classList.toggle("active", phase === "play" && toPlay === BLACK && !replay);
+      $("whiteCard").classList.toggle("active", phase === "play" && toPlay === WHITE && !replay);
+
+      if (replay) {
+
+        $("turn").textContent = "Replay: move " + replay.step + " of " + replay.game.moves.length;
+
+      } else if (phase === "play") {
+
+        $("turn").textContent = aiBusy
+          ? "The computer is thinking..."
+          : colorName(toPlay) + "'s turn" + (mode === "computer" && toPlay === human ? " (you)" : "");
+
+      } else if (phase === "scoring") {
+
+        $("turn").textContent = "Scoring";
+
+      } else if (phase === "over") {
+
+        $("turn").textContent = "Game over";
+
+      }
+
+      $("timer").textContent = clock(elapsed);
+
+      // Buttons
+      const mine = humanCanMove();
+
+      $("passBtn").disabled = !mine;
+      $("resignBtn").disabled = phase !== "play" || !!replay || (mode === "computer" && toPlay !== human);
+      $("undoBtn").classList.toggle("hidden", mode !== "practice");
+      $("hintBtn").classList.toggle("hidden", mode !== "practice");
+      $("undoBtn").disabled = mode !== "practice" || snapshots.length === 0 || phase === "over" || !!replay;
+      $("hintBtn").disabled = !mine;
+
+      // Scoring table
+      if (phase === "scoring" && !replay) {
+
+        const s = currentScore();
+
+        $("sBlack").textContent = s.terrB + " + " + s.prisB + " = " + s.black;
+        $("sWhite").textContent = s.terrW + " + " + s.prisW + " + " + komi + " = " + s.white;
+
+        const diff = Math.abs(s.black - s.white);
+
+        $("sResult").textContent = s.black === s.white
+          ? "Draw so far"
+          : (s.black > s.white ? "Black" : "White") + " leads by " + diff;
+
+      }
+
+      // Move history
+      const list = $("history");
+
+      const source = replay ? replay.game.moves : moves;
+      const upto = replay ? replay.step : moves.length;
+
+      list.replaceChildren();
+
+      source.forEach((p, i) => {
+
+        const item = document.createElement("span");
+
+        item.className = "mv" + (i === upto - 1 ? " now" : "") + (i >= upto ? " later" : "");
+
+        item.textContent = (i + 1) + ". " + (i % 2 === 0 ? "B " : "W ") + pointName(p);
+
+        list.appendChild(item);
+
+      });
+
+      list.scrollTop = list.scrollHeight;
+
+      $("replayBar").classList.toggle("hidden", !replay);
+
+      draw();
+
+    }
+
+    // ---------- Starting, resuming and replays ----------
+    function startNew(options) {
+
+      aiToken++;
+      aiBusy = false;
+      stopReplay();
+
+      replay = null;
+
+      N = options.size;
+
+      setSize(options.size);
+
+      board = new Int8Array(NN);
+      prevPos = null;
+      toPlay = BLACK;
+      passes = 0;
+      captures = [0, 0, 0];
+      moves = [];
+      lastMove = -1;
+      koMark = -1;
+      dead = new Set();
+      snapshots = [];
+      hintPoint = -1;
+
+      mode = options.mode;
+      level = options.level;
+      human = options.human;
+      komi = options.komi;
+
+      matchId = options.id || newId();
+      elapsed = options.elapsed || 0;
+      rewardClaimed = !!options.claimed;
+      finishedInfo = null;
+
+      phase = "play";
+
+      $("banner").style.display = "none";
+
+      $("gamePanel").classList.remove("hidden");
+
+      sizeCanvas();
+
+      if (options.moves && options.moves.length) {
+
+        const state = simulate(options.moves, options.moves.length, options.size);
+
+        if (state.error) {
+
+          say("That saved game could not be loaded.");
+          phase = "setup";
+          refresh();
+
+          return;
+
+        }
+
+        moves = options.moves.slice();
+
+        loadState(state);
+
+        // Build the undo steps for practice games
+        snapshots = [];
+
+        for (let i = 0; i < moves.length && mode === "practice"; i++) {
+
+          const part = simulate(moves, i, options.size);
+
+          snapshots.push({
+            board: part.board, prevPos: part.prevPos, toPlay: part.toPlay,
+            passes: part.passes, captures: part.captures,
+            lastMove: part.lastMove, koMark: part.koMark, count: i
+          });
+
+        }
+
+        setSize(options.size);
+
+      }
+
+      startTimer();
+
+      saveGame();
+
+      if (passes >= 2) {
+
+        startScoring();
+
+        return;
+
+      }
+
+      say(mode === "computer"
+        ? (human === BLACK ? "You are Black. You move first." : "You are White. The computer moves first.")
+        : "Black moves first.");
+
+      refresh();
+
+      maybeComputer();
+
+    }
+
+    $("startBtn").onclick = () => {
+
+      const k = parseFloat($("komi").value);
+
+      startNew({
+        size: parseInt($("size").value, 10),
+        mode: $("mode").value,
+        level: $("level").value,
+        human: $("side").value === "white" ? WHITE : BLACK,
+        komi: isNaN(k) ? 6.5 : Math.max(0, Math.min(30, k)),
+      });
+
+    };
+
+    $("continueBtn").onclick = () => {
+
+      const saved = readSave();
+
+      if (!saved) {
+        return;
+      }
+
+      startNew({
+        size: saved.size, mode: saved.mode, level: saved.level,
+        human: saved.human, komi: saved.komi, moves: saved.moves,
+        id: saved.id, elapsed: saved.elapsed, claimed: saved.claimed
+      });
+
+    };
+
+    function syncSetup() {
+
+      const m = $("mode").value;
+
+      $("levelRow").classList.toggle("hidden", m !== "computer");
+      $("sideRow").classList.toggle("hidden", m !== "computer");
+
+      $("continueBtn").classList.toggle("hidden", !readSave());
+
+      $("replayListBtn").classList.toggle("hidden", readGames().length === 0);
+
+    }
+
+    $("mode").onchange = syncSetup;
+
+    // Pass, resign, undo and suggestion
+    $("passBtn").onclick = () => {
+
+      if (humanCanMove()) {
+        commit(-1);
+      }
+
+    };
+
+    $("resignBtn").onclick = () => {
+
+      if (phase !== "play") {
+        return;
+      }
+
+      const loser = mode === "computer" ? human : toPlay;
+
+      if (confirm(colorName(loser) + " resigns. Are you sure?")) {
+        finish({ type: "resign", loser: loser });
+      }
+
+    };
+
+    $("undoBtn").onclick = () => {
+
+      if (mode !== "practice" || !snapshots.length) {
+        return;
+      }
+
+      const snap = snapshots.pop();
+
+      board = snap.board;
+      prevPos = snap.prevPos;
+      toPlay = snap.toPlay;
+      passes = snap.passes;
+      captures = snap.captures;
+      lastMove = snap.lastMove;
+      koMark = snap.koMark;
+
+      moves.length = snap.count;
+
+      if (phase === "scoring") {
+        phase = "play";
+      }
+
+      hintPoint = -1;
+
+      say("Move undone.");
+
+      refresh();
+      saveGame();
+
+    };
+
+    $("hintBtn").onclick = async () => {
+
+      if (!humanCanMove()) {
+        return;
+      }
+
+      $("hintBtn").disabled = true;
+
+      const p = await chooseMove("medium", {
+        board: board, color: toPlay, prevPos: prevPos, last: lastMove,
+        moveNo: moves.length, opponentPassed: false,
+        capByBlack: captures[BLACK], capByWhite: captures[WHITE], komi: komi
+      });
+
+      hintPoint = p;
+
+      say(p < 0 ? "Suggestion: pass." : "Suggestion: try " + pointName(p) + ".");
+
+      refresh();
+
+    };
+
+    $("legalBox").onchange = draw;
+    $("territoryBox").onchange = draw;
+
+    $("newAfterBtn").onclick = () => {
+
+      $("gamePanel").classList.add("hidden");
+      $("historyPanel").classList.add("hidden");
+      $("scorePanel").classList.add("hidden");
+      $("banner").style.display = "none";
+
+      phase = "setup";
+
+      syncSetup();
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
+    };
+
+    // ---------- Replay of finished games ----------
+    function stopReplay() {
+
+      if (replayTimer) {
+        clearInterval(replayTimer);
+        replayTimer = null;
+      }
+
+      $("playReplayBtn").textContent = "▶ Play";
+
+    }
+
+    function showReplayList() {
+
+      const list = readGames();
+
+      const box = $("replayList");
+
+      box.replaceChildren();
+
+      if (!list.length) {
+
+        box.textContent = "No finished games yet.";
+
+      }
+
+      list.forEach((game, index) => {
+
+        const button = document.createElement("button");
+
+        button.className = "secondary replay-item";
+
+        const date = new Date(game.when).toLocaleString();
+
+        const kind = game.mode === "computer"
+          ? "vs " + game.level
+          : game.mode === "local" ? "1 vs 1" : "practice";
+
+        button.textContent = game.size + "×" + game.size + " · " + kind + " · " +
+          game.moves.length + " moves · " + date + " — " + game.result;
+
+        button.onclick = () => openReplay(index);
+
+        box.appendChild(button);
+
+      });
+
+      $("replayPanel").classList.remove("hidden");
+
+      $("replayPanel").scrollIntoView({ behavior: "smooth" });
+
+    }
+
+    function openReplay(index) {
+
+      const game = readGames()[index];
+
+      if (!game) {
+        return;
+      }
+
+      // Leave any game in progress (it is saved and can be resumed)
+      if (phase === "play" || phase === "scoring") {
+        saveGame();
+        stopTimer();
+        aiToken++;
+        aiBusy = false;
+      }
+
+      phase = "replay";
+
+      replay = { game: game, step: 0 };
+
+      setSize(game.size);
+
+      N = game.size;
+
+      $("banner").style.display = "none";
+      $("scorePanel").classList.add("hidden");
+      $("gamePanel").classList.remove("hidden");
+
+      sizeCanvas();
+
+      say("Replay: " + game.result);
+
+      refresh();
+
+      $("gamePanel").scrollIntoView({ behavior: "smooth" });
+
+    }
+
+    function replayStep(delta, absolute) {
+
+      if (!replay) {
+        return;
+      }
+
+      const total = replay.game.moves.length;
+
+      let step = absolute !== undefined ? absolute : replay.step + delta;
+
+      step = Math.max(0, Math.min(total, step));
+
+      replay.step = step;
+
+      setSize(replay.game.size);
+
+      if (step === total) {
+        stopReplay();
+      }
+
+      refresh();
+
+    }
+
+    $("replayListBtn").onclick = showReplayList;
+
+    $("rFirst").onclick = () => { stopReplay(); replayStep(0, 0); };
+    $("rPrev").onclick = () => { stopReplay(); replayStep(-1); };
+    $("rNext").onclick = () => { stopReplay(); replayStep(1); };
+    $("rLast").onclick = () => { stopReplay(); replayStep(0, 999999); };
+
+    $("playReplayBtn").onclick = () => {
+
+      if (replayTimer) {
+        stopReplay();
+        return;
+      }
+
+      if (replay.step >= replay.game.moves.length) {
+        replayStep(0, 0);
+      }
+
+      $("playReplayBtn").textContent = "⏸ Pause";
+
+      replayTimer = setInterval(() => replayStep(1), 700);
+
+    };
+
+    $("closeReplayBtn").onclick = () => {
+
+      stopReplay();
+
+      replay = null;
+
+      phase = "setup";
+
+      $("gamePanel").classList.add("hidden");
+      $("historyPanel").classList.add("hidden");
+      $("replayPanel").classList.add("hidden");
+
+      syncSetup();
+
+    };
+
+    // ---------- Buttons and login ----------
+    window.addEventListener("resize", () => {
+      sizeCanvas();
+      draw();
+    });
+
+    $("logoutBtn").onclick = async () => {
+
+      try {
+        await signOut(auth);
+      } catch (error) {
+        console.error(error);
+      }
+
+      window.location.replace("login.html");
+
+    };
+
+    onAuthStateChanged(auth, (user) => {
+
+      if (!user) {
+        window.location.replace("login.html");
+        return;
+      }
+
+      currentUser = user;
+
+      syncSetup();
+
+    });
+
+    setSize(9);
+    sizeCanvas();
+    syncSetup();
+
+  </script>
+
+</body>
+</html>

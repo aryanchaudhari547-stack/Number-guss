@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Quoridor | Number Guess</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #07152f, #123c69);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    header {
+      max-width: 900px;
+      margin: 10px auto 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    header h2 {
+      color: #20d5ff;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin: 10px auto 20px;
+      max-width: 900px;
+    }
+
+    nav a {
+      background: #193c63;
+      color: white;
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    nav a:hover {
+      background: #087fa9;
+    }
+
+    .logout {
+      background: #e84b61;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+
+    h1 {
+      color: #20d5ff;
+      margin-bottom: 6px;
+    }
+
+    .muted {
+      color: #9db3cf;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .panel {
+      max-width: 620px;
+      margin: 14px auto;
+      padding: 16px;
+      background: #101f3d;
+      border: 1px solid #294a70;
+      border-radius: 16px;
+    }
+
+    .panel h3 {
+      color: #20d5ff;
+      margin-bottom: 8px;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+      margin: 8px 0;
+    }
+
+    label {
+      color: #b9c9df;
+      font-size: 13px;
+    }
+
+    button,
+    select {
+      padding: 11px 14px;
+      border: none;
+      border-radius: 9px;
+      background: #087fa9;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    select {
+      background: #08172e;
+      border: 1px solid #395779;
+    }
+
+    button:hover:not(:disabled) {
+      background: #08a9d5;
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    button.secondary {
+      background: #263d5c;
+      border: 1px solid #395779;
+    }
+
+    button.good {
+      background: #1f8f66;
+    }
+
+    button.on {
+      background: #f6ca45;
+      color: #101f3d;
+    }
+
+    .status {
+      color: #f6ca45;
+      min-height: 40px;
+      margin: 10px 0 4px;
+      font-weight: bold;
+      line-height: 1.4;
+    }
+
+    .banner {
+      display: none;
+      margin: 12px 0;
+      padding: 14px;
+      border-radius: 12px;
+      background: #08172e;
+      border: 2px solid #45e6a0;
+      line-height: 1.6;
+    }
+
+    .banner.lose {
+      border-color: #ff8585;
+    }
+
+    .players {
+      display: flex;
+      gap: 10px;
+    }
+
+    .pcard {
+      flex: 1;
+      padding: 10px;
+      background: #08172e;
+      border: 2px solid #294a70;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .pcard.active {
+      border-color: #f6ca45;
+      box-shadow: 0 0 12px #f6ca4555;
+    }
+
+    .dotico {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      vertical-align: -3px;
+      margin-right: 4px;
+    }
+
+    .dotico.p0 {
+      background: #20d5ff;
+    }
+
+    .dotico.p1 {
+      background: #f6ca45;
+    }
+
+    .info-line {
+      display: flex;
+      justify-content: space-between;
+      color: #b9c9df;
+      font-size: 14px;
+      margin: 10px 4px 0;
+    }
+
+    /* ---- The board ---- */
+    #qboard {
+      position: relative;
+      width: min(94vw, 520px);
+      aspect-ratio: 1;
+      margin: 12px auto;
+      background: #0b2548;
+      border: 3px solid #294a70;
+      border-radius: 12px;
+      touch-action: manipulation;
+      box-shadow: 0 10px 28px #0007;
+    }
+
+    .qcell {
+      position: absolute;
+      background: #1d4a7a;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qcell.goal0 {
+      background: #1d6a8f;
+    }
+
+    .qcell.goal1 {
+      background: #6d5c22;
+    }
+
+    .qcell.hintcell {
+      box-shadow: inset 0 0 0 3px #ffffff;
+      animation: glow 0.8s ease-in-out infinite alternate;
+    }
+
+    .qwall {
+      position: absolute;
+      background: #f6ca45;
+      border-radius: 3px;
+      box-shadow: 0 0 6px #0008;
+      z-index: 2;
+    }
+
+    .qwall.preview {
+      z-index: 4;
+    }
+
+    .qwall.preview.ok {
+      background: rgba(69, 230, 160, 0.9);
+    }
+
+    .qwall.preview.bad {
+      background: rgba(255, 107, 107, 0.9);
+    }
+
+    .pawn {
+      position: absolute;
+      border-radius: 50%;
+      z-index: 5;
+      transition: left 0.28s ease, top 0.28s ease;
+      border: 3px solid #0b1220;
+      box-shadow: 0 4px 6px #0009, inset 0 3px 5px #fff5;
+      pointer-events: none;
+    }
+
+    .pawn.p0 {
+      background: radial-gradient(circle at 35% 30%, #a5f0ff, #20d5ff 55%, #0a8cab);
+    }
+
+    .pawn.p1 {
+      background: radial-gradient(circle at 35% 30%, #ffe9a3, #f6ca45 55%, #c9971c);
+    }
+
+    .pawn.win {
+      animation: bounce 0.6s ease-in-out infinite alternate;
+    }
+
+    .dot {
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .dot.legal {
+      width: 34%;
+      height: 34%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+    }
+
+    .dot.route0 {
+      position: absolute;
+      width: 18%;
+      height: 18%;
+      background: #20d5ff;
+      opacity: 0.85;
+      margin-left: -14%;
+    }
+
+    .dot.route1 {
+      position: absolute;
+      width: 18%;
+      height: 18%;
+      background: #f6ca45;
+      opacity: 0.85;
+      margin-left: 14%;
+    }
+
+    @keyframes glow {
+      from { filter: brightness(1); }
+      to   { filter: brightness(1.6); }
+    }
+
+    @keyframes bounce {
+      from { transform: scale(1); }
+      to   { transform: scale(1.3); }
+    }
+
+    .confetti {
+      position: fixed;
+      top: -40px;
+      pointer-events: none;
+      z-index: 100;
+      animation-name: fall;
+      animation-timing-function: linear;
+      animation-fill-mode: forwards;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(115vh) rotate(360deg);
+        opacity: 0.85;
+      }
+    }
+
+    .toggles {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin: 6px 0;
+    }
+
+    .toggles label {
+      cursor: pointer;
+    }
+
+    .note {
+      min-height: 20px;
+      color: #f6ca45;
+      font-size: 13px;
+    }
+
+    .history {
+      text-align: left;
+      max-height: 130px;
+      overflow-y: auto;
+      line-height: 1.9;
+      font-size: 13px;
+      color: #b9c9df;
+    }
+
+    .mv {
+      display: inline-block;
+      margin: 0 4px 0 0;
+      padding: 1px 7px;
+      border-radius: 6px;
+      background: #08172e;
+    }
+
+    .mv.now {
+      background: #f6ca45;
+      color: #101f3d;
+      font-weight: bold;
+    }
+
+    .mv.later {
+      opacity: 0.35;
+    }
+
+    .replay-item {
+      display: block;
+      width: 100%;
+      margin: 6px 0;
+      text-align: left;
+      font-weight: normal;
+      line-height: 1.4;
+    }
+
+    details {
+      text-align: left;
+      margin: 8px 0;
+      background: #08172e;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    summary {
+      cursor: pointer;
+      color: #20d5ff;
+      font-weight: bold;
+    }
+
+    details p {
+      color: #b9c9df;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    footer {
+      color: #9db3cf;
+      font-size: 13px;
+      margin: 30px 0 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h2>🎯 Number Guess</h2>
+    <button class="logout" id="logoutBtn">Logout</button>
+  </header>
+
+  <nav>
+    <a href="home.html">Home</a>
+    <a href="go.html">Go</a>
+    <a href="shop.html">Shop</a>
+    <a href="profile.html">Profile</a>
+  </nav>
+
+  <h1>🧱 Quoridor</h1>
+  <p class="muted">Race your pawn to the other side. Use walls to slow your opponent.</p>
+
+  <!-- Setup -->
+  <section class="panel" id="setupPanel">
+
+    <div class="row">
+
+      <label>Mode
+        <select id="mode">
+          <option value="computer">1 vs Computer</option>
+          <option value="local">1 vs 1 (same device)</option>
+          <option value="practice">Practice (both sides, undo)</option>
+        </select>
+      </label>
+
+      <label id="levelRow">Computer
+        <select id="level">
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </label>
+
+      <label id="orderRow">You move
+        <select id="order">
+          <option value="first">First</option>
+          <option value="second">Second</option>
+        </select>
+      </label>
+
+    </div>
+
+    <div class="row">
+      <button id="startBtn">New Game</button>
+      <button class="secondary hidden" id="replayListBtn">🎞 Replays</button>
+    </div>
+
+    <p class="muted">
+      Beat the <strong>Hard</strong> computer to earn <strong>20 🪙 and 30 XP</strong>.
+      Easy, Medium, 1 vs 1 and Practice give no rewards.
+    </p>
+
+  </section>
+
+  <!-- Replay list -->
+  <section class="panel hidden" id="replayPanel">
+    <h3>Finished games</h3>
+    <div id="replayList"></div>
+  </section>
+
+  <!-- Game -->
+  <section class="panel hidden" id="gamePanel">
+
+    <div class="players">
+
+      <div class="pcard" id="card0">
+        <span class="dotico p0"></span><strong id="name0">Player 1</strong><br>
+        🧱 Walls: <span id="walls0">10</span><br>
+        Steps to goal: <span id="dist0">8</span>
+      </div>
+
+      <div class="pcard" id="card1">
+        <span class="dotico p1"></span><strong id="name1">Player 2</strong><br>
+        🧱 Walls: <span id="walls1">10</span><br>
+        Steps to goal: <span id="dist1">8</span>
+      </div>
+
+    </div>
+
+    <div class="info-line">
+      <span id="turn">Player 1's turn</span>
+      <span>⏱ <span id="timer">0:00</span></span>
+    </div>
+
+    <p class="status" id="status"></p>
+
+    <div class="banner" id="banner"></div>
+
+    <div id="qboard" aria-label="Quoridor board"></div>
+
+    <div class="row">
+      <button id="moveModeBtn" class="on">♟ Move pawn</button>
+      <button id="wallModeBtn">🧱 Place wall</button>
+    </div>
+
+    <div class="row hidden" id="wallTools">
+      <button class="secondary" id="rotateBtn">↔ Horizontal</button>
+      <button class="good" id="placeBtn">Place wall</button>
+    </div>
+
+    <p class="note" id="wallNote"></p>
+
+    <div class="toggles">
+      <label><input type="checkbox" id="routeBox"> Show shortest routes</label>
+    </div>
+
+    <div class="row">
+      <button class="secondary" id="resignBtn">Resign</button>
+      <button class="secondary" id="undoBtn">↩ Undo</button>
+      <button class="secondary" id="hintBtn">💡 Suggest</button>
+    </div>
+
+    <div class="row hidden" id="replayBar">
+      <button class="secondary" id="rFirst">⏮</button>
+      <button class="secondary" id="rPrev">◀</button>
+      <button class="good" id="playReplayBtn">▶ Play</button>
+      <button class="secondary" id="rNext">▶</button>
+      <button class="secondary" id="rLast">⏭</button>
+      <button class="secondary" id="closeReplayBtn">Close</button>
+    </div>
+
+    <div class="row">
+      <button class="secondary" id="newAfterBtn">⚙ New game / setup</button>
+    </div>
+
+  </section>
+
+  <!-- Move history -->
+  <section class="panel hidden" id="historyPanel">
+    <h3>Move history</h3>
+    <div class="history" id="history"></div>
+  </section>
+
+  <!-- Rules -->
+  <section class="panel">
+
+    <h3>Rules and tutorial</h3>
+
+    <details>
+      <summary>Goal</summary>
+      <p>
+        Player 1 (blue, bottom) must reach any square on the top row. Player 2
+        (gold, top) must reach any square on the bottom row. The first pawn to
+        arrive wins. Each player has 10 walls.
+      </p>
+    </details>
+
+    <details>
+      <summary>Your turn: move or wall</summary>
+      <p>
+        On your turn you do one thing: move your pawn one square up, down,
+        left or right (never diagonally), or place one wall.
+      </p>
+    </details>
+
+    <details>
+      <summary>Jumping</summary>
+      <p>
+        If the other pawn is right next to you, you can jump straight over it.
+        If a wall or the edge of the board is behind that pawn, you may step
+        diagonally around it instead.
+      </p>
+    </details>
+
+    <details>
+      <summary>Walls</summary>
+      <p>
+        A wall is two squares long and sits between squares. Walls cannot
+        overlap, cross each other or go off the board. A wall is only allowed
+        if both pawns can still reach their goal side. Tap Place wall, tap the
+        board to preview (green is allowed, red is not), use Rotate to switch
+        between horizontal and vertical, then press Place wall.
+      </p>
+    </details>
+
+    <details>
+      <summary>Tips</summary>
+      <p>
+        Turn on Show shortest routes to see the quickest path for both pawns
+        (blue dots for Player 1, gold dots for Player 2). Save walls for
+        moments when they make your opponent's path much longer.
+      </p>
+    </details>
+
+    <details>
+      <summary>Computer levels</summary>
+      <p>
+        Easy just walks the shortest way. Medium also places walls to slow you
+        down when you are ahead. Hard looks several moves ahead for both sides
+        and plans its walls carefully.
+      </p>
+    </details>
+
+  </section>
+
+  <footer>© 2026 Number Guess</footer>
+
+  <script type="module">
+
+    import {
+      initializeApp
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
+
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
+
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      writeBatch,
+      increment,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
+
+    // Firebase configuration (same as every other page)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDhigYBT68Dv4pdboLzVYxnLVMK6VUFFWY",
+      authDomain: "number-guss.firebaseapp.com",
+      projectId: "number-guss",
+      storageBucket: "number-guss.firebasestorage.app",
+      messagingSenderId: "471501648483",
+      appId: "1:471501648483:web:3cbe55c24fd4e0c92b3e56",
+      measurementId: "G-4FYB07JSC5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // =====================================================================
+    //  QUORIDOR ENGINE (rules and the computer players)
+    //  Board: 9 x 9. Player 0 starts at the bottom and must reach row 0.
+    //  Player 1 starts at the top and must reach row 8.
+    //  A wall is stored by its "anchor" (r, c), a point between four squares:
+    //    horizontal wall at (r, c): blocks the line between rows r and r+1,
+    //                               across columns c and c+1
+    //    vertical wall at (r, c):   blocks the line between columns c and c+1,
+    //                               across rows r and r+1
+    // =====================================================================
+    const GOAL = [0, 8];
+
+    const DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+    function newState() {
+
+      return {
+        p: [{ r: 8, c: 4 }, { r: 0, c: 4 }],
+        w: [10, 10],
+        h: new Uint8Array(64),
+        v: new Uint8Array(64),
+        turn: 0
+      };
+
+    }
+
+    function cloneState(s) {
+
+      return {
+        p: [{ r: s.p[0].r, c: s.p[0].c }, { r: s.p[1].r, c: s.p[1].c }],
+        w: [s.w[0], s.w[1]],
+        h: s.h.slice(),
+        v: s.v.slice(),
+        turn: s.turn
+      };
+
+    }
+
+    // Is the step from (r, c) in direction (dr, dc) blocked by a wall?
+    // (The step must stay on the board.)
+    function blocked(s, r, c, dr, dc) {
+
+      if (dr === 1) {
+        return (c < 8 && s.h[r * 8 + c] === 1) || (c > 0 && s.h[r * 8 + c - 1] === 1);
+      }
+
+      if (dr === -1) {
+        const rr = r - 1;
+        return (c < 8 && s.h[rr * 8 + c] === 1) || (c > 0 && s.h[rr * 8 + c - 1] === 1);
+      }
+
+      if (dc === 1) {
+        return (r < 8 && s.v[r * 8 + c] === 1) || (r > 0 && s.v[(r - 1) * 8 + c] === 1);
+      }
+
+      const cc = c - 1;
+
+      return (r < 8 && s.v[r * 8 + cc] === 1) || (r > 0 && s.v[(r - 1) * 8 + cc] === 1);
+
+    }
+
+    // Where can this player's pawn go? (jumps and diagonal steps included)
+    function pawnMoves(s, pl) {
+
+      const me = s.p[pl];
+      const opp = s.p[1 - pl];
+
+      const out = [];
+
+      for (const [dr, dc] of DIRS) {
+
+        const r = me.r + dr;
+        const c = me.c + dc;
+
+        if (r < 0 || r > 8 || c < 0 || c > 8) continue;
+        if (blocked(s, me.r, me.c, dr, dc)) continue;
+
+        if (r === opp.r && c === opp.c) {
+
+          // The opponent is in the way: jump straight over...
+          const r2 = r + dr;
+          const c2 = c + dc;
+
+          if (r2 >= 0 && r2 <= 8 && c2 >= 0 && c2 <= 8 && !blocked(s, r, c, dr, dc)) {
+
+            out.push({ r: r2, c: c2 });
+
+          } else {
+
+            // ...or, if a wall or the edge is behind them, step diagonally
+            const sides = dr !== 0 ? [[0, -1], [0, 1]] : [[-1, 0], [1, 0]];
+
+            for (const [pr, pc] of sides) {
+
+              const r3 = r + pr;
+              const c3 = c + pc;
+
+              if (r3 < 0 || r3 > 8 || c3 < 0 || c3 > 8) continue;
+              if (blocked(s, r, c, pr, pc)) continue;
+
+              out.push({ r: r3, c: c3 });
+
+            }
+
+          }
+
+        } else {
+
+          out.push({ r: r, c: c });
+
+        }
+
+      }
+
+      return out;
+
+    }
+
+    // Fewest steps from (r, c) to a row, ignoring pawns. -1 if there is no way.
+    const bfsDist = new Int16Array(81);
+    const bfsPrev = new Int16Array(81);
+    const bfsQueue = new Int16Array(81);
+
+    function distFrom(s, r0, c0, goalRow, wantPath) {
+
+      bfsDist.fill(-1);
+
+      let head = 0;
+      let tail = 0;
+
+      const start = r0 * 9 + c0;
+
+      bfsDist[start] = 0;
+      bfsPrev[start] = -1;
+      bfsQueue[tail++] = start;
+
+      while (head < tail) {
+
+        const cur = bfsQueue[head++];
+        const r = (cur / 9) | 0;
+        const c = cur % 9;
+
+        if (r === goalRow) {
+
+          if (!wantPath) {
+            return bfsDist[cur];
+          }
+
+          const path = [];
+
+          for (let x = cur; x !== start; x = bfsPrev[x]) {
+            path.push({ r: (x / 9) | 0, c: x % 9 });
+          }
+
+          return path.reverse();
+
+        }
+
+        for (let i = 0; i < 4; i++) {
+
+          const dr = DIRS[i][0];
+          const dc = DIRS[i][1];
+
+          const nr = r + dr;
+          const nc = c + dc;
+
+          if (nr < 0 || nr > 8 || nc < 0 || nc > 8) continue;
+
+          const next = nr * 9 + nc;
+
+          if (bfsDist[next] !== -1) continue;
+          if (blocked(s, r, c, dr, dc)) continue;
+
+          bfsDist[next] = bfsDist[cur] + 1;
+          bfsPrev[next] = cur;
+          bfsQueue[tail++] = next;
+
+        }
+
+      }
+
+      return wantPath ? null : -1;
+
+    }
+
+    function distance(s, pl) {
+      return distFrom(s, s.p[pl].r, s.p[pl].c, GOAL[pl], false);
+    }
+
+    function routeOf(s, pl) {
+      return distFrom(s, s.p[pl].r, s.p[pl].c, GOAL[pl], true) || [];
+    }
+
+    // Why can't this wall be placed? "" means it can.
+    function wallProblem(s, pl, o, r, c) {
+
+      if (r < 0 || r > 7 || c < 0 || c > 7) {
+        return "A wall must stay on the board.";
+      }
+
+      if (s.w[pl] <= 0) {
+        return "No walls left.";
+      }
+
+      const i = r * 8 + c;
+
+      if (o === "h") {
+
+        if (s.h[i] === 1 || (c > 0 && s.h[i - 1] === 1) || (c < 7 && s.h[i + 1] === 1)) {
+          return "That overlaps another wall.";
+        }
+
+        if (s.v[i] === 1) {
+          return "That crosses another wall.";
+        }
+
+      } else {
+
+        if (s.v[i] === 1 || (r > 0 && s.v[i - 8] === 1) || (r < 7 && s.v[i + 8] === 1)) {
+          return "That overlaps another wall.";
+        }
+
+        if (s.h[i] === 1) {
+          return "That crosses another wall.";
+        }
+
+      }
+
+      // Every pawn must still have a way to its goal
+      const arr = o === "h" ? s.h : s.v;
+
+      arr[i] = 1;
+
+      const ok0 = distance(s, 0) >= 0;
+      const ok1 = distance(s, 1) >= 0;
+
+      arr[i] = 0;
+
+      if (!ok0 || !ok1) {
+        return "That would completely block a pawn. Every pawn must keep a path.";
+      }
+
+      return "";
+
+    }
+
+    function isLegal(s, move) {
+
+      if (move.t === "m") {
+        return pawnMoves(s, s.turn).some((m) => m.r === move.r && m.c === move.c);
+      }
+
+      return wallProblem(s, s.turn, move.o, move.r, move.c) === "";
+
+    }
+
+    // Returns the new position after a move (the old one is not changed)
+    function applyMove(s, move) {
+
+      const n = cloneState(s);
+
+      if (move.t === "m") {
+
+        n.p[s.turn] = { r: move.r, c: move.c };
+
+      } else {
+
+        (move.o === "h" ? n.h : n.v)[move.r * 8 + move.c] = 1;
+        n.w[s.turn]--;
+
+      }
+
+      n.turn = 1 - s.turn;
+
+      return n;
+
+    }
+
+    // 0 or 1 if that player has won, otherwise -1
+    function winnerOf(s) {
+
+      if (s.p[0].r === GOAL[0]) return 0;
+      if (s.p[1].r === GOAL[1]) return 1;
+
+      return -1;
+
+    }
+
+    // ---------- The computer ----------
+    function pickRandom(list) {
+      return list[Math.floor(Math.random() * list.length)];
+    }
+
+    // The pawn moves that get closest to the goal
+    function bestPawnMoves(s, pl) {
+
+      const moves = pawnMoves(s, pl);
+
+      let best = Infinity;
+      let out = [];
+
+      moves.forEach((m) => {
+
+        const d = distFrom(s, m.r, m.c, GOAL[pl], false);
+
+        if (d < 0) return;
+
+        if (d < best) {
+          best = d;
+          out = [m];
+        } else if (d === best) {
+          out.push(m);
+        }
+
+      });
+
+      return out.map((m) => ({ t: "m", r: m.r, c: m.c }));
+
+    }
+
+    // Legal walls that cut the other player's shortest route
+    function blockingWalls(s, pl) {
+
+      if (s.w[pl] <= 0) {
+        return [];
+      }
+
+      const opp = 1 - pl;
+
+      const route = [{ r: s.p[opp].r, c: s.p[opp].c }, ...routeOf(s, opp)];
+
+      const seen = new Set();
+      const out = [];
+
+      const add = (o, r, c) => {
+
+        const key = o + r + "," + c;
+
+        if (seen.has(key)) return;
+
+        seen.add(key);
+
+        if (wallProblem(s, pl, o, r, c) === "") {
+          out.push({ t: "w", o: o, r: r, c: c });
+        }
+
+      };
+
+      for (let i = 0; i + 1 < route.length; i++) {
+
+        const a = route[i];
+        const b = route[i + 1];
+
+        if (b.r === a.r + 1) {
+          add("h", a.r, a.c);
+          add("h", a.r, a.c - 1);
+        } else if (b.r === a.r - 1) {
+          add("h", b.r, a.c);
+          add("h", b.r, a.c - 1);
+        } else if (b.c === a.c + 1) {
+          add("v", a.r, a.c);
+          add("v", a.r - 1, a.c);
+        } else {
+          add("v", a.r, b.c);
+          add("v", a.r - 1, b.c);
+        }
+
+      }
+
+      return out;
+
+    }
+
+    // Easy: just walk the shortest way
+    function easyMove(s) {
+
+      const pl = s.turn;
+
+      if (Math.random() < 0.12) {
+        const m = pickRandom(pawnMoves(s, pl));
+        return { t: "m", r: m.r, c: m.c };
+      }
+
+      return pickRandom(bestPawnMoves(s, pl));
+
+    }
+
+    // Medium: walk, but slow the opponent down with walls when they are ahead
+    function mediumMove(s) {
+
+      const me = s.turn;
+      const opp = 1 - me;
+
+      const myD = distance(s, me);
+      const oppD = distance(s, opp);
+
+      if (s.w[me] > 0 && oppD <= myD + 1) {
+
+        let best = null;
+        let bestGain = 0;
+
+        blockingWalls(s, me).forEach((w) => {
+
+          const t = applyMove(s, w);
+
+          const gain = (distance(t, opp) - oppD) - (distance(t, me) - myD);
+
+          if (gain > bestGain) {
+            bestGain = gain;
+            best = w;
+          }
+
+        });
+
+        if (best && bestGain >= 1 && (oppD <= myD || Math.random() < 0.7)) {
+          return best;
+        }
+
+      }
+
+      return pickRandom(bestPawnMoves(s, me));
+
+    }
+
+    // How much each wall in hand is worth (in "tenths of a step")
+    let WALL_VALUE = 12;
+
+    // Bonus for being the one to move in a race
+    let TEMPO = 4;
+
+    function setTuning(wallValue, tempo) {
+      WALL_VALUE = wallValue;
+      TEMPO = tempo;
+    }
+
+    // How good is this position for player `me`? (higher is better)
+    function evaluate(s, me) {
+
+      const w = winnerOf(s);
+
+      if (w === me) return 100000;
+      if (w === 1 - me) return -100000;
+
+      const mine = distance(s, me);
+      const theirs = distance(s, 1 - me);
+
+      return (theirs - mine) * 10 +
+        (s.w[me] - s.w[1 - me]) * WALL_VALUE +
+        (s.turn === me ? TEMPO : -TEMPO);
+
+    }
+
+    function candidates(s) {
+
+      const pl = s.turn;
+
+      const moves = pawnMoves(s, pl).map((m) => ({ t: "m", r: m.r, c: m.c }));
+
+      return moves.concat(blockingWalls(s, pl));
+
+    }
+
+    // Looks ahead: me wants a high score, the other player a low one
+    function search(s, depth, alpha, beta, me) {
+
+      const w = winnerOf(s);
+
+      if (w === me) return 100000 + depth;
+      if (w === 1 - me) return -100000 - depth;
+
+      if (depth === 0) {
+        return evaluate(s, me);
+      }
+
+      const maximizing = s.turn === me;
+
+      const list = candidates(s).map((m) => {
+
+        const next = applyMove(s, m);
+
+        return { m: m, next: next, h: evaluate(next, me) };
+
+      });
+
+      list.sort((a, b) => maximizing ? b.h - a.h : a.h - b.h);
+
+      const top = list.slice(0, depth >= 3 ? 9 : 7);
+
+      let best = maximizing ? -Infinity : Infinity;
+
+      for (const item of top) {
+
+        const score = search(item.next, depth - 1, alpha, beta, me);
+
+        if (maximizing) {
+          best = Math.max(best, score);
+          alpha = Math.max(alpha, best);
+        } else {
+          best = Math.min(best, score);
+          beta = Math.min(beta, best);
+        }
+
+        if (beta <= alpha) break;
+
+      }
+
+      return best;
+
+    }
+
+    // How many moves ahead the Hard computer looks
+    let hardDepth = 5;
+
+    function setHardDepth(d) {
+      hardDepth = d;
+    }
+
+    function hardMove(s) {
+
+      const me = s.turn;
+
+      let list = candidates(s).map((m) => ({
+        m: m, next: applyMove(s, m)
+      }));
+
+      list.forEach((item) => { item.h = evaluate(item.next, me); });
+
+      list.sort((a, b) => b.h - a.h);
+
+      list = list.slice(0, 12);
+
+      let bestScore = -Infinity;
+      let best = [];
+
+      for (const item of list) {
+
+        const score = search(item.next, hardDepth - 1, -Infinity, Infinity, me);
+
+        if (score > bestScore) {
+          bestScore = score;
+          best = [item.m];
+        } else if (score === bestScore) {
+          best.push(item.m);
+        }
+
+      }
+
+      return pickRandom(best);
+
+    }
+
+    function computerMove(level, s) {
+
+      let move;
+
+      if (level === "easy") move = easyMove(s);
+      else if (level === "medium") move = mediumMove(s);
+      else move = hardMove(s);
+
+      // Safety net: the computer never breaks a rule
+      if (!isLegal(s, move)) {
+        move = pickRandom(bestPawnMoves(s, s.turn));
+      }
+
+      return move;
+
+    }
+
+    // Names like "e5"
+    const FILES = "abcdefghi";
+
+    function squareName(r, c) {
+      return FILES[c] + (9 - r);
+    }
+
+    function moveName(m) {
+
+      if (m.t === "m") {
+        return "pawn to " + squareName(m.r, m.c);
+      }
+
+      return (m.o === "h" ? "horizontal" : "vertical") + " wall at " +
+        FILES[m.c] + (8 - m.r);
+
+    }
+
+    // =====================================================================
+    //  THE GAME (screens, saving, replay and your stats)
+    // =====================================================================
+    const $ = (id) => document.getElementById(id);
+
+    // Reward for a verified win against the Hard computer
+    const HARD_REWARD = { coins: 20, xp: 30 };
+
+    let currentUser = null;
+
+    let state = newState();
+    let phase = "setup";           // "setup", "play", "over" or "replay"
+    let mode = "computer";         // "computer", "local" or "practice"
+    let level = "easy";
+    let humanIndex = 0;            // which pawn you control against the computer
+    let flip = false;              // turn the board so you are always at the bottom
+
+    let moves = [];
+    let past = [];                 // earlier positions (for Undo)
+    let uiMode = "move";           // "move" or "wall"
+    let orient = "h";
+    let wallAt = null;             // { r, c } of the wall being previewed
+    let hint = null;               // a suggested move (practice)
+
+    let matchId = "";
+    let elapsed = 0;
+    let timerHandle = null;
+    let aiBusy = false;
+    let aiToken = 0;
+    let rewardClaimed = false;
+    let winner = -1;
+
+    let replay = null;             // { game, states, step }
+    let replayTimer = null;
+
+    // ---------- Board layout (percent of the board) ----------
+    const GAP_RATIO = 0.3;
+    const CELL = 100 / (9 + 8 * GAP_RATIO);
+    const GAP = CELL * GAP_RATIO;
+    const STEP = CELL + GAP;
+    const PAWN = CELL * 0.72;
+
+    const boardEl = $("qboard");
+
+    let cellEls = [];
+    let pawnEls = [];
+
+    const vpos = (r, c) => [flip ? 8 - r : r, flip ? 8 - c : c];
+    const wpos = (r, c) => [flip ? 7 - r : r, flip ? 7 - c : c];
+
+    function percent(n) {
+      return n + "%";
+    }
+
+    function buildBoard() {
+
+      boardEl.replaceChildren();
+
+      cellEls = [];
+
+      for (let r = 0; r < 9; r++) {
+
+        cellEls.push([]);
+
+        for (let c = 0; c < 9; c++) {
+
+          const el = document.createElement("div");
+
+          el.className = "qcell";
+          el.style.width = percent(CELL);
+          el.style.height = percent(CELL);
+
+          boardEl.appendChild(el);
+
+          cellEls[r].push(el);
+
+        }
+
+      }
+
+      pawnEls = [0, 1].map((i) => {
+
+        const el = document.createElement("div");
+
+        el.className = "pawn p" + i;
+        el.style.width = percent(PAWN);
+        el.style.height = percent(PAWN);
+
+        boardEl.appendChild(el);
+
+        return el;
+
+      });
+
+    }
+
+    // ---------- Small helpers ----------
+    function who(i) {
+
+      if (mode === "computer") {
+        return i === humanIndex ? "You" : "The computer";
+      }
+
+      return "Player " + (i + 1);
+
+    }
+
+    function clock(seconds) {
+
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+
+      return m + ":" + String(s).padStart(2, "0");
+
+    }
+
+    function say(text) {
+      $("status").textContent = text;
+    }
+
+    function newId() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    }
+
+    const gamesKey = () => "qr_games_" + (currentUser ? currentUser.uid : "guest");
+
+    function readGames() {
+
+      try {
+
+        const raw = localStorage.getItem(gamesKey());
+
+        return raw ? JSON.parse(raw) : [];
+
+      } catch (error) {
+        return [];
+      }
+
+    }
+
+    function storeFinished(game) {
+
+      try {
+
+        const list = readGames();
+
+        list.unshift(game);
+
+        localStorage.setItem(gamesKey(), JSON.stringify(list.slice(0, 12)));
+
+      } catch (error) {
+        console.error("Could not store the finished game:", error);
+      }
+
+    }
+
+    // What is on the screen right now (live game or a replay step)
+    function shown() {
+      return replay ? replay.states[replay.step] : state;
+    }
+
+    // ---------- Drawing ----------
+    function humanCanAct() {
+
+      return phase === "play" && !aiBusy && !replay &&
+        (mode !== "computer" || state.turn === humanIndex);
+
+    }
+
+    function addWallEl(o, r, c, extra) {
+
+      const [vr, vc] = wpos(r, c);
+
+      const el = document.createElement("div");
+
+      el.className = "qwall" + (extra ? " " + extra : "");
+
+      if (o === "h") {
+
+        el.style.left = percent(vc * STEP);
+        el.style.top = percent(vr * STEP + CELL);
+        el.style.width = percent(2 * CELL + GAP);
+        el.style.height = percent(GAP);
+
+      } else {
+
+        el.style.left = percent(vc * STEP + CELL);
+        el.style.top = percent(vr * STEP);
+        el.style.width = percent(GAP);
+        el.style.height = percent(2 * CELL + GAP);
+
+      }
+
+      boardEl.appendChild(el);
+
+    }
+
+    function render() {
+
+      const s = shown();
+
+      // Squares
+      for (let r = 0; r < 9; r++) {
+
+        for (let c = 0; c < 9; c++) {
+
+          const [vr, vc] = vpos(r, c);
+
+          const el = cellEls[r][c];
+
+          el.style.left = percent(vc * STEP);
+          el.style.top = percent(vr * STEP);
+
+          el.className = "qcell" +
+            (r === GOAL[0] ? " goal0" : "") + (r === GOAL[1] ? " goal1" : "");
+
+          el.replaceChildren();
+
+        }
+
+      }
+
+      // Walls
+      boardEl.querySelectorAll(".qwall").forEach((el) => el.remove());
+
+      for (let r = 0; r < 8; r++) {
+
+        for (let c = 0; c < 8; c++) {
+
+          if (s.h[r * 8 + c]) addWallEl("h", r, c);
+          if (s.v[r * 8 + c]) addWallEl("v", r, c);
+
+        }
+
+      }
+
+      // Shortest routes
+      if ($("routeBox").checked && !replay && phase !== "setup") {
+
+        [0, 1].forEach((i) => {
+
+          routeOf(s, i).forEach((cellPos, k, list) => {
+
+            if (k === list.length - 1) return;
+
+            const dot = document.createElement("div");
+
+            dot.className = "dot route" + i;
+
+            cellEls[cellPos.r][cellPos.c].appendChild(dot);
+
+          });
+
+        });
+
+      }
+
+      // Legal pawn moves
+      if (humanCanAct() && uiMode === "move") {
+
+        pawnMoves(s, s.turn).forEach((m) => {
+
+          const dot = document.createElement("div");
+
+          dot.className = "dot legal";
+
+          cellEls[m.r][m.c].appendChild(dot);
+
+        });
+
+      }
+
+      // Suggested move (practice)
+      if (hint && hint.t === "m" && !replay) {
+        cellEls[hint.r][hint.c].classList.add("hintcell");
+      }
+
+      // Wall preview
+      if (!replay && phase === "play" && uiMode === "wall" && wallAt && humanCanAct()) {
+
+        const problem = wallProblem(s, s.turn, orient, wallAt.r, wallAt.c);
+
+        addWallEl(orient, wallAt.r, wallAt.c, "preview " + (problem ? "bad" : "ok"));
+
+        $("wallNote").textContent = problem || "Press Place wall (or tap the same spot again).";
+
+      } else if (hint && hint.t === "w" && !replay) {
+
+        addWallEl(hint.o, hint.r, hint.c, "preview ok");
+
+      } else {
+
+        $("wallNote").textContent = uiMode === "wall"
+          ? "Tap the board where you want the wall. Use Rotate to change direction."
+          : "";
+
+      }
+
+      // Pawns
+      [0, 1].forEach((i) => {
+
+        const [vr, vc] = vpos(s.p[i].r, s.p[i].c);
+
+        pawnEls[i].style.left = percent(vc * STEP + (CELL - PAWN) / 2);
+        pawnEls[i].style.top = percent(vr * STEP + (CELL - PAWN) / 2);
+
+        pawnEls[i].classList.toggle("win", winner === i && phase === "over");
+
+      });
+
+      // Panels
+      const live = replay ? null : state;
+
+      [0, 1].forEach((i) => {
+
+        $("name" + i).textContent = replay
+          ? "Player " + (i + 1)
+          : who(i) === "You" ? "You (P" + (i + 1) + ")" : who(i) === "The computer" ? "Computer (P" + (i + 1) + ")" : "Player " + (i + 1);
+
+        $("walls" + i).textContent = s.w[i];
+
+        $("card" + i).classList.toggle("active", phase === "play" && !replay && state.turn === i);
+
+        $("dist" + i).textContent = distance(s, i);
+
+      });
+
+      if (replay) {
+
+        $("turn").textContent = "Replay: move " + replay.step + " of " + replay.game.moves.length;
+
+      } else if (phase === "play") {
+
+        $("turn").textContent = aiBusy
+          ? "The computer is thinking..."
+          : "Player " + (state.turn + 1) + "'s turn" + (mode === "computer" && state.turn === humanIndex ? " (you)" : "");
+
+      } else if (phase === "over") {
+
+        $("turn").textContent = "Game over";
+
+      }
+
+      $("timer").textContent = clock(elapsed);
+
+      const mine = humanCanAct();
+
+      $("moveModeBtn").classList.toggle("on", uiMode === "move");
+      $("wallModeBtn").classList.toggle("on", uiMode === "wall");
+      $("wallTools").classList.toggle("hidden", uiMode !== "wall");
+      $("rotateBtn").textContent = orient === "h" ? "↔ Horizontal" : "↕ Vertical";
+
+      $("moveModeBtn").disabled = !mine;
+      $("wallModeBtn").disabled = !mine || s.w[s.turn] <= 0;
+      $("rotateBtn").disabled = !mine;
+      $("placeBtn").disabled = !mine || !wallAt ||
+        wallProblem(s, s.turn, orient, wallAt.r, wallAt.c) !== "";
+
+      $("resignBtn").disabled = phase !== "play" || !!replay || (mode === "computer" && state.turn !== humanIndex);
+      $("undoBtn").classList.toggle("hidden", mode !== "practice");
+      $("hintBtn").classList.toggle("hidden", mode !== "practice");
+      $("undoBtn").disabled = mode !== "practice" || !past.length || phase === "over" || !!replay;
+      $("hintBtn").disabled = !mine;
+
+      // Move history
+      const list = $("history");
+
+      const source = replay ? replay.game.moves : moves;
+      const upto = replay ? replay.step : moves.length;
+
+      list.replaceChildren();
+
+      source.forEach((m, i) => {
+
+        const item = document.createElement("span");
+
+        item.className = "mv" + (i === upto - 1 ? " now" : "") + (i >= upto ? " later" : "");
+
+        item.textContent = (i + 1) + ". P" + (i % 2 + 1) + " " +
+          (m.t === "m" ? squareName(m.r, m.c) : (m.o === "h" ? "H" : "V") + FILES[m.c] + (8 - m.r));
+
+        list.appendChild(item);
+
+      });
+
+      list.scrollTop = list.scrollHeight;
+
+      const playing = phase === "play" || phase === "over";
+
+      $("gamePanel").classList.toggle("hidden", !playing && !replay);
+      $("historyPanel").classList.toggle("hidden", !playing && !replay);
+      $("replayBar").classList.toggle("hidden", !replay);
+
+    }
+
+    // ---------- Playing ----------
+    function doMove(move) {
+
+      if (!isLegal(state, move)) {
+        return;
+      }
+
+      past.push(state);
+      moves.push(move);
+
+      const mover = state.turn;
+
+      state = applyMove(state, move);
+
+      wallAt = null;
+      hint = null;
+
+      const w = winnerOf(state);
+
+      if (w >= 0) {
+
+        winner = w;
+
+        render();
+
+        finish(w);
+
+        return;
+
+      }
+
+      if (mode === "computer" && mover !== humanIndex) {
+        say("The computer moved its " + moveName(move) + ". Your turn.");
+      } else if (mode === "computer") {
+        say("You moved your " + moveName(move) + ".");
+      } else {
+        say("Player " + (mover + 1) + ": " + moveName(move) + ".");
+      }
+
+      render();
+
+      maybeComputer();
+
+    }
+
+    function maybeComputer() {
+
+      if (phase !== "play" || mode !== "computer" || state.turn === humanIndex) {
+        return;
+      }
+
+      aiBusy = true;
+
+      const token = aiToken;
+
+      say("The computer is thinking...");
+
+      render();
+
+      setTimeout(() => {
+
+        if (token !== aiToken || phase !== "play") {
+          return;
+        }
+
+        const move = computerMove(level, state);
+
+        aiBusy = false;
+
+        doMove(move);
+
+      }, 500);
+
+    }
+
+    function onBoardTap(event) {
+
+      if (!humanCanAct()) {
+        return;
+      }
+
+      const rect = boardEl.getBoundingClientRect();
+
+      const px = (event.clientX - rect.left) / rect.width * 100;
+      const py = (event.clientY - rect.top) / rect.height * 100;
+
+      if (uiMode === "move") {
+
+        const vc = Math.max(0, Math.min(8, Math.floor(px / STEP)));
+        const vr = Math.max(0, Math.min(8, Math.floor(py / STEP)));
+
+        const [r, c] = vpos(vr, vc);
+
+        if (pawnMoves(state, state.turn).some((m) => m.r === r && m.c === c)) {
+          doMove({ t: "m", r: r, c: c });
+        } else {
+          say("You cannot move there. Tap a square with a green dot.");
+        }
+
+        return;
+
+      }
+
+      // Walls: pick the nearest crossing between four squares
+      const vc = Math.max(0, Math.min(7, Math.round((px - (CELL + GAP / 2)) / STEP)));
+      const vr = Math.max(0, Math.min(7, Math.round((py - (CELL + GAP / 2)) / STEP)));
+
+      const [r, c] = wpos(vr, vc);
+
+      const same = wallAt && wallAt.r === r && wallAt.c === c;
+
+      if (same && wallProblem(state, state.turn, orient, r, c) === "") {
+        doMove({ t: "w", o: orient, r: r, c: c });
+        return;
+      }
+
+      wallAt = { r: r, c: c };
+
+      hint = null;
+
+      render();
+
+    }
+
+    boardEl.addEventListener("pointerup", onBoardTap);
+
+    $("moveModeBtn").onclick = () => {
+      uiMode = "move";
+      wallAt = null;
+      render();
+    };
+
+    $("wallModeBtn").onclick = () => {
+      uiMode = "wall";
+      hint = null;
+      render();
+    };
+
+    $("rotateBtn").onclick = () => {
+      orient = orient === "h" ? "v" : "h";
+      render();
+    };
+
+    $("placeBtn").onclick = () => {
+
+      if (wallAt && humanCanAct()) {
+        doMove({ t: "w", o: orient, r: wallAt.r, c: wallAt.c });
+      }
+
+    };
+
+    $("routeBox").onchange = render;
+
+    $("undoBtn").onclick = () => {
+
+      if (mode !== "practice" || !past.length) {
+        return;
+      }
+
+      state = past.pop();
+      moves.pop();
+      wallAt = null;
+      hint = null;
+
+      say("Move undone.");
+
+      render();
+
+    };
+
+    $("hintBtn").onclick = () => {
+
+      if (!humanCanAct()) {
+        return;
+      }
+
+      hint = computerMove("hard", state);
+
+      uiMode = "move";
+      wallAt = null;
+
+      say("Suggestion: " + moveName(hint) + ".");
+
+      render();
+
+    };
+
+    $("resignBtn").onclick = () => {
+
+      if (phase !== "play") {
+        return;
+      }
+
+      const loser = mode === "computer" ? humanIndex : state.turn;
+
+      if (confirm("Player " + (loser + 1) + " resigns. Are you sure?")) {
+        winner = 1 - loser;
+        finish(winner, true);
+      }
+
+    };
+
+    // ---------- Confetti ----------
+    function celebrate() {
+
+      for (let i = 0; i < 26; i++) {
+
+        const piece = document.createElement("span");
+
+        piece.className = "confetti";
+        piece.textContent = ["🎉", "🎊", "✨", "⭐"][i % 4];
+        piece.style.left = Math.random() * 100 + "vw";
+        piece.style.fontSize = 20 + Math.random() * 18 + "px";
+        piece.style.animationDuration = 2.2 + Math.random() * 2 + "s";
+        piece.style.animationDelay = Math.random() * 0.8 + "s";
+
+        document.body.appendChild(piece);
+
+        setTimeout(() => piece.remove(), 5500);
+
+      }
+
+    }
+
+    // ---------- Ending a game ----------
+    // Replays every move from the start and checks the result
+    function verifyGame(claimedWinner) {
+
+      let s = newState();
+
+      for (const m of moves) {
+
+        if (!isLegal(s, m)) {
+          return false;
+        }
+
+        s = applyMove(s, m);
+
+      }
+
+      return winnerOf(s) === claimedWinner;
+
+    }
+
+    async function finish(w, resigned) {
+
+      phase = "over";
+      aiToken++;
+      aiBusy = false;
+      stopTimer();
+
+      const banner = $("banner");
+
+      banner.style.display = "block";
+      banner.className = "banner";
+
+      let humanWon = false;
+
+      let text;
+
+      if (mode === "computer") {
+
+        humanWon = w === humanIndex;
+
+        text = humanWon
+          ? "🏆 You win! Your pawn reached the other side."
+          : resigned ? "💀 You resigned." : "💀 The computer wins.";
+
+        banner.classList.toggle("lose", !humanWon);
+
+      } else {
+
+        text = "🏆 Player " + (w + 1) + " wins!" + (resigned ? " (resigned)" : "");
+
+      }
+
+      banner.textContent = text;
+
+      say(text);
+
+      if (humanWon || mode !== "computer") {
+        celebrate();
+      }
+
+      storeFinished({
+        id: matchId, when: Date.now(), mode: mode, level: level,
+        humanIndex: humanIndex, flip: flip, moves: moves.slice(),
+        winner: w, result: text, seconds: elapsed
+      });
+
+      render();
+
+      if (mode === "practice") {
+        return;
+      }
+
+      const verified = !resigned && verifyGame(w);
+
+      const rewardOk = mode === "computer" && level === "hard" &&
+        humanWon && verified && !rewardClaimed;
+
+      const note = await recordStats(humanWon, rewardOk);
+
+      if (note) {
+        banner.textContent += " " + note;
+      }
+
+    }
+
+    // ---------- Your stats (saved to your profile) ----------
+    async function recordStats(humanWon, rewardOk) {
+
+      if (!currentUser) {
+        return "";
+      }
+
+      const ref = doc(db, "players", currentUser.uid);
+
+      let note = "";
+
+      try {
+
+        const snap = await getDoc(ref);
+
+        const data = snap.exists() ? snap.data() : {};
+
+        const num = (key) => Number(data[key]) || 0;
+
+        const changes = { qrLastPlayed: serverTimestamp() };
+
+        if (mode === "local") {
+
+          changes.qrPvpGames = increment(1);
+
+        } else {
+
+          changes.qrGames = increment(1);
+
+          if (humanWon) {
+
+            const key = "qrWins" + (level === "easy" ? "Easy" : level === "medium" ? "Medium" : "Hard");
+
+            changes[key] = increment(1);
+            changes.qrWinStreak = num("qrWinStreak") + 1;
+
+            const best = num("qrBestTime");
+
+            if (!best || elapsed < best) {
+              changes.qrBestTime = Math.max(1, elapsed);
+            }
+
+          } else {
+
+            changes.qrLosses = increment(1);
+            changes.qrWinStreak = 0;
+
+          }
+
+        }
+
+        if (rewardOk) {
+
+          changes.coins = increment(HARD_REWARD.coins);
+          changes.xp = increment(HARD_REWARD.xp);
+
+        }
+
+        const batch = writeBatch(db);
+
+        batch.set(ref, changes, { merge: true });
+
+        if (rewardOk) {
+
+          // One reward per match: this record can only be created once
+          batch.set(doc(db, "rewards", currentUser.uid + "_" + matchId), {
+            uid: currentUser.uid, game: "quoridor", matchId: matchId,
+            coins: HARD_REWARD.coins, xp: HARD_REWARD.xp,
+            createdAt: serverTimestamp()
+          });
+
+        }
+
+        await batch.commit();
+
+        if (rewardOk) {
+
+          rewardClaimed = true;
+
+          note = "🪙 +" + HARD_REWARD.coins + " coins and +" + HARD_REWARD.xp +
+            " XP for beating Hard!";
+
+        } else {
+
+          note = "Result saved.";
+
+        }
+
+      } catch (error) {
+
+        console.error("Stats error:", error);
+
+        note = rewardOk
+          ? "Could not save the reward. Check Firestore rules, or it was already claimed."
+          : "Could not save your result. Check Firestore rules.";
+
+        if (rewardOk) {
+
+          try {
+            await recordStats(humanWon, false);
+          } catch (inner) {
+            console.error(inner);
+          }
+
+        }
+
+      }
+
+      return note;
+
+    }
+
+    // ---------- Timer ----------
+    function startTimer() {
+
+      stopTimer();
+
+      timerHandle = setInterval(() => {
+
+        if (phase === "play") {
+          elapsed++;
+          $("timer").textContent = clock(elapsed);
+        }
+
+      }, 1000);
+
+    }
+
+    function stopTimer() {
+
+      if (timerHandle) {
+        clearInterval(timerHandle);
+        timerHandle = null;
+      }
+
+    }
+
+    // ---------- Starting a game ----------
+    function startNew() {
+
+      aiToken++;
+      aiBusy = false;
+
+      stopReplay();
+
+      replay = null;
+
+      mode = $("mode").value;
+      level = $("level").value;
+      humanIndex = $("order").value === "second" ? 1 : 0;
+
+      flip = mode === "computer" && humanIndex === 1;
+
+      state = newState();
+      moves = [];
+      past = [];
+      uiMode = "move";
+      orient = "h";
+      wallAt = null;
+      hint = null;
+      winner = -1;
+      elapsed = 0;
+      matchId = newId();
+      rewardClaimed = false;
+
+      phase = "play";
+
+      $("banner").style.display = "none";
+
+      startTimer();
+
+      say(mode === "computer"
+        ? (humanIndex === 0 ? "You are Player 1 at the bottom. Reach the top row!" : "You are Player 2. The computer moves first. Reach the bottom row!")
+        : "Player 1 (bottom) moves first.");
+
+      render();
+
+      maybeComputer();
+
+    }
+
+    $("startBtn").onclick = startNew;
+
+    function syncSetup() {
+
+      const m = $("mode").value;
+
+      $("levelRow").classList.toggle("hidden", m !== "computer");
+      $("orderRow").classList.toggle("hidden", m !== "computer");
+
+      $("replayListBtn").classList.toggle("hidden", readGames().length === 0);
+
+    }
+
+    $("mode").onchange = syncSetup;
+
+    $("newAfterBtn").onclick = () => {
+
+      aiToken++;
+      aiBusy = false;
+      stopTimer();
+
+      phase = "setup";
+
+      $("banner").style.display = "none";
+
+      render();
+
+      syncSetup();
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
+    };
+
+    // ---------- Replay ----------
+    function stopReplay() {
+
+      if (replayTimer) {
+        clearInterval(replayTimer);
+        replayTimer = null;
+      }
+
+      $("playReplayBtn").textContent = "▶ Play";
+
+    }
+
+    function showReplayList() {
+
+      const list = readGames();
+
+      const box = $("replayList");
+
+      box.replaceChildren();
+
+      if (!list.length) {
+        box.textContent = "No finished games yet.";
+      }
+
+      list.forEach((game, index) => {
+
+        const button = document.createElement("button");
+
+        button.className = "secondary replay-item";
+
+        const kind = game.mode === "computer"
+          ? "vs " + game.level
+          : game.mode === "local" ? "1 vs 1" : "practice";
+
+        button.textContent = kind + " · " + game.moves.length + " moves · " +
+          clock(game.seconds) + " · " + new Date(game.when).toLocaleString() +
+          " — " + game.result;
+
+        button.onclick = () => openReplay(index);
+
+        box.appendChild(button);
+
+      });
+
+      $("replayPanel").classList.remove("hidden");
+
+      $("replayPanel").scrollIntoView({ behavior: "smooth" });
+
+    }
+
+    function openReplay(index) {
+
+      const game = readGames()[index];
+
+      if (!game) {
+        return;
+      }
+
+      aiToken++;
+      aiBusy = false;
+      stopTimer();
+
+      const states = [newState()];
+
+      for (const m of game.moves) {
+        states.push(applyMove(states[states.length - 1], m));
+      }
+
+      flip = !!game.flip;
+      winner = game.winner;
+
+      replay = { game: game, states: states, step: 0 };
+
+      phase = "replay";
+
+      $("banner").style.display = "none";
+
+      say("Replay: " + game.result);
+
+      render();
+
+      $("gamePanel").scrollIntoView({ behavior: "smooth" });
+
+    }
+
+    function replayStep(delta, absolute) {
+
+      if (!replay) {
+        return;
+      }
+
+      const total = replay.game.moves.length;
+
+      let step = absolute !== undefined ? absolute : replay.step + delta;
+
+      step = Math.max(0, Math.min(total, step));
+
+      replay.step = step;
+
+      if (step === total) {
+        stopReplay();
+      }
+
+      render();
+
+    }
+
+    $("replayListBtn").onclick = showReplayList;
+
+    $("rFirst").onclick = () => { stopReplay(); replayStep(0, 0); };
+    $("rPrev").onclick = () => { stopReplay(); replayStep(-1); };
+    $("rNext").onclick = () => { stopReplay(); replayStep(1); };
+    $("rLast").onclick = () => { stopReplay(); replayStep(0, 999999); };
+
+    $("playReplayBtn").onclick = () => {
+
+      if (replayTimer) {
+        stopReplay();
+        return;
+      }
+
+      if (replay.step >= replay.game.moves.length) {
+        replayStep(0, 0);
+      }
+
+      $("playReplayBtn").textContent = "⏸ Pause";
+
+      replayTimer = setInterval(() => replayStep(1), 800);
+
+    };
+
+    $("closeReplayBtn").onclick = () => {
+
+      stopReplay();
+
+      replay = null;
+      winner = -1;
+      flip = false;
+
+      phase = "setup";
+
+      $("replayPanel").classList.add("hidden");
+
+      render();
+
+      syncSetup();
+
+    };
+
+    // ---------- Buttons and login ----------
+    $("logoutBtn").onclick = async () => {
+
+      try {
+        await signOut(auth);
+      } catch (error) {
+        console.error(error);
+      }
+
+      window.location.replace("login.html");
+
+    };
+
+    onAuthStateChanged(auth, (user) => {
+
+      if (!user) {
+        window.location.replace("login.html");
+        return;
+      }
+
+      currentUser = user;
+
+      syncSetup();
+
+    });
+
+    buildBoard();
+    render();
+    syncSetup();
+
+  </script>
+
+</body>
+</html>
