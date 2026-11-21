@@ -62,6 +62,18 @@
     }
     .card button:hover:not(:disabled) { filter: brightness(1.12); transform: translateY(-1px); }
     .card.locked { opacity: .72; }
+    .card.coming-soon { border-color: rgba(126, 177, 226, .28); }
+    .card.coming-soon:hover {
+      transform: none;
+      border-color: rgba(126, 177, 226, .28);
+      box-shadow: 0 10px 24px rgba(0,0,0,.16);
+    }
+    .card.coming-soon button:disabled {
+      background: #395779;
+      color: #d5e1ef;
+      cursor: not-allowed;
+      opacity: .9;
+    }
     .card button:disabled { background: #395779; cursor: not-allowed; }
     footer {
       text-align: center; margin: 38px auto 12px; padding: 18px 12px;
@@ -165,6 +177,20 @@
       <h2>Go</h2>
       <p>Capture territory in this classic strategy game.</p>
       <button id="goBtn">Play Go</button>
+    </div>
+
+    <div class="card coming-soon">
+      <div class="emoji">将</div>
+      <h2>Shogi</h2>
+      <p>Master Japanese chess, promote pieces and outsmart your opponent.</p>
+      <button type="button" disabled aria-label="Shogi coming soon">Coming Soon</button>
+    </div>
+
+    <div class="card coming-soon">
+      <div class="emoji">🏦</div>
+      <h2>Monopoly</h2>
+      <p>Buy properties, collect rent and build your way to victory.</p>
+      <button type="button" disabled aria-label="Monopoly coming soon">Coming Soon</button>
     </div>
 
     <div class="card">
